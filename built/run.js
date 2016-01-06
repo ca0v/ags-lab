@@ -1,3 +1,8 @@
+var __extends = (this && this.__extends) || function (d, b) {
+    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+    function __() { this.constructor = d; }
+    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+};
 /**
  * https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=50%20Datastream%20Plaza&f=json&outSR=%7B%22wkid%22%3A102100%2C%22latestWkid%22%3A3857%7D&maxLocations=10
  */
@@ -109,25 +114,44 @@ define("ags-reverse-geocode-proxy", ["require", "exports"], function (require, e
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = ReverseGeocode;
 });
-define("ags-route-proxy", ["require", "exports"], function (require, exports) {
+define("ags-solve-proxy", ["require", "exports"], function (require, exports) {
+    "use strict";
+    var BaseSolve = (function () {
+        function BaseSolve(url) {
+            this.ajax = new Ajax(url);
+        }
+        BaseSolve.prototype.solve = function (data) {
+            return this.ajax.get(data);
+        };
+        ;
+        BaseSolve.test = function () {
+            throw "this is an abstract class for route, closest facility and service area";
+        };
+        return BaseSolve;
+    })();
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = BaseSolve;
+});
+define("ags-route-solve-proxy", ["require", "exports", "ags-solve-proxy"], function (require, exports, ags_solve_proxy_1) {
     "use strict";
     /**
      * http://sampleserver6.arcgisonline.com/arcgis/sdk/rest/index.html#/Network_Layer/02ss0000009p000000/
      */
-    var Route = (function () {
-        function Route(url) {
-            this.ajax = new Ajax(url);
+    var RouteSolve = (function (_super) {
+        __extends(RouteSolve, _super);
+        function RouteSolve() {
+            _super.apply(this, arguments);
         }
         /**
          * http://sampleserver6.arcgisonline.com/arcgis/sdk/rest/index.html#/Solve_Route/02ss0000001t000000/
          */
-        Route.prototype.solve = function (data) {
+        RouteSolve.prototype.solve = function (data) {
             var req = Object.assign({
                 returnDirections: true,
                 returnRoutes: true,
                 preserveFirstStop: true,
                 preserveLastStop: true,
-                directionsLanguage: "en",
+                directionsLanguage: "",
                 outputGeometryPrecisionUnits: "esriDecimalDegrees",
                 directionsOutputType: "esriDOTComplete",
                 directionsLengthUnits: "esriNAUMiles",
@@ -136,8 +160,8 @@ define("ags-route-proxy", ["require", "exports"], function (require, exports) {
             req.stops = data.stops.map(function (p) { return (p.x + "," + p.y); }).join(';');
             return this.ajax.get(req);
         };
-        Route.test = function () {
-            new Route("http://sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/Route/solve")
+        RouteSolve.test = function () {
+            new RouteSolve("http://sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/Route/solve")
                 .solve({ stops: [{ x: -117.141724, y: 32.7122 }, { x: -117.141724, y: 32.72 }] })
                 .then(function (value) {
                 // how to get route to return json?
@@ -151,10 +175,91 @@ define("ags-route-proxy", ["require", "exports"], function (require, exports) {
                 return value;
             });
         };
-        return Route;
-    })();
+        return RouteSolve;
+    })(ags_solve_proxy_1.default);
     Object.defineProperty(exports, "__esModule", { value: true });
-    exports.default = Route;
+    exports.default = RouteSolve;
+});
+define("ags-servicearea-solve-proxy", ["require", "exports", "ags-solve-proxy"], function (require, exports, ags_solve_proxy_2) {
+    "use strict";
+    var ServiceAreaSolve = (function (_super) {
+        __extends(ServiceAreaSolve, _super);
+        function ServiceAreaSolve() {
+            _super.apply(this, arguments);
+        }
+        ServiceAreaSolve.prototype.solve = function (data) {
+            /**
+             * ?facilities=
+                // {"features": [{
+                // "attributes": {
+                //     "Name": "San Francisco Museum of Modern Art",
+                //     "Breaks_Length" : 10.0
+                // },
+                // "geometry": {
+                //     "x": -122.401134465,
+                //     "y": 37.7857056500001
+                //     }
+                // }]}
+             * &barriers={}
+             * &polylineBarriers={}
+             * &polygonBarriers={}
+             * &defaultBreaks=5.0
+             * &excludeSourcesFromPolygons=
+             * &mergeSimilarPolygonRanges=false
+             * &overlapLines=false
+             * &overlapPolygons=false
+             * &splitLinesAtBreaks=false
+             * &splitPolygonsAtBreaks=false
+             * &trimOuterPolygon=false
+             * &trimPolygonDistance=100.0
+             * &trimPolygonDistanceUnits=esriMeters
+             * &outSR=26911
+             * &accumulateAttributeNames=
+             * &impedanceAttributeName=Length
+             * &restrictionAttributeNames=
+             * &attributeParameterValues=
+             * &restrictUTurns=esriNFSBAllowBacktrack
+             * &returnFacilities=true
+             * &returnBarriers=true
+             * &returnPolylineBarriers=false
+             * &returnPolygonBarriers=false
+             * &outputLines=esriNAOutputLineNone
+             * &outputPolygons=esriNAOutputPolygonSimplified
+             * &travelDirection=esriNATravelDirectionFromFacility
+             * &outputGeometryPrecision=0.01
+             * &outputGeometryPrecisionUnits=esriMeters
+             * &f=html
+            */
+            var req = Object.assign({
+                travelDirection: "esriNATravelDirectionFromFacility",
+                returnFacilities: false,
+                f: "pjson"
+            }, data);
+            return this.ajax.get(req);
+        };
+        ServiceAreaSolve.test = function () {
+            new ServiceAreaSolve("http://sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/ServiceArea/solveServiceArea")
+                .solve({
+                facilities: "-117.141724,32.7122",
+                returnFacilities: true,
+                outSR: 4326
+            })
+                .then(function (value) {
+                // how to get route to return json?
+                value = JSON.parse(value);
+                if (value.error) {
+                    console.error(value.error.message);
+                }
+                else {
+                    console.log("solve", value);
+                }
+                return value;
+            });
+        };
+        return ServiceAreaSolve;
+    })(ags_solve_proxy_2.default);
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = ServiceAreaSolve;
 });
 define("ags-suggest-proxy", ["require", "exports"], function (require, exports) {
     "use strict";
@@ -309,14 +414,15 @@ define("maplet", ["require", "exports", "esri/map", "esri/geometry/Point", "esri
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Maplet;
 });
-define("app", ["require", "exports", "ags-find-address-proxy", "ags-reverse-geocode-proxy"], function (require, exports, ags_find_address_proxy_1, ags_reverse_geocode_proxy_1) {
+define("app", ["require", "exports", "ags-servicearea-solve-proxy"], function (require, exports, ags_servicearea_solve_proxy_1) {
     "use strict";
     window.onload = function () {
         //Maplet.test();
-        //Router.test();
         //Suggest.test();
-        ags_find_address_proxy_1.default.test();
+        //FindAddress.test();
         //Find.test();
-        ags_reverse_geocode_proxy_1.default.test();
+        //ReverseGeocode.test();
+        //RouteSolve.test();
+        ags_servicearea_solve_proxy_1.default.test();
     };
 });

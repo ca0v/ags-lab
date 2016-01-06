@@ -2,3 +2,5 @@
 
 This is Proof of Concept code for learning
 aspects of the AG Server.
+
+Build using tsc
