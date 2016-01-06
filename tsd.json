@@ -1,0 +1,15 @@
+{
+  "version": "v4",
+  "repo": "borisyankov/DefinitelyTyped",
+  "ref": "master",
+  "path": "typings",
+  "bundle": "typings/tsd.d.ts",
+  "installed": {
+    "arcgis-js-api/arcgis-js-api.d.ts": {
+      "commit": "ba424f7ee39717d51c17699a09ac8df312a7e9a1"
+    },
+    "es6-promise/es6-promise.d.ts": {
+      "commit": "f11e49cfb77f99678657ddfe5d43017849675c64"
+    }
+  }
+}
