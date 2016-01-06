@@ -1,0 +1,25 @@
+{
+  "name": "agsLab",
+  "homepage": "https://github.com/ca0v/ags-lab",
+  "authors": [
+    "coreyalix <coreyalix@hotmail.com>"
+  ],
+  "description": "AGS POC",
+  "main": "index.html",
+  "moduleType": [],
+  "keywords": [
+    "AGS"
+  ],
+  "license": "MIT",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "esri": "arcgis-js-api#~3.14.0"
+  }
+}
