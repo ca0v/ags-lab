@@ -73,6 +73,42 @@ define("ags-find-proxy", ["require", "exports"], function (require, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Find;
 });
+define("ags-reverse-geocode-proxy", ["require", "exports"], function (require, exports) {
+    "use strict";
+    /**
+     * http://resources.arcgis.com/EN/HELP/REST/APIREF/INDEX.HTML?REVERSE.HTML
+     */
+    var ReverseGeocode = (function () {
+        function ReverseGeocode(url) {
+            this.ajax = new Ajax(url);
+        }
+        ReverseGeocode.prototype.reverseGeocode = function (data) {
+            var req = Object.assign({
+                outSRS: "wkid:4326",
+                distance: 10,
+                langCode: "en",
+                forStorage: false,
+                returnIntersection: false,
+                f: "pjson"
+            }, data);
+            return this.ajax.get(req);
+        };
+        ReverseGeocode.test = function () {
+            new ReverseGeocode("http://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode")
+                .reverseGeocode({
+                location: "-82.407548,34.790207"
+            })
+                .then(function (value) {
+                value = JSON.parse(value);
+                console.log("ReverseGeocode", value.address);
+                console.log(value);
+            });
+        };
+        return ReverseGeocode;
+    })();
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = ReverseGeocode;
+});
 define("ags-route-proxy", ["require", "exports"], function (require, exports) {
     "use strict";
     /**
@@ -273,13 +309,14 @@ define("maplet", ["require", "exports", "esri/map", "esri/geometry/Point", "esri
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Maplet;
 });
-define("app", ["require", "exports", "ags-route-proxy", "ags-suggest-proxy", "ags-find-address-proxy", "ags-find-proxy"], function (require, exports, ags_route_proxy_1, ags_suggest_proxy_1, ags_find_address_proxy_1, ags_find_proxy_1) {
+define("app", ["require", "exports", "ags-find-address-proxy", "ags-reverse-geocode-proxy"], function (require, exports, ags_find_address_proxy_1, ags_reverse_geocode_proxy_1) {
     "use strict";
     window.onload = function () {
         //Maplet.test();
-        ags_route_proxy_1.default.test();
-        ags_suggest_proxy_1.default.test();
+        //Router.test();
+        //Suggest.test();
         ags_find_address_proxy_1.default.test();
-        ags_find_proxy_1.default.test();
+        //Find.test();
+        ags_reverse_geocode_proxy_1.default.test();
     };
 });
