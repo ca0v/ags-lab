@@ -18,20 +18,27 @@ let asList = (nodeList: NodeList) => {
 /** add the geometry to the map  */
 topic.subscribe("add-geometry-to-map", () => {    
     let geomText = (<HTMLTextAreaElement>document.getElementById("geometry")).value;
-    let geomJs = JSON.parse(geomText);
-
+    let geomJs = <Array<any>>JSON.parse(geomText);
+    
+    if ("x" in geomJs) geomJs = [geomJs];
+        
     if (Array.isArray(geomJs)) {
-        let items = <Array<{x: number; y: number;}>>geomJs;
-        items.forEach(item => topic.publish("add-point", item));
-    } else {
-        switch (geomJs) {
-            case "rings":
-            break;
-            default:
-            break;
-        }
+        let items = geomJs;
+        if (typeof geomJs[0]["x"] !== "undefined") {
+            items.forEach(item => topic.publish("add-point", item));
+        } else {
+            if (Array.isArray(geomJs[0])) {
+                if (typeof geomJs[0][0] == "number") {
+                    topic.publish("add-polyline", items);
+                } else {                
+                    topic.publish("add-polygon", items);
+                }
+            } else {
+                topic.publish("add-point", {x: items[0], y: items[1] });                
+            }
+        }        
     }
-})
+});
 
 let run = () => {
     let events = asList(document.querySelectorAll("[data-event]"));
@@ -48,11 +55,11 @@ let run = () => {
     
     Maplet.test();
     //Suggest.test();
-    FindAddress.test();
+    //FindAddress.test();
     //Find.test();
     //ReverseGeocode.test();
     //RouteSolve.test();
-    //ServiceSolve.test();
+    ServiceSolve.test();
 }
 
 window.onload = run;

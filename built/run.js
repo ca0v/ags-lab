@@ -377,7 +377,7 @@ define("pubsub", ["require", "exports"], function (require, exports) {
     var pubsub = new PubSub();
     return pubsub;
 });
-define("maplet", ["require", "exports", "pubsub", "esri/map", "esri/geometry/Point", "esri/graphic", "esri/symbols/SimpleMarkerSymbol", "esri/renderers/HeatmapRenderer", "esri/layers/FeatureLayer", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/ArcGISDynamicMapServiceLayer"], function (require, exports, topic, Map, Point, Graphic, MarkerSymbol, HeatmapRenderer, FeatureLayer, ArcGISTiledMapServiceLayer, ArcGISDynamicMapServiceLayer) {
+define("maplet", ["require", "exports", "pubsub", "esri/map", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/SimpleFillSymbol", "esri/geometry/Point", "esri/geometry/Polygon", "esri/graphic", "esri/renderers/HeatmapRenderer", "esri/layers/FeatureLayer", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/ArcGISDynamicMapServiceLayer"], function (require, exports, topic, Map, MarkerSymbol, LineSymbol, FillSymbol, Point, Polygon, Graphic, HeatmapRenderer, FeatureLayer, ArcGISTiledMapServiceLayer, ArcGISDynamicMapServiceLayer) {
     "use strict";
     var Maplet = (function () {
         function Maplet(element) {
@@ -438,6 +438,19 @@ define("maplet", ["require", "exports", "pubsub", "esri/map", "esri/geometry/Poi
                 var geom = new Point(point.x, point.y);
                 var g = new Graphic(geom, new MarkerSymbol());
                 map.map.graphics.add(g);
+                map.map.centerAt(geom);
+            });
+            topic.subscribe("add-polyline", function (points) {
+                var geom = new Polygon(points);
+                var g = new Graphic(geom, new LineSymbol());
+                map.map.graphics.add(g);
+                map.map.setExtent(geom.getExtent());
+            });
+            topic.subscribe("add-polygon", function (points) {
+                var geom = new Polygon(points);
+                var g = new Graphic(geom, new FillSymbol());
+                map.map.graphics.add(g);
+                map.map.setExtent(geom.getExtent());
             });
         };
         return Maplet;
@@ -445,7 +458,7 @@ define("maplet", ["require", "exports", "pubsub", "esri/map", "esri/geometry/Poi
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Maplet;
 });
-define("app", ["require", "exports", "pubsub", "maplet", "ags-find-address-proxy"], function (require, exports, topic, maplet_1, ags_find_address_proxy_1) {
+define("app", ["require", "exports", "pubsub", "maplet", "ags-servicearea-solve-proxy"], function (require, exports, topic, maplet_1, ags_servicearea_solve_proxy_1) {
     "use strict";
     var asList = function (nodeList) {
         var result = [];
@@ -458,16 +471,25 @@ define("app", ["require", "exports", "pubsub", "maplet", "ags-find-address-proxy
     topic.subscribe("add-geometry-to-map", function () {
         var geomText = document.getElementById("geometry").value;
         var geomJs = JSON.parse(geomText);
+        if ("x" in geomJs)
+            geomJs = [geomJs];
         if (Array.isArray(geomJs)) {
             var items = geomJs;
-            items.forEach(function (item) { return topic.publish("add-point", item); });
-        }
-        else {
-            switch (geomJs) {
-                case "rings":
-                    break;
-                default:
-                    break;
+            if (typeof geomJs[0]["x"] !== "undefined") {
+                items.forEach(function (item) { return topic.publish("add-point", item); });
+            }
+            else {
+                if (Array.isArray(geomJs[0])) {
+                    if (typeof geomJs[0][0] == "number") {
+                        topic.publish("add-polyline", items);
+                    }
+                    else {
+                        topic.publish("add-polygon", items);
+                    }
+                }
+                else {
+                    topic.publish("add-point", { x: items[0], y: items[1] });
+                }
             }
         }
     });
@@ -488,11 +510,11 @@ define("app", ["require", "exports", "pubsub", "maplet", "ags-find-address-proxy
         };
         maplet_1.default.test();
         //Suggest.test();
-        ags_find_address_proxy_1.default.test();
+        //FindAddress.test();
         //Find.test();
         //ReverseGeocode.test();
         //RouteSolve.test();
-        //ServiceSolve.test();
+        ags_servicearea_solve_proxy_1.default.test();
     };
     window.onload = run;
 });

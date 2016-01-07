@@ -2,9 +2,12 @@
 import * as topic from "./pubsub";
 import esri = require("esri");
 import Map = require("esri/map");
-import Point = require("esri/geometry/Point");
-import Graphic = require("esri/graphic");
 import MarkerSymbol = require("esri/symbols/SimpleMarkerSymbol");
+import LineSymbol = require("esri/symbols/SimpleLineSymbol");
+import FillSymbol = require("esri/symbols/SimpleFillSymbol");
+import Point = require("esri/geometry/Point");
+import Polygon = require("esri/geometry/Polygon");
+import Graphic = require("esri/graphic");
 import HeatmapRenderer = require("esri/renderers/HeatmapRenderer");
 import FeatureLayer = require("esri/layers/FeatureLayer");
 import ArcGISTiledMapServiceLayer = require("esri/layers/ArcGISTiledMapServiceLayer");
@@ -80,6 +83,22 @@ export default class Maplet {
             let geom = new Point(point.x, point.y);
             let g = new Graphic(geom, new MarkerSymbol()); 
             map.map.graphics.add(g);
+            map.map.centerAt(geom);
         });
+        
+        topic.subscribe("add-polyline", (points: Array<{x: number; y: number;}>) => {
+            let geom = new Polygon(points);
+            let g = new Graphic(geom, new LineSymbol()); 
+            map.map.graphics.add(g);
+            map.map.setExtent(geom.getExtent());
+        });
+
+        topic.subscribe("add-polygon", (points: number[][]) => {
+            let geom = new Polygon(points);
+            let g = new Graphic(geom, new FillSymbol()); 
+            map.map.graphics.add(g);
+            map.map.setExtent(geom.getExtent());
+        });
+        
     }
 }
