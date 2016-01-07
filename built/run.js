@@ -37,7 +37,7 @@ define("ags-find-address-proxy", ["require", "exports"], function (require, expo
             });
         };
         return FindAddress;
-    })();
+    }());
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = FindAddress;
 });
@@ -74,7 +74,7 @@ define("ags-find-proxy", ["require", "exports"], function (require, exports) {
             });
         };
         return Find;
-    })();
+    }());
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Find;
 });
@@ -110,7 +110,7 @@ define("ags-reverse-geocode-proxy", ["require", "exports"], function (require, e
             });
         };
         return ReverseGeocode;
-    })();
+    }());
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = ReverseGeocode;
 });
@@ -128,7 +128,7 @@ define("ags-solve-proxy", ["require", "exports"], function (require, exports) {
             throw "this is an abstract class for route, closest facility and service area";
         };
         return BaseSolve;
-    })();
+    }());
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = BaseSolve;
 });
@@ -176,7 +176,7 @@ define("ags-route-solve-proxy", ["require", "exports", "ags-solve-proxy"], funct
             });
         };
         return RouteSolve;
-    })(ags_solve_proxy_1.default);
+    }(ags_solve_proxy_1.default));
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = RouteSolve;
 });
@@ -257,7 +257,7 @@ define("ags-servicearea-solve-proxy", ["require", "exports", "ags-solve-proxy"],
             });
         };
         return ServiceAreaSolve;
-    })(ags_solve_proxy_2.default);
+    }(ags_solve_proxy_2.default));
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = ServiceAreaSolve;
 });
@@ -286,7 +286,7 @@ define("ags-suggest-proxy", ["require", "exports"], function (require, exports) 
             });
         };
         return Suggest;
-    })();
+    }());
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Suggest;
 });
@@ -350,7 +350,7 @@ var Ajax = (function () {
         return this.ajax('DELETE', args);
     };
     return Ajax;
-})();
+}());
 define("maplet", ["require", "exports", "esri/map", "esri/geometry/Point", "esri/renderers/HeatmapRenderer", "esri/layers/FeatureLayer", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/ArcGISDynamicMapServiceLayer"], function (require, exports, Map, Point, HeatmapRenderer, FeatureLayer, ArcGISTiledMapServiceLayer, ArcGISDynamicMapServiceLayer) {
     "use strict";
     var Maplet = (function () {
@@ -410,7 +410,7 @@ define("maplet", ["require", "exports", "esri/map", "esri/geometry/Point", "esri
             map.addFeatureLayer();
         };
         return Maplet;
-    })();
+    }());
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Maplet;
 });
