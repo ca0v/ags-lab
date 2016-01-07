@@ -1,7 +1,10 @@
 ﻿/// <reference path="typings/tsd.d.ts" />
+import * as topic from "./pubsub";
 import esri = require("esri");
 import Map = require("esri/map");
 import Point = require("esri/geometry/Point");
+import Graphic = require("esri/graphic");
+import MarkerSymbol = require("esri/symbols/SimpleMarkerSymbol");
 import HeatmapRenderer = require("esri/renderers/HeatmapRenderer");
 import FeatureLayer = require("esri/layers/FeatureLayer");
 import ArcGISTiledMapServiceLayer = require("esri/layers/ArcGISTiledMapServiceLayer");
@@ -67,11 +70,16 @@ export default class Maplet {
     }
     
     static test() {
-        var el = document.getElementById('content');
+        var el = document.getElementById('map');
         var map = new Maplet(el);
-        map.addDynamicLayer();
-        //map.addBasemap();
-        map.addHeatmap();
-        map.addFeatureLayer();        
+        //map.addDynamicLayer();
+        map.addBasemap();
+        //map.addHeatmap();
+        //map.addFeatureLayer();
+        topic.subscribe("add-point", (point: {x: number; y: number;}) => {
+            let geom = new Point(point.x, point.y);
+            let g = new Graphic(geom, new MarkerSymbol()); 
+            map.map.graphics.add(g);
+        });
     }
 }

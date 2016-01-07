@@ -6,7 +6,25 @@ span {
     font-style: italic;
 }
 
-#content {
+#console > textarea {
+    background: black;
+    color: white;
+    margin: 10px;
+    padding: 10px;
+    min-height: 240px;
+    min-width: 240px;
+    max-height: 240px;
+    width: 240px;
+}
+
+#geometry {
+    background: black;
+    color: white;
+    width: 240px;
+    height: 240px;
+}
+
+.full-screen {
     position: absolute;
     left: 0;
     right: 0;

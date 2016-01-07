@@ -351,7 +351,33 @@ var Ajax = (function () {
     };
     return Ajax;
 }());
-define("maplet", ["require", "exports", "esri/map", "esri/geometry/Point", "esri/renderers/HeatmapRenderer", "esri/layers/FeatureLayer", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/ArcGISDynamicMapServiceLayer"], function (require, exports, Map, Point, HeatmapRenderer, FeatureLayer, ArcGISTiledMapServiceLayer, ArcGISDynamicMapServiceLayer) {
+define("pubsub", ["require", "exports"], function (require, exports) {
+    "use strict";
+    var PubSub = (function () {
+        function PubSub() {
+            this.topics = {};
+        }
+        PubSub.prototype.subscribe = function (topic, listener) {
+            var _this = this;
+            if (!this.topics[topic])
+                this.topics[topic] = [];
+            var index = this.topics[topic].push(listener) - 1;
+            return {
+                remove: function () { return delete _this.topics[topic][index]; }
+            };
+        };
+        PubSub.prototype.publish = function (topic, info) {
+            if (info === void 0) { info = {}; }
+            if (!this.topics[topic])
+                return;
+            this.topics[topic].forEach(function (item) { return item(info); });
+        };
+        return PubSub;
+    }());
+    var pubsub = new PubSub();
+    return pubsub;
+});
+define("maplet", ["require", "exports", "pubsub", "esri/map", "esri/geometry/Point", "esri/graphic", "esri/symbols/SimpleMarkerSymbol", "esri/renderers/HeatmapRenderer", "esri/layers/FeatureLayer", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/ArcGISDynamicMapServiceLayer"], function (require, exports, topic, Map, Point, Graphic, MarkerSymbol, HeatmapRenderer, FeatureLayer, ArcGISTiledMapServiceLayer, ArcGISDynamicMapServiceLayer) {
     "use strict";
     var Maplet = (function () {
         function Maplet(element) {
@@ -402,27 +428,71 @@ define("maplet", ["require", "exports", "esri/map", "esri/geometry/Point", "esri
         Maplet.prototype.measure = function () {
         };
         Maplet.test = function () {
-            var el = document.getElementById('content');
+            var el = document.getElementById('map');
             var map = new Maplet(el);
-            map.addDynamicLayer();
-            //map.addBasemap();
-            map.addHeatmap();
-            map.addFeatureLayer();
+            //map.addDynamicLayer();
+            map.addBasemap();
+            //map.addHeatmap();
+            //map.addFeatureLayer();
+            topic.subscribe("add-point", function (point) {
+                var geom = new Point(point.x, point.y);
+                var g = new Graphic(geom, new MarkerSymbol());
+                map.map.graphics.add(g);
+            });
         };
         return Maplet;
     }());
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Maplet;
 });
-define("app", ["require", "exports", "ags-servicearea-solve-proxy"], function (require, exports, ags_servicearea_solve_proxy_1) {
+define("app", ["require", "exports", "pubsub", "maplet", "ags-find-address-proxy"], function (require, exports, topic, maplet_1, ags_find_address_proxy_1) {
     "use strict";
-    window.onload = function () {
-        //Maplet.test();
+    var asList = function (nodeList) {
+        var result = [];
+        for (var i = 0; i < nodeList.length; i++) {
+            result.push(nodeList[i]);
+        }
+        return result;
+    };
+    /** add the geometry to the map  */
+    topic.subscribe("add-geometry-to-map", function () {
+        var geomText = document.getElementById("geometry").value;
+        var geomJs = JSON.parse(geomText);
+        if (Array.isArray(geomJs)) {
+            var items = geomJs;
+            items.forEach(function (item) { return topic.publish("add-point", item); });
+        }
+        else {
+            switch (geomJs) {
+                case "rings":
+                    break;
+                default:
+                    break;
+            }
+        }
+    });
+    var run = function () {
+        var events = asList(document.querySelectorAll("[data-event]"));
+        events.forEach(function (e) { return e.addEventListener("click", function () { return topic.publish(e.dataset["event"], e); }); });
+        var content = document.getElementById("console");
+        var log = console.log;
+        console.log = function () {
+            var args = [];
+            for (var _i = 0; _i < arguments.length; _i++) {
+                args[_i - 0] = arguments[_i];
+            }
+            log.apply(console, args);
+            var div = document.createElement("textarea");
+            div.innerText = args.map(JSON.stringify).join(" ");
+            content.appendChild(div);
+        };
+        maplet_1.default.test();
         //Suggest.test();
-        //FindAddress.test();
+        ags_find_address_proxy_1.default.test();
         //Find.test();
         //ReverseGeocode.test();
         //RouteSolve.test();
-        ags_servicearea_solve_proxy_1.default.test();
+        //ServiceSolve.test();
     };
+    window.onload = run;
 });
