@@ -458,7 +458,7 @@ define("maplet", ["require", "exports", "pubsub", "esri/map", "esri/symbols/Simp
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Maplet;
 });
-define("app", ["require", "exports", "pubsub", "maplet", "ags-servicearea-solve-proxy"], function (require, exports, topic, maplet_1, ags_servicearea_solve_proxy_1) {
+define("app", ["require", "exports", "pubsub", "maplet"], function (require, exports, topic, maplet_1) {
     "use strict";
     var asList = function (nodeList) {
         var result = [];
@@ -469,7 +469,8 @@ define("app", ["require", "exports", "pubsub", "maplet", "ags-servicearea-solve-
     };
     /** add the geometry to the map  */
     topic.subscribe("add-geometry-to-map", function () {
-        var geomText = document.getElementById("geometry").value;
+        var textarea = document.getElementById("geometry");
+        var geomText = textarea.value;
         var geomJs = JSON.parse(geomText);
         if ("x" in geomJs)
             geomJs = [geomJs];
@@ -491,6 +492,8 @@ define("app", ["require", "exports", "pubsub", "maplet", "ags-servicearea-solve-
                     topic.publish("add-point", { x: items[0], y: items[1] });
                 }
             }
+            console.log(geomJs);
+            textarea.value = "";
         }
     });
     var run = function () {
@@ -506,7 +509,7 @@ define("app", ["require", "exports", "pubsub", "maplet", "ags-servicearea-solve-
             log.apply(console, args);
             var div = document.createElement("textarea");
             div.innerText = args.map(JSON.stringify).join(" ");
-            content.appendChild(div);
+            content.insertBefore(div, null);
         };
         maplet_1.default.test();
         //Suggest.test();
@@ -514,7 +517,7 @@ define("app", ["require", "exports", "pubsub", "maplet", "ags-servicearea-solve-
         //Find.test();
         //ReverseGeocode.test();
         //RouteSolve.test();
-        ags_servicearea_solve_proxy_1.default.test();
+        //ServiceSolve.test();
     };
     window.onload = run;
 });

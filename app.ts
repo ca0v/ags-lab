@@ -17,7 +17,8 @@ let asList = (nodeList: NodeList) => {
  
 /** add the geometry to the map  */
 topic.subscribe("add-geometry-to-map", () => {    
-    let geomText = (<HTMLTextAreaElement>document.getElementById("geometry")).value;
+    let textarea = <HTMLTextAreaElement>document.getElementById("geometry"); 
+    let geomText = textarea.value;
     let geomJs = <Array<any>>JSON.parse(geomText);
     
     if ("x" in geomJs) geomJs = [geomJs];
@@ -36,7 +37,9 @@ topic.subscribe("add-geometry-to-map", () => {
             } else {
                 topic.publish("add-point", {x: items[0], y: items[1] });                
             }
-        }        
+        }
+        console.log(geomJs);
+        textarea.value = "";
     }
 });
 
@@ -50,7 +53,7 @@ let run = () => {
         log.apply(console, args);
         let div = document.createElement("textarea");
         div.innerText = args.map(JSON.stringify).join(" ");
-        content.appendChild(div);
+        content.insertBefore(div, null);
     }
     
     Maplet.test();
@@ -59,7 +62,7 @@ let run = () => {
     //Find.test();
     //ReverseGeocode.test();
     //RouteSolve.test();
-    ServiceSolve.test();
+    //ServiceSolve.test();
 }
 
 window.onload = run;
