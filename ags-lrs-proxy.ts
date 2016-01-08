@@ -2,6 +2,13 @@
  * http://roadsandhighwayssample.esri.com/roads/api/index.html
  */
 
+interface Location {
+    routeId: string;
+    measure?: number;
+    fromMeasure?: number;
+    toMeasure?: number;
+}
+
 export default class Lrs {
     private ajax: Ajax;
 
@@ -10,7 +17,8 @@ export default class Lrs {
     }
 
     static test() {
-        
+
+        // geometryToMeasure
         new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/geometryToMeasure")
             .geometryToMeasure({
                 locations: [{
@@ -35,6 +43,7 @@ export default class Lrs {
                 console.log("geometryToMeasure", value);
             });
 
+        // measureToGeometry
         new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/measureToGeometry")
             .measureToGeometry({
                 locations: [{
@@ -46,15 +55,48 @@ export default class Lrs {
                 console.log("measureToGeometry", value);
             });
             
-            // TODO: tranlate
+        // translate
+        new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/translate")
+            .translate({
+                locations: [{
+                    routeId: "10050601",
+                    measure: 0.071
+                }],
+                targetNetworkLayerIds: [2, 3]
+            }).then((value: {
+                locations: Array<{
+                    routeId: string;
+                    measure: number;
+                    translateLocations: Array<{
+                        networkLayerId: number;
+                        routeId: string;
+                        measure: number;
+                    }>;
+                }>;
+            }) => {
+                console.log("translate", value);
+            });
             
-            // TODO: query attribute set
-            
-            // TODO: check events
+        // query attribute set
+        new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/queryAttributeSet")
+            .queryAttributeSet({
+                locations: [{
+                    routeId: "10050601",
+                    measure: 0.071
+                }],
+                attributeSet: [{
+                    layerId: 0,
+                    fields: "rid,meas,distance,comment_".split(',')
+                }]
+            }).then((value: {}) => {
+                console.log("queryAttributeSet", value);
+            }); 
+         
+        // TODO: check events
 
-            // TODO: geometry to station
+        // TODO: geometry to station
             
-            // TODO: station to geometry
+        // TODO: station to geometry
     }
 
     geometryToMeasure(data: {
@@ -79,12 +121,7 @@ export default class Lrs {
     }
 
     measureToGeometry(data: {
-        locations: Array<{
-            routeId: string;
-            measure?: number;
-            fromMeasure?: number;
-            toMeasure?: number;
-        }>;
+        locations: Array<Location>;
         outSR?: number;
     }) {
 
@@ -98,21 +135,39 @@ export default class Lrs {
     }
 
     translate(data: {
+        locations: Array<Location>;
+        targetNetworkLayerIds: Array<number>;
+        tolerance?: number;
+        temporalViewDate?: number;
     }) {
 
         let req = Object.assign({
+            tolerance: 0,
             f: "pjson"
         }, data);
 
+        req.locations = <any>JSON.stringify(req.locations);
+        req.targetNetworkLayerIds = `[${req.targetNetworkLayerIds}]`;
         return this.ajax.get(req);
     }
 
     queryAttributeSet(data: {
+        locations: Array<Location>;
+        attributeSet: Array<{
+            layerId: number;
+            fields: Array<string>;
+        }>;
+        temporalViewDate?: number;
+        outSR?: number;
     }) {
 
         let req = Object.assign({
+            outSR: 4326,
             f: "pjson"
         }, data);
+
+        req.locations = <any>JSON.stringify(req.locations);
+        req.attributeSet = <any>JSON.stringify(req.attributeSet);
 
         return this.ajax.get(req);
     }

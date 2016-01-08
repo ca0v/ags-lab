@@ -88,6 +88,7 @@ define("ags-lrs-proxy", ["require", "exports"], function (require, exports) {
             this.ajax = new Ajax(url);
         }
         Lrs.test = function () {
+            // geometryToMeasure
             new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/geometryToMeasure")
                 .geometryToMeasure({
                 locations: [{
@@ -102,6 +103,7 @@ define("ags-lrs-proxy", ["require", "exports"], function (require, exports) {
             }).then(function (value) {
                 console.log("geometryToMeasure", value);
             });
+            // measureToGeometry
             new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/measureToGeometry")
                 .measureToGeometry({
                 locations: [{
@@ -112,8 +114,31 @@ define("ags-lrs-proxy", ["require", "exports"], function (require, exports) {
             }).then(function (value) {
                 console.log("measureToGeometry", value);
             });
-            // TODO: tranlate
-            // TODO: query attribute set
+            // translate
+            new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/translate")
+                .translate({
+                locations: [{
+                        routeId: "10050601",
+                        measure: 0.071
+                    }],
+                targetNetworkLayerIds: [2, 3]
+            }).then(function (value) {
+                console.log("translate", value);
+            });
+            // query attribute set
+            new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/queryAttributeSet")
+                .queryAttributeSet({
+                locations: [{
+                        routeId: "10050601",
+                        measure: 0.071
+                    }],
+                attributeSet: [{
+                        layerId: 0,
+                        fields: "rid,meas,distance,comment_".split(',')
+                    }]
+            }).then(function (value) {
+                console.log("queryAttributeSet", value);
+            });
             // TODO: check events
             // TODO: geometry to station
             // TODO: station to geometry
@@ -137,14 +162,20 @@ define("ags-lrs-proxy", ["require", "exports"], function (require, exports) {
         };
         Lrs.prototype.translate = function (data) {
             var req = Object.assign({
+                tolerance: 0,
                 f: "pjson"
             }, data);
+            req.locations = JSON.stringify(req.locations);
+            req.targetNetworkLayerIds = "[" + req.targetNetworkLayerIds + "]";
             return this.ajax.get(req);
         };
         Lrs.prototype.queryAttributeSet = function (data) {
             var req = Object.assign({
+                outSR: 4326,
                 f: "pjson"
             }, data);
+            req.locations = JSON.stringify(req.locations);
+            req.attributeSet = JSON.stringify(req.attributeSet);
             return this.ajax.get(req);
         };
         Lrs.prototype.checkEvents = function (data) {
