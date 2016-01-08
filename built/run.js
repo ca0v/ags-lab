@@ -88,29 +88,35 @@ define("ags-lrs-proxy", ["require", "exports"], function (require, exports) {
             this.ajax = new Ajax(url);
         }
         Lrs.test = function () {
-            var lrs = new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/geometryToMeasure");
-            lrs.geometryToMeasure({
+            new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/geometryToMeasure")
+                .geometryToMeasure({
                 locations: [{
                         routeId: "10050601",
                         geometry: {
-                            x: -73.93205854118287,
-                            y: 41.71805546327077
+                            x: 588947,
+                            y: 4619012
                         }
                     }],
-                tolerance: 0.001,
-                inSR: 4326
+                tolerance: 0.1,
+                inSR: 26918
             }).then(function (value) {
                 console.log("geometryToMeasure", value);
             });
-            lrs.measureToGeometry({
+            new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/measureToGeometry")
+                .measureToGeometry({
                 locations: [{
                         routeId: "10050601",
-                        measure: 0.1
+                        measure: 0.071
                     }],
                 outSR: 102100
             }).then(function (value) {
                 console.log("measureToGeometry", value);
             });
+            // TODO: tranlate
+            // TODO: query attribute set
+            // TODO: check events
+            // TODO: geometry to station
+            // TODO: station to geometry
         };
         Lrs.prototype.geometryToMeasure = function (data) {
             var req = Object.assign({

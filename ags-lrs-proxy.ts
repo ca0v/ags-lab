@@ -10,40 +10,51 @@ export default class Lrs {
     }
 
     static test() {
-        let lrs = new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/geometryToMeasure");
+        
+        new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/geometryToMeasure")
+            .geometryToMeasure({
+                locations: [{
+                    routeId: "10050601",
+                    geometry: {
+                        x: 588947,
+                        y: 4619012
+                    }
+                }],
+                tolerance: 0.1,
+                inSR: 26918
+            }).then((value: {
+                unitsOfMeasure: string;
+                spatialReference: {
+                    wkid: number;
+                };
+                locations: Array<{
+                    status: string;
+                    results: Array<string>;
+                }>;
+            }) => {
+                console.log("geometryToMeasure", value);
+            });
 
-        lrs.geometryToMeasure({
-            locations: [{
-                routeId: "10050601",
-                geometry: {
-                    x: -73.93205854118287,
-                    y: 41.71805546327077
-                }
-            }],
-            tolerance: 0.001,
-            inSR: 4326
-        }).then((value: {
-            unitsOfMeasure: string;
-            spatialReference: {
-                wkid: number;
-            };
-            locations: Array<{
-                status: string;
-                results: Array<string>;
-            }>;
-        }) => {
-            console.log("geometryToMeasure", value);
-        });
+        new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/measureToGeometry")
+            .measureToGeometry({
+                locations: [{
+                    routeId: "10050601",
+                    measure: 0.071
+                }],
+                outSR: 102100
+            }).then((value: {}) => {
+                console.log("measureToGeometry", value);
+            });
+            
+            // TODO: tranlate
+            
+            // TODO: query attribute set
+            
+            // TODO: check events
 
-        lrs.measureToGeometry({
-            locations: [{
-                routeId: "10050601",
-                measure: 0.1
-            }],
-            outSR: 102100
-        }).then((value: {}) => {
-            console.log("measureToGeometry", value);
-        });
+            // TODO: geometry to station
+            
+            // TODO: station to geometry
     }
 
     geometryToMeasure(data: {
