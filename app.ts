@@ -1,5 +1,6 @@
 import * as topic from "./pubsub";
 import Maplet from "./maplet";
+import Lrs from "./ags-lrs-proxy";
 import RouteSolve from "./ags-route-solve-proxy";
 import Suggest from "./ags-suggest-proxy";
 import FindAddress from "./ags-find-address-proxy";
@@ -57,6 +58,7 @@ let run = () => {
     }
     
     Maplet.test();
+    Lrs.test();
     //Suggest.test();
     //FindAddress.test();
     //Find.test();

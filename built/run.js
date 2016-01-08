@@ -78,6 +78,92 @@ define("ags-find-proxy", ["require", "exports"], function (require, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Find;
 });
+/**
+ * http://roadsandhighwayssample.esri.com/roads/api/index.html
+ */
+define("ags-lrs-proxy", ["require", "exports"], function (require, exports) {
+    "use strict";
+    var Lrs = (function () {
+        function Lrs(url) {
+            this.ajax = new Ajax(url);
+        }
+        Lrs.test = function () {
+            var lrs = new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/geometryToMeasure");
+            lrs.geometryToMeasure({
+                locations: [{
+                        routeId: "10050601",
+                        geometry: {
+                            x: -73.93205854118287,
+                            y: 41.71805546327077
+                        }
+                    }],
+                tolerance: 0.001,
+                inSR: 4326
+            }).then(function (value) {
+                console.log("geometryToMeasure", value);
+            });
+            lrs.measureToGeometry({
+                locations: [{
+                        routeId: "10050601",
+                        measure: 0.1
+                    }],
+                outSR: 102100
+            }).then(function (value) {
+                console.log("measureToGeometry", value);
+            });
+        };
+        Lrs.prototype.geometryToMeasure = function (data) {
+            var req = Object.assign({
+                inSR: 4326,
+                outSR: 4326,
+                f: "pjson"
+            }, data);
+            req.locations = JSON.stringify(req.locations);
+            return this.ajax.get(req);
+        };
+        Lrs.prototype.measureToGeometry = function (data) {
+            var req = Object.assign({
+                outSR: 4326,
+                f: "pjson"
+            }, data);
+            req.locations = JSON.stringify(req.locations);
+            return this.ajax.get(req);
+        };
+        Lrs.prototype.translate = function (data) {
+            var req = Object.assign({
+                f: "pjson"
+            }, data);
+            return this.ajax.get(req);
+        };
+        Lrs.prototype.queryAttributeSet = function (data) {
+            var req = Object.assign({
+                f: "pjson"
+            }, data);
+            return this.ajax.get(req);
+        };
+        Lrs.prototype.checkEvents = function (data) {
+            var req = Object.assign({
+                f: "pjson"
+            }, data);
+            return this.ajax.get(req);
+        };
+        Lrs.prototype.geometryToStation = function (data) {
+            var req = Object.assign({
+                f: "pjson"
+            }, data);
+            return this.ajax.get(req);
+        };
+        Lrs.prototype.stationToGeometry = function (data) {
+            var req = Object.assign({
+                f: "pjson"
+            }, data);
+            return this.ajax.get(req);
+        };
+        return Lrs;
+    }());
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = Lrs;
+});
 define("ags-reverse-geocode-proxy", ["require", "exports"], function (require, exports) {
     "use strict";
     /**
@@ -294,16 +380,28 @@ define("ags-suggest-proxy", ["require", "exports"], function (require, exports) 
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
  */
 "use strict";
+var use_jsonp = true;
 var Ajax = (function () {
     function Ajax(url) {
         this.url = url;
     }
-    // Method that performs the ajax request
-    Ajax.prototype.ajax = function (method, args, url) {
+    Ajax.prototype.jsonp = function (args, url) {
         if (url === void 0) { url = this.url; }
         // Creating a promise
         var promise = new Promise(function (resolve, reject) {
-            // Instantiates the XMLHttpRequest
+            args["callback"] = "define";
+            var uri = url + "?" + Object.keys(args).map(function (k) { return (k + "=" + args[k]); }).join('&');
+            require([uri], function (data) {
+                resolve(data);
+            });
+        });
+        return promise;
+    };
+    Ajax.prototype.ajax = function (method, args, url) {
+        if (url === void 0) { url = this.url; }
+        if (use_jsonp)
+            return this.jsonp(args, url);
+        var promise = new Promise(function (resolve, reject) {
             var client = new XMLHttpRequest();
             var uri = url;
             if (args) {
@@ -458,7 +556,7 @@ define("maplet", ["require", "exports", "pubsub", "esri/map", "esri/symbols/Simp
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Maplet;
 });
-define("app", ["require", "exports", "pubsub", "maplet"], function (require, exports, topic, maplet_1) {
+define("app", ["require", "exports", "pubsub", "maplet", "ags-lrs-proxy"], function (require, exports, topic, maplet_1, ags_lrs_proxy_1) {
     "use strict";
     var asList = function (nodeList) {
         var result = [];
@@ -512,6 +610,7 @@ define("app", ["require", "exports", "pubsub", "maplet"], function (require, exp
             content.insertBefore(div, null);
         };
         maplet_1.default.test();
+        ags_lrs_proxy_1.default.test();
         //Suggest.test();
         //FindAddress.test();
         //Find.test();
