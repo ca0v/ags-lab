@@ -3,6 +3,48 @@ var __extends = (this && this.__extends) || function (d, b) {
     function __() { this.constructor = d; }
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
+define("ags-feature-query-proxy", ["require", "exports"], function (require, exports) {
+    "use strict";
+    /**
+     * http://sampleserver6.arcgisonline.com/arcgis/sdk/rest/index.html#//02ss0000002r000000
+     */
+    var Query = (function () {
+        function Query(url) {
+            this.ajax = new Ajax(url);
+        }
+        Query.prototype.query = function (data) {
+            var req = Object.assign({
+                where: "1=1",
+                inSR: 4326,
+                outSR: 4326,
+                returnDistinctValues: true,
+                returnGeometry: false,
+                returnCountOnly: false,
+                f: "pjson"
+            }, data);
+            if (req.objectIds)
+                req.objectIds = req.objectIds.join(',');
+            if (req.outFields)
+                req.outFields = req.outFields.join(',');
+            if (req.groupByFieldsForStatistics)
+                req.groupByFieldsForStatistics = req.groupByFieldsForStatistics.join(',');
+            return this.ajax.get(req);
+        };
+        Query.test = function () {
+            new Query("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer/3/query")
+                .query({
+                outFields: ["symbolname"],
+                returnDistinctValues: true
+            })
+                .then(function (value) {
+                console.log("query", value);
+            });
+        };
+        return Query;
+    }());
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = Query;
+});
 /**
  * https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=50%20Datastream%20Plaza&f=json&outSR=%7B%22wkid%22%3A102100%2C%22latestWkid%22%3A3857%7D&maxLocations=10
  */
@@ -80,6 +122,7 @@ define("ags-find-proxy", ["require", "exports"], function (require, exports) {
 });
 /**
  * http://roadsandhighwayssample.esri.com/roads/api/index.html
+ * http://roadsandhighwayssample.esri.com/ROADS/SAMPLES/
  */
 define("ags-lrs-proxy", ["require", "exports"], function (require, exports) {
     "use strict";
@@ -593,7 +636,7 @@ define("maplet", ["require", "exports", "pubsub", "esri/map", "esri/symbols/Simp
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Maplet;
 });
-define("app", ["require", "exports", "pubsub", "maplet", "ags-lrs-proxy"], function (require, exports, topic, maplet_1, ags_lrs_proxy_1) {
+define("app", ["require", "exports", "pubsub", "maplet", "ags-feature-query-proxy"], function (require, exports, topic, maplet_1, ags_feature_query_proxy_1) {
     "use strict";
     var asList = function (nodeList) {
         var result = [];
@@ -647,7 +690,8 @@ define("app", ["require", "exports", "pubsub", "maplet", "ags-lrs-proxy"], funct
             content.insertBefore(div, null);
         };
         maplet_1.default.test();
-        ags_lrs_proxy_1.default.test();
+        ags_feature_query_proxy_1.default.test();
+        //Lrs.test();
         //Suggest.test();
         //FindAddress.test();
         //Find.test();
@@ -655,5 +699,5 @@ define("app", ["require", "exports", "pubsub", "maplet", "ags-lrs-proxy"], funct
         //RouteSolve.test();
         //ServiceSolve.test();
     };
-    window.onload = run;
+    return run;
 });

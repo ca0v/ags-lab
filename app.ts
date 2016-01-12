@@ -1,5 +1,6 @@
 import * as topic from "./pubsub";
 import Maplet from "./maplet";
+import Query from "./ags-feature-query-proxy";
 import Lrs from "./ags-lrs-proxy";
 import RouteSolve from "./ags-route-solve-proxy";
 import Suggest from "./ags-suggest-proxy";
@@ -58,7 +59,8 @@ let run = () => {
     }
     
     Maplet.test();
-    Lrs.test();
+    Query.test();
+    //Lrs.test();
     //Suggest.test();
     //FindAddress.test();
     //Find.test();
@@ -67,4 +69,4 @@ let run = () => {
     //ServiceSolve.test();
 }
 
-window.onload = run;
+export = run; 

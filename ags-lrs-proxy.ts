@@ -1,5 +1,6 @@
 /**
  * http://roadsandhighwayssample.esri.com/roads/api/index.html
+ * http://roadsandhighwayssample.esri.com/ROADS/SAMPLES/
  */
 
 interface Location {
