@@ -324,6 +324,42 @@ define("ags-map-identify-proxy", ["require", "exports"], function (require, expo
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Identify;
 });
+/**
+ * http://sampleserver1.arcgisonline.com/ArcGIS/SDK/REST/query.html
+ */
+define("ags-map-query-proxy", ["require", "exports"], function (require, exports) {
+    "use strict";
+    /**
+     * mapserver query
+     */
+    var Query = (function () {
+        function Query(url) {
+            this.ajax = new Ajax(url);
+        }
+        Query.prototype.query = function (data) {
+            var req = Object.assign({
+                inSR: 4326,
+                outSR: 4326,
+                f: "pjson"
+            }, data);
+            if (req.outFields)
+                req.outFields = req.outFields.join(",");
+            if (req.layers)
+                req.layers = req.layers.join(",");
+            return this.ajax.get(req);
+        };
+        Query.test = function () {
+            new Query("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StateCityHighway_USA/MapServer/1/query")
+                .query({
+                text: "South Carolina"
+            })
+                .then(function (value) { return console.log("query", value); });
+        };
+        return Query;
+    }());
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = Query;
+});
 define("ags-reverse-geocode-proxy", ["require", "exports"], function (require, exports) {
     "use strict";
     /**
@@ -716,7 +752,7 @@ define("maplet", ["require", "exports", "pubsub", "esri/map", "esri/symbols/Simp
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Maplet;
 });
-define("app", ["require", "exports", "pubsub", "maplet", "ags-map-identify-proxy"], function (require, exports, topic, maplet_1, ags_map_identify_proxy_1) {
+define("app", ["require", "exports", "pubsub", "maplet", "ags-map-query-proxy"], function (require, exports, topic, maplet_1, ags_map_query_proxy_1) {
     "use strict";
     var asList = function (nodeList) {
         var result = [];
@@ -770,7 +806,8 @@ define("app", ["require", "exports", "pubsub", "maplet", "ags-map-identify-proxy
             content.insertBefore(div, null);
         };
         maplet_1.default.test();
-        ags_map_identify_proxy_1.default.test();
+        ags_map_query_proxy_1.default.test();
+        //MapIdentify.test();
         //MapFind.test();
         //Query.test();
         //Lrs.test();
