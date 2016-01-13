@@ -9,6 +9,7 @@ import Find from "./ags-find-proxy";
 import ReverseGeocode from "./ags-reverse-geocode-proxy";
 import ServiceSolve from "./ags-servicearea-solve-proxy";
 import MapFind from "./ags-map-find-proxy";
+import MapIdentify from "./ags-map-identify-proxy";
 
 let asList = (nodeList: NodeList) => {
     let result = <Array<HTMLElement>>[];
@@ -60,7 +61,8 @@ let run = () => {
     }
     
     Maplet.test();
-    MapFind.test();
+    MapIdentify.test();
+    //MapFind.test();
     //Query.test();
     //Lrs.test();
     //Suggest.test();

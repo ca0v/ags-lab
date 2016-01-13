@@ -280,6 +280,50 @@ define("ags-map-find-proxy", ["require", "exports"], function (require, exports)
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Find;
 });
+/**
+ * http://sampleserver1.arcgisonline.com/ArcGIS/SDK/REST/identify.html
+ */
+define("ags-map-identify-proxy", ["require", "exports"], function (require, exports) {
+    "use strict";
+    /**
+     * mapserver identify
+     */
+    var Identify = (function () {
+        function Identify(url) {
+            this.ajax = new Ajax(url);
+        }
+        Identify.prototype.identify = function (data) {
+            var req = Object.assign({
+                sr: 4326,
+                tolerance: 10,
+                f: "pjson"
+            }, data);
+            req.mapExtent = req.mapExtent.join(",");
+            req.imageDisplay = req.imageDisplay.width + "," + req.imageDisplay.height + "," + req.imageDisplay.dpi;
+            return this.ajax.get(req);
+        };
+        Identify.test = function () {
+            new Identify("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StateCityHighway_USA/MapServer/identify")
+                .identify({
+                geometryType: "esriGeometryPoint",
+                geometry: [-82.4, 34.85],
+                mapExtent: [-83, 34, -82, 35],
+                imageDisplay: {
+                    width: 400,
+                    height: 300,
+                    dpi: 96
+                },
+                tolerance: 0
+            })
+                .then(function (value) {
+                console.log("identify", value);
+            });
+        };
+        return Identify;
+    }());
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = Identify;
+});
 define("ags-reverse-geocode-proxy", ["require", "exports"], function (require, exports) {
     "use strict";
     /**
@@ -672,7 +716,7 @@ define("maplet", ["require", "exports", "pubsub", "esri/map", "esri/symbols/Simp
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Maplet;
 });
-define("app", ["require", "exports", "pubsub", "maplet", "ags-map-find-proxy"], function (require, exports, topic, maplet_1, ags_map_find_proxy_1) {
+define("app", ["require", "exports", "pubsub", "maplet", "ags-map-identify-proxy"], function (require, exports, topic, maplet_1, ags_map_identify_proxy_1) {
     "use strict";
     var asList = function (nodeList) {
         var result = [];
@@ -726,7 +770,8 @@ define("app", ["require", "exports", "pubsub", "maplet", "ags-map-find-proxy"], 
             content.insertBefore(div, null);
         };
         maplet_1.default.test();
-        ags_map_find_proxy_1.default.test();
+        ags_map_identify_proxy_1.default.test();
+        //MapFind.test();
         //Query.test();
         //Lrs.test();
         //Suggest.test();
