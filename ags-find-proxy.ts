@@ -1,4 +1,5 @@
-/** 
+/**
+ * geocode find 
  */
 export default class Find {
     private ajax: Ajax;

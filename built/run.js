@@ -86,6 +86,7 @@ define("ags-find-address-proxy", ["require", "exports"], function (require, expo
 define("ags-find-proxy", ["require", "exports"], function (require, exports) {
     "use strict";
     /**
+     * geocode find
      */
     var Find = (function () {
         function Find(url) {
@@ -243,6 +244,41 @@ define("ags-lrs-proxy", ["require", "exports"], function (require, exports) {
     }());
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Lrs;
+});
+/**
+ * http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/find?searchText=Woonsocket&contains=true&searchFields=&sr=&layers=0%2C2&layerdefs=&returnGeometry=true&maxAllowableOffset=&f=pjson
+ */
+define("ags-map-find-proxy", ["require", "exports"], function (require, exports) {
+    "use strict";
+    /**
+     * mapserver find
+     */
+    var Find = (function () {
+        function Find(url) {
+            this.ajax = new Ajax(url);
+        }
+        Find.prototype.find = function (data) {
+            var req = Object.assign({
+                sr: 4326,
+                f: "pjson"
+            }, data);
+            req.layers = req.layers.join(",");
+            return this.ajax.get(req);
+        };
+        Find.test = function () {
+            new Find("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/find")
+                .find({
+                searchText: "island",
+                layers: ["0"]
+            })
+                .then(function (value) {
+                console.log("find", value);
+            });
+        };
+        return Find;
+    }());
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = Find;
 });
 define("ags-reverse-geocode-proxy", ["require", "exports"], function (require, exports) {
     "use strict";
@@ -636,7 +672,7 @@ define("maplet", ["require", "exports", "pubsub", "esri/map", "esri/symbols/Simp
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Maplet;
 });
-define("app", ["require", "exports", "pubsub", "maplet", "ags-feature-query-proxy"], function (require, exports, topic, maplet_1, ags_feature_query_proxy_1) {
+define("app", ["require", "exports", "pubsub", "maplet", "ags-map-find-proxy"], function (require, exports, topic, maplet_1, ags_map_find_proxy_1) {
     "use strict";
     var asList = function (nodeList) {
         var result = [];
@@ -690,7 +726,8 @@ define("app", ["require", "exports", "pubsub", "maplet", "ags-feature-query-prox
             content.insertBefore(div, null);
         };
         maplet_1.default.test();
-        ags_feature_query_proxy_1.default.test();
+        ags_map_find_proxy_1.default.test();
+        //Query.test();
         //Lrs.test();
         //Suggest.test();
         //FindAddress.test();
