@@ -55,7 +55,18 @@ export default class Identify {
         req.mapExtent = req.mapExtent.join(",");
         req.imageDisplay = `${req.imageDisplay.width},${req.imageDisplay.height},${req.imageDisplay.dpi}`;
 
-        return this.ajax.get(req);
+        return this.ajax.get<{
+                results: Array<{
+                    layerId: string;
+                    layerName: string;
+                    displayFieldName: string;
+                    foundFieldName: string;
+                    value: string;
+                    attributes: any;
+                    geometryType: string;
+                    geometry: any;
+                }>;
+            }>(req);
     }
 
     public static test() {
@@ -71,18 +82,7 @@ export default class Identify {
                 },
                 tolerance: 0
             })
-            .then((value: {
-                results: Array<{
-                    layerId: string;
-                    layerName: string;
-                    displayFieldName: string;
-                    foundFieldName: string;
-                    value: string;
-                    attributes: any;
-                    geometryType: string;
-                    geometry: any;
-                }>;
-            }) => {
+            .then(value => {
                 console.log("identify", value);
             });
     }

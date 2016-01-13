@@ -13,13 +13,13 @@ class Ajax {
     constructor(public url: string) {
     }
 
-    private jsonp(args?: any, url = this.url) {
+    private jsonp<T>(args?: any, url = this.url) {
         // Creating a promise
-        let promise = new Promise((resolve, reject) => {
+        let promise = new Promise<T>((resolve, reject) => {
 
             args["callback"] = "define";
             let uri = url + "?" + Object.keys(args).map(k => `${k}=${args[k]}`).join('&');
-            require([uri], (data: string) => {
+            require([uri], (data: T) => {
                 resolve(data);
             });
         });
@@ -27,10 +27,10 @@ class Ajax {
         return promise;
     }
 
-    private ajax(method: string, args?: any, url = this.url) {
-        if (use_jsonp) return this.jsonp(args, url);
+    private ajax<T>(method: string, args?: any, url = this.url) {
+        if (use_jsonp) return this.jsonp<T>(args, url);
 
-        let promise = new Promise((resolve, reject) => {
+        let promise = new Promise<T>((resolve, reject) => {
 
             let client = new XMLHttpRequest();
             let uri = url;
@@ -69,8 +69,8 @@ class Ajax {
         return promise;
     }
 
-    get(args?: any) {
-        return this.ajax('GET', args);
+    get<T>(args?: any) {
+        return this.ajax<T>('GET', args);
     }
 
     post(args?: any) {
