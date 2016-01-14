@@ -1,4 +1,4 @@
-import * as topic from "./pubsub";
+import Topic from "./pubsub";
 import Maplet from "./maplet";
 import Query from "./ags-feature-query-proxy";
 import Lrs from "./ags-lrs-proxy";
@@ -12,6 +12,9 @@ import MapFind from "./ags-map-find-proxy";
 import MapIdentify from "./ags-map-identify-proxy";
 import MapQuery from "./ags-map-query-proxy";
 import FeatureServer from "./ags-feature-proxy";
+import Catalog from "./ags-catalog-proxy";
+
+let topic = new Topic();
 
 let asList = (nodeList: NodeList) => {
     let result = <Array<HTMLElement>>[];
@@ -62,8 +65,11 @@ let run = () => {
         content.insertBefore(div, null);
     }
     
-    //Maplet.test();
-    FeatureServer.test();
+    let app = {topic: topic};
+    
+    //Maplet.test(app);
+    Catalog.test();    
+    //FeatureServer.test();
     //MapQuery.test();
     //MapIdentify.test();
     //MapFind.test();

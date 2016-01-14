@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "declaration": false,
         "module": "amd",
         "target": "es5",
         "noImplicitAny": true,

@@ -2,6 +2,8 @@
  * http://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer 
  */
 
+import lang = require("dojo/_base/lang");
+
 interface SpatialReference {
     wkid: number;
     latestWkid: number;
@@ -233,7 +235,7 @@ export default class FeatureServer {
 
     about(data?: any) {
 
-        let req = Object.assign({
+        let req = lang.mixin({
             f: "pjson"
         }, data);
 
@@ -243,7 +245,7 @@ export default class FeatureServer {
     aboutLayer(layer: number) {
         
         let ajax = new Ajax(`${this.ajax.url}/${layer}`);
-        let req = Object.assign({
+        let req = lang.mixin({
             f: "pjson"
         }, {});
 

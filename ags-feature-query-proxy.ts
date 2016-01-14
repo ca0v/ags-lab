@@ -1,6 +1,9 @@
 /**
  * http://sampleserver6.arcgisonline.com/arcgis/sdk/rest/index.html#//02ss0000002r000000 
  */
+
+import lang = require("dojo/_base/lang");
+
 export default class Query {
     private ajax: Ajax;
     
@@ -42,7 +45,7 @@ export default class Query {
         resultRecordCount?: number;
     }) {
         
-        let req = Object.assign({
+        let req = lang.mixin({
             where: "1=1",
             inSR: 4326,
             outSR: 4326,

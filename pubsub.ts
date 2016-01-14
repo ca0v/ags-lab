@@ -5,7 +5,7 @@
      [n: string]: T;
  }
  
-class PubSub {
+export default class PubSub {
   private topics = <Dictionary<Function[]>>{};
 
     subscribe(topic: string, listener: Function) {
@@ -24,6 +24,3 @@ class PubSub {
     }
     
 }
-
-let pubsub = new PubSub();
-export = pubsub;

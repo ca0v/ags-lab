@@ -1,5 +1,5 @@
 ﻿/// <reference path="typings/tsd.d.ts" />
-import * as topic from "./pubsub";
+import Topic from "./pubsub";
 import esri = require("esri");
 import Map = require("esri/map");
 import MarkerSymbol = require("esri/symbols/SimpleMarkerSymbol");
@@ -72,28 +72,28 @@ export default class Maplet {
     measure() {
     }
     
-    static test() {
+    static test(app: {topic: Topic}) {
         var el = document.getElementById('map');
         var map = new Maplet(el);
         //map.addDynamicLayer();
         map.addBasemap();
         //map.addHeatmap();
         //map.addFeatureLayer();
-        topic.subscribe("add-point", (point: {x: number; y: number;}) => {
+        app.topic.subscribe("add-point", (point: {x: number; y: number;}) => {
             let geom = new Point(point.x, point.y);
             let g = new Graphic(geom, new MarkerSymbol()); 
             map.map.graphics.add(g);
             map.map.centerAt(geom);
         });
         
-        topic.subscribe("add-polyline", (points: Array<{x: number; y: number;}>) => {
+        app.topic.subscribe("add-polyline", (points: Array<{x: number; y: number;}>) => {
             let geom = new Polygon(points);
             let g = new Graphic(geom, new LineSymbol()); 
             map.map.graphics.add(g);
             map.map.setExtent(geom.getExtent());
         });
 
-        topic.subscribe("add-polygon", (points: number[][]) => {
+        app.topic.subscribe("add-polygon", (points: number[][]) => {
             let geom = new Polygon(points);
             let g = new Graphic(geom, new FillSymbol()); 
             map.map.graphics.add(g);

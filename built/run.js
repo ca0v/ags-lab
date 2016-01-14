@@ -4,23 +4,63 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
+ * http://sampleserver6.arcgisonline.com/arcgis/rest/?f=pjson
+ */
+define("ags-catalog-proxy", ["require", "exports", "dojo/_base/lang"], function (require, exports, lang) {
+    "use strict";
+    var Catalog = (function () {
+        function Catalog(url) {
+            this.ajax = new Ajax(url);
+        }
+        Catalog.prototype.about = function (data) {
+            var req = lang.mixin({
+                f: "pjson"
+            }, data);
+            return this.ajax.get(req);
+        };
+        Catalog.prototype.aboutFolder = function (folder) {
+            var ajax = new Ajax(this.ajax.url + "/" + folder);
+            var req = lang.mixin({
+                f: "pjson"
+            }, {});
+            return ajax.get(req);
+        };
+        Catalog.test = function () {
+            var service = new Catalog("http://sampleserver6.arcgisonline.com/arcgis/rest/services");
+            service
+                .about()
+                .then(function (value) {
+                console.log("about", value);
+                value.folders.forEach(function (f) {
+                    service.aboutFolder(f).then(function (value) {
+                        console.log("folder", f, value);
+                    });
+                });
+            });
+        };
+        return Catalog;
+    }());
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = Catalog;
+});
+/**
  * http://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer
  */
-define("ags-feature-proxy", ["require", "exports"], function (require, exports) {
+define("ags-feature-proxy", ["require", "exports", "dojo/_base/lang"], function (require, exports, lang) {
     "use strict";
     var FeatureServer = (function () {
         function FeatureServer(url) {
             this.ajax = new Ajax(url);
         }
         FeatureServer.prototype.about = function (data) {
-            var req = Object.assign({
+            var req = lang.mixin({
                 f: "pjson"
             }, data);
             return this.ajax.get(req);
         };
         FeatureServer.prototype.aboutLayer = function (layer) {
             var ajax = new Ajax(this.ajax.url + "/" + layer);
-            var req = Object.assign({
+            var req = lang.mixin({
                 f: "pjson"
             }, {});
             return ajax.get(req);
@@ -42,17 +82,17 @@ define("ags-feature-proxy", ["require", "exports"], function (require, exports) 
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = FeatureServer;
 });
-define("ags-feature-query-proxy", ["require", "exports"], function (require, exports) {
+/**
+ * http://sampleserver6.arcgisonline.com/arcgis/sdk/rest/index.html#//02ss0000002r000000
+ */
+define("ags-feature-query-proxy", ["require", "exports", "dojo/_base/lang"], function (require, exports, lang) {
     "use strict";
-    /**
-     * http://sampleserver6.arcgisonline.com/arcgis/sdk/rest/index.html#//02ss0000002r000000
-     */
     var Query = (function () {
         function Query(url) {
             this.ajax = new Ajax(url);
         }
         Query.prototype.query = function (data) {
-            var req = Object.assign({
+            var req = lang.mixin({
                 where: "1=1",
                 inSR: 4326,
                 outSR: 4326,
@@ -124,9 +164,6 @@ define("ags-find-address-proxy", ["require", "exports"], function (require, expo
 });
 define("ags-find-proxy", ["require", "exports"], function (require, exports) {
     "use strict";
-    /**
-     * geocode find
-     */
     var Find = (function () {
         function Find(url) {
             this.ajax = new Ajax(url);
@@ -399,9 +436,6 @@ define("ags-map-query-proxy", ["require", "exports"], function (require, exports
 });
 define("ags-reverse-geocode-proxy", ["require", "exports"], function (require, exports) {
     "use strict";
-    /**
-     * http://resources.arcgis.com/EN/HELP/REST/APIREF/INDEX.HTML?REVERSE.HTML
-     */
     var ReverseGeocode = (function () {
         function ReverseGeocode(url) {
             this.ajax = new Ajax(url);
@@ -705,10 +739,10 @@ define("pubsub", ["require", "exports"], function (require, exports) {
         };
         return PubSub;
     }());
-    var pubsub = new PubSub();
-    return pubsub;
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = PubSub;
 });
-define("maplet", ["require", "exports", "pubsub", "esri/map", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/SimpleFillSymbol", "esri/geometry/Point", "esri/geometry/Polygon", "esri/graphic", "esri/renderers/HeatmapRenderer", "esri/layers/FeatureLayer", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/ArcGISDynamicMapServiceLayer"], function (require, exports, topic, Map, MarkerSymbol, LineSymbol, FillSymbol, Point, Polygon, Graphic, HeatmapRenderer, FeatureLayer, ArcGISTiledMapServiceLayer, ArcGISDynamicMapServiceLayer) {
+define("maplet", ["require", "exports", "esri/map", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/SimpleFillSymbol", "esri/geometry/Point", "esri/geometry/Polygon", "esri/graphic", "esri/renderers/HeatmapRenderer", "esri/layers/FeatureLayer", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/ArcGISDynamicMapServiceLayer"], function (require, exports, Map, MarkerSymbol, LineSymbol, FillSymbol, Point, Polygon, Graphic, HeatmapRenderer, FeatureLayer, ArcGISTiledMapServiceLayer, ArcGISDynamicMapServiceLayer) {
     "use strict";
     var Maplet = (function () {
         function Maplet(element) {
@@ -758,26 +792,26 @@ define("maplet", ["require", "exports", "pubsub", "esri/map", "esri/symbols/Simp
         };
         Maplet.prototype.measure = function () {
         };
-        Maplet.test = function () {
+        Maplet.test = function (app) {
             var el = document.getElementById('map');
             var map = new Maplet(el);
             //map.addDynamicLayer();
             map.addBasemap();
             //map.addHeatmap();
             //map.addFeatureLayer();
-            topic.subscribe("add-point", function (point) {
+            app.topic.subscribe("add-point", function (point) {
                 var geom = new Point(point.x, point.y);
                 var g = new Graphic(geom, new MarkerSymbol());
                 map.map.graphics.add(g);
                 map.map.centerAt(geom);
             });
-            topic.subscribe("add-polyline", function (points) {
+            app.topic.subscribe("add-polyline", function (points) {
                 var geom = new Polygon(points);
                 var g = new Graphic(geom, new LineSymbol());
                 map.map.graphics.add(g);
                 map.map.setExtent(geom.getExtent());
             });
-            topic.subscribe("add-polygon", function (points) {
+            app.topic.subscribe("add-polygon", function (points) {
                 var geom = new Polygon(points);
                 var g = new Graphic(geom, new FillSymbol());
                 map.map.graphics.add(g);
@@ -789,8 +823,9 @@ define("maplet", ["require", "exports", "pubsub", "esri/map", "esri/symbols/Simp
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Maplet;
 });
-define("app", ["require", "exports", "pubsub", "ags-feature-proxy"], function (require, exports, topic, ags_feature_proxy_1) {
+define("app", ["require", "exports", "pubsub", "ags-catalog-proxy"], function (require, exports, pubsub_1, ags_catalog_proxy_1) {
     "use strict";
+    var topic = new pubsub_1.default();
     var asList = function (nodeList) {
         var result = [];
         for (var i = 0; i < nodeList.length; i++) {
@@ -842,8 +877,10 @@ define("app", ["require", "exports", "pubsub", "ags-feature-proxy"], function (r
             div.innerText = args.map(JSON.stringify).join(" ");
             content.insertBefore(div, null);
         };
-        //Maplet.test();
-        ags_feature_proxy_1.default.test();
+        var app = { topic: topic };
+        //Maplet.test(app);
+        ags_catalog_proxy_1.default.test();
+        //FeatureServer.test();
         //MapQuery.test();
         //MapIdentify.test();
         //MapFind.test();
