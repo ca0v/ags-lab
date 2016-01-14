@@ -52,14 +52,14 @@ interface FeatureServerInfo {
     zDefault: number;
 }
 
-export interface AdvancedQueryCapabilities {
+interface AdvancedQueryCapabilities {
     supportsPagination: boolean;
     supportsStatistics: boolean;
     supportsOrderBy: boolean;
     supportsDistinct: boolean;
 }
 
-export interface EsriTSSymbol {
+interface EsriTSSymbol {
     type: string;
     color: number[];
     backgroundColor?: any;
@@ -77,7 +77,7 @@ export interface EsriTSSymbol {
     font: Font;
 }
 
-export interface DefaultSymbol {
+interface DefaultSymbol {
     type: string;
     url: string;
     imageData: string;
@@ -89,14 +89,14 @@ export interface DefaultSymbol {
     yoffset: number;
 }
 
-export interface UniqueValueInfo {
+interface UniqueValueInfo {
     symbol: DefaultSymbol;
     value: string;
     label: string;
     description: string;
 }
 
-export interface Renderer {
+interface Renderer {
     type: string;
     field1: string;
     field2?: any;
@@ -107,7 +107,7 @@ export interface Renderer {
     uniqueValueInfos: UniqueValueInfo[];
 }
 
-export interface Font {
+interface Font {
     family: string;
     size: number;
     style: string;
@@ -115,7 +115,7 @@ export interface Font {
     decoration: string;
 }
 
-export interface LabelingInfo {
+interface LabelingInfo {
     labelPlacement: string;
     where?: any;
     labelExpression: string;
@@ -125,25 +125,25 @@ export interface LabelingInfo {
     maxScale: number;
 }
 
-export interface DrawingInfo {
+interface DrawingInfo {
     renderer: Renderer;
     transparency: number;
     labelingInfo: LabelingInfo[];
 }
 
-export interface CodedValue {
+interface CodedValue {
     name: string;
     code: any;
 }
 
-export interface Domain {
+interface Domain {
     type: string;
     name: string;
     codedValues: CodedValue[];
     range: number[];
 }
 
-export interface Field {
+interface Field {
     name: string;
     type: string;
     alias: string;
@@ -153,35 +153,35 @@ export interface Field {
     length?: number;
 }
 
-export interface Domains {
+interface Domains {
     [n: string]: {
         type: string
     };
 }
 
-export interface Attributes {
+interface Attributes {
     [n: string]: string;
 }
 
-export interface Prototype {
+interface Prototype {
     attributes: Attributes;
 }
 
-export interface Template {
+interface Template {
     name: string;
     description: string;
     prototype: Prototype;
     drawingTool: string;
 }
 
-export interface Type {
+interface Type {
     id: string;
     name: string;
     domains: Domains;
     templates: Template[];
 }
 
-export interface FeatureLayerInfo {
+interface FeatureLayerInfo {
     currentVersion: number;
     id: number;
     name: string;
