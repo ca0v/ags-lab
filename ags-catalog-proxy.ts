@@ -3,6 +3,7 @@
  */
 
 import lang = require("dojo/_base/lang");
+import FeatureServer from "./ags-feature-proxy";
 
 interface Service {
     name: string;
@@ -47,6 +48,10 @@ export default class Catalog {
             .about()
             .then(value => {
                 console.log("about", value);
+                value.services.filter(s => s.type === "FeatureServer").forEach(s => {
+                    let featureService = new FeatureServer(`${service.ajax.url}/${s.name}/FeatureServer`);
+                    featureService.about().then(s => console.log("featureServer", s));
+                });
                 value.folders.forEach(f => {
                     service.aboutFolder(f).then(value => {
                         console.log("folder", f, value);

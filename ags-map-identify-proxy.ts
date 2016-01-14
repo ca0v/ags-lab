@@ -2,6 +2,8 @@
  * http://sampleserver1.arcgisonline.com/ArcGIS/SDK/REST/identify.html
  */
 
+import lang = require("dojo/_base/lang");
+
 interface Dictionary<T> {
     [n: string]: T;
 }
@@ -46,14 +48,14 @@ export default class Identify {
         maxAllowableOffset?: number;
     }) {
 
-        let req = Object.assign({
+        let req = lang.mixin({
             sr: 4326,
             tolerance: 10,
             f: "pjson"
         }, data);
 
-        req.mapExtent = req.mapExtent.join(",");
-        req.imageDisplay = `${req.imageDisplay.width},${req.imageDisplay.height},${req.imageDisplay.dpi}`;
+        req.mapExtent = <any>req.mapExtent.join(",");
+        req.imageDisplay = <any>`${req.imageDisplay.width},${req.imageDisplay.height},${req.imageDisplay.dpi}`;
 
         return this.ajax.get<{
                 results: Array<{

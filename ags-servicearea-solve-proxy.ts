@@ -1,4 +1,5 @@
 import Base from "./ags-solve-proxy";
+import lang = require("dojo/_base/lang");
 
 export default class ServiceAreaSolve extends Base {
 
@@ -59,7 +60,7 @@ export default class ServiceAreaSolve extends Base {
          * &outputGeometryPrecisionUnits=esriMeters
          * &f=html
         */
-        let req = Object.assign({
+        let req = lang.mixin({
             travelDirection: "esriNATravelDirectionFromFacility",
             returnFacilities: false,
             f: "pjson"

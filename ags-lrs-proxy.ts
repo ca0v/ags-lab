@@ -3,6 +3,8 @@
  * http://roadsandhighwayssample.esri.com/ROADS/SAMPLES/
  */
 
+import lang = require("dojo/_base/lang");
+
 interface Location {
     routeId: string;
     measure?: number;
@@ -110,7 +112,7 @@ export default class Lrs {
         outSR?: number;
     }) {
 
-        let req = Object.assign({
+        let req = lang.mixin({
             inSR: 4326,
             outSR: 4326,
             f: "pjson"
@@ -126,7 +128,7 @@ export default class Lrs {
         outSR?: number;
     }) {
 
-        let req = Object.assign({
+        let req = lang.mixin({
             outSR: 4326,
             f: "pjson"
         }, data);
@@ -142,13 +144,13 @@ export default class Lrs {
         temporalViewDate?: number;
     }) {
 
-        let req = Object.assign({
+        let req = lang.mixin({
             tolerance: 0,
             f: "pjson"
         }, data);
 
         req.locations = <any>JSON.stringify(req.locations);
-        req.targetNetworkLayerIds = `[${req.targetNetworkLayerIds}]`;
+        req.targetNetworkLayerIds = <any>`[${req.targetNetworkLayerIds}]`;
         return this.ajax.get(req);
     }
 
@@ -162,7 +164,7 @@ export default class Lrs {
         outSR?: number;
     }) {
 
-        let req = Object.assign({
+        let req = lang.mixin({
             outSR: 4326,
             f: "pjson"
         }, data);
@@ -176,7 +178,7 @@ export default class Lrs {
     checkEvents(data: {
     }) {
 
-        let req = Object.assign({
+        let req = lang.mixin({
             f: "pjson"
         }, data);
 
@@ -186,7 +188,7 @@ export default class Lrs {
     geometryToStation(data: {
     }) {
 
-        let req = Object.assign({
+        let req = lang.mixin({
             f: "pjson"
         }, data);
 
@@ -196,7 +198,7 @@ export default class Lrs {
     stationToGeometry(data: {
     }) {
 
-        let req = Object.assign({
+        let req = lang.mixin({
             f: "pjson"
         }, data);
 

@@ -2,6 +2,8 @@
  * https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=50%20Datastream%20Plaza&f=json&outSR=%7B%22wkid%22%3A102100%2C%22latestWkid%22%3A3857%7D&maxLocations=10
  */
 
+import lang = require("dojo/_base/lang");
+
 export default class FindAddress {
     private ajax: Ajax;
     
@@ -20,7 +22,7 @@ export default class FindAddress {
         category?: string;
     }) {
         
-        let req = Object.assign({
+        let req = lang.mixin({
             outFields: "*",
             outSRS: "wkid:4326",
             maxLocations: 1,

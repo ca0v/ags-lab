@@ -2,6 +2,8 @@
  * http://sampleserver1.arcgisonline.com/ArcGIS/SDK/REST/query.html
  */
 
+import lang = require("dojo/_base/lang");
+
 /**
  * mapserver query 
  */
@@ -30,7 +32,7 @@ export default class Query {
         returnCountOnly?: boolean;
     }) {
 
-        let req = Object.assign({
+        let req = lang.mixin({
             inSR: 4326,
             outSR: 4326,
             f: "pjson"

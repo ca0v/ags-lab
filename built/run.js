@@ -4,46 +4,6 @@ var __extends = (this && this.__extends) || function (d, b) {
     d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 };
 /**
- * http://sampleserver6.arcgisonline.com/arcgis/rest/?f=pjson
- */
-define("ags-catalog-proxy", ["require", "exports", "dojo/_base/lang"], function (require, exports, lang) {
-    "use strict";
-    var Catalog = (function () {
-        function Catalog(url) {
-            this.ajax = new Ajax(url);
-        }
-        Catalog.prototype.about = function (data) {
-            var req = lang.mixin({
-                f: "pjson"
-            }, data);
-            return this.ajax.get(req);
-        };
-        Catalog.prototype.aboutFolder = function (folder) {
-            var ajax = new Ajax(this.ajax.url + "/" + folder);
-            var req = lang.mixin({
-                f: "pjson"
-            }, {});
-            return ajax.get(req);
-        };
-        Catalog.test = function () {
-            var service = new Catalog("http://sampleserver6.arcgisonline.com/arcgis/rest/services");
-            service
-                .about()
-                .then(function (value) {
-                console.log("about", value);
-                value.folders.forEach(function (f) {
-                    service.aboutFolder(f).then(function (value) {
-                        console.log("folder", f, value);
-                    });
-                });
-            });
-        };
-        return Catalog;
-    }());
-    Object.defineProperty(exports, "__esModule", { value: true });
-    exports.default = Catalog;
-});
-/**
  * http://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer
  */
 define("ags-feature-proxy", ["require", "exports", "dojo/_base/lang"], function (require, exports, lang) {
@@ -81,6 +41,50 @@ define("ags-feature-proxy", ["require", "exports", "dojo/_base/lang"], function 
     }());
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = FeatureServer;
+});
+/**
+ * http://sampleserver6.arcgisonline.com/arcgis/rest/?f=pjson
+ */
+define("ags-catalog-proxy", ["require", "exports", "dojo/_base/lang", "ags-feature-proxy"], function (require, exports, lang, ags_feature_proxy_1) {
+    "use strict";
+    var Catalog = (function () {
+        function Catalog(url) {
+            this.ajax = new Ajax(url);
+        }
+        Catalog.prototype.about = function (data) {
+            var req = lang.mixin({
+                f: "pjson"
+            }, data);
+            return this.ajax.get(req);
+        };
+        Catalog.prototype.aboutFolder = function (folder) {
+            var ajax = new Ajax(this.ajax.url + "/" + folder);
+            var req = lang.mixin({
+                f: "pjson"
+            }, {});
+            return ajax.get(req);
+        };
+        Catalog.test = function () {
+            var service = new Catalog("http://sampleserver6.arcgisonline.com/arcgis/rest/services");
+            service
+                .about()
+                .then(function (value) {
+                console.log("about", value);
+                value.services.filter(function (s) { return s.type === "FeatureServer"; }).forEach(function (s) {
+                    var featureService = new ags_feature_proxy_1.default(service.ajax.url + "/" + s.name + "/FeatureServer");
+                    featureService.about().then(function (s) { return console.log("featureServer", s); });
+                });
+                value.folders.forEach(function (f) {
+                    service.aboutFolder(f).then(function (value) {
+                        console.log("folder", f, value);
+                    });
+                });
+            });
+        };
+        return Catalog;
+    }());
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = Catalog;
 });
 /**
  * http://sampleserver6.arcgisonline.com/arcgis/sdk/rest/index.html#//02ss0000002r000000
@@ -127,14 +131,14 @@ define("ags-feature-query-proxy", ["require", "exports", "dojo/_base/lang"], fun
 /**
  * https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=50%20Datastream%20Plaza&f=json&outSR=%7B%22wkid%22%3A102100%2C%22latestWkid%22%3A3857%7D&maxLocations=10
  */
-define("ags-find-address-proxy", ["require", "exports"], function (require, exports) {
+define("ags-find-address-proxy", ["require", "exports", "dojo/_base/lang"], function (require, exports, lang) {
     "use strict";
     var FindAddress = (function () {
         function FindAddress(url) {
             this.ajax = new Ajax(url);
         }
         FindAddress.prototype.find = function (data) {
-            var req = Object.assign({
+            var req = lang.mixin({
                 outFields: "*",
                 outSRS: "wkid:4326",
                 maxLocations: 1,
@@ -162,14 +166,17 @@ define("ags-find-address-proxy", ["require", "exports"], function (require, expo
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = FindAddress;
 });
-define("ags-find-proxy", ["require", "exports"], function (require, exports) {
+/**
+ * geocode find
+ */
+define("ags-find-proxy", ["require", "exports", "dojo/_base/lang"], function (require, exports, lang) {
     "use strict";
     var Find = (function () {
         function Find(url) {
             this.ajax = new Ajax(url);
         }
         Find.prototype.find = function (data) {
-            var req = Object.assign({
+            var req = lang.mixin({
                 outFields: "*",
                 outSRS: "wkid:4326",
                 maxLocations: 1,
@@ -201,7 +208,7 @@ define("ags-find-proxy", ["require", "exports"], function (require, exports) {
  * http://roadsandhighwayssample.esri.com/roads/api/index.html
  * http://roadsandhighwayssample.esri.com/ROADS/SAMPLES/
  */
-define("ags-lrs-proxy", ["require", "exports"], function (require, exports) {
+define("ags-lrs-proxy", ["require", "exports", "dojo/_base/lang"], function (require, exports, lang) {
     "use strict";
     var Lrs = (function () {
         function Lrs(url) {
@@ -264,7 +271,7 @@ define("ags-lrs-proxy", ["require", "exports"], function (require, exports) {
             // TODO: station to geometry
         };
         Lrs.prototype.geometryToMeasure = function (data) {
-            var req = Object.assign({
+            var req = lang.mixin({
                 inSR: 4326,
                 outSR: 4326,
                 f: "pjson"
@@ -273,7 +280,7 @@ define("ags-lrs-proxy", ["require", "exports"], function (require, exports) {
             return this.ajax.get(req);
         };
         Lrs.prototype.measureToGeometry = function (data) {
-            var req = Object.assign({
+            var req = lang.mixin({
                 outSR: 4326,
                 f: "pjson"
             }, data);
@@ -281,16 +288,16 @@ define("ags-lrs-proxy", ["require", "exports"], function (require, exports) {
             return this.ajax.get(req);
         };
         Lrs.prototype.translate = function (data) {
-            var req = Object.assign({
+            var req = lang.mixin({
                 tolerance: 0,
                 f: "pjson"
             }, data);
             req.locations = JSON.stringify(req.locations);
-            req.targetNetworkLayerIds = "[" + req.targetNetworkLayerIds + "]";
+            req.targetNetworkLayerIds = ("[" + req.targetNetworkLayerIds + "]");
             return this.ajax.get(req);
         };
         Lrs.prototype.queryAttributeSet = function (data) {
-            var req = Object.assign({
+            var req = lang.mixin({
                 outSR: 4326,
                 f: "pjson"
             }, data);
@@ -299,19 +306,19 @@ define("ags-lrs-proxy", ["require", "exports"], function (require, exports) {
             return this.ajax.get(req);
         };
         Lrs.prototype.checkEvents = function (data) {
-            var req = Object.assign({
+            var req = lang.mixin({
                 f: "pjson"
             }, data);
             return this.ajax.get(req);
         };
         Lrs.prototype.geometryToStation = function (data) {
-            var req = Object.assign({
+            var req = lang.mixin({
                 f: "pjson"
             }, data);
             return this.ajax.get(req);
         };
         Lrs.prototype.stationToGeometry = function (data) {
-            var req = Object.assign({
+            var req = lang.mixin({
                 f: "pjson"
             }, data);
             return this.ajax.get(req);
@@ -324,7 +331,7 @@ define("ags-lrs-proxy", ["require", "exports"], function (require, exports) {
 /**
  * http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/find?searchText=Woonsocket&contains=true&searchFields=&sr=&layers=0%2C2&layerdefs=&returnGeometry=true&maxAllowableOffset=&f=pjson
  */
-define("ags-map-find-proxy", ["require", "exports"], function (require, exports) {
+define("ags-map-find-proxy", ["require", "exports", "dojo/_base/lang"], function (require, exports, lang) {
     "use strict";
     /**
      * mapserver find
@@ -334,7 +341,7 @@ define("ags-map-find-proxy", ["require", "exports"], function (require, exports)
             this.ajax = new Ajax(url);
         }
         Find.prototype.find = function (data) {
-            var req = Object.assign({
+            var req = lang.mixin({
                 sr: 4326,
                 f: "pjson"
             }, data);
@@ -359,7 +366,7 @@ define("ags-map-find-proxy", ["require", "exports"], function (require, exports)
 /**
  * http://sampleserver1.arcgisonline.com/ArcGIS/SDK/REST/identify.html
  */
-define("ags-map-identify-proxy", ["require", "exports"], function (require, exports) {
+define("ags-map-identify-proxy", ["require", "exports", "dojo/_base/lang"], function (require, exports, lang) {
     "use strict";
     /**
      * mapserver identify
@@ -369,13 +376,13 @@ define("ags-map-identify-proxy", ["require", "exports"], function (require, expo
             this.ajax = new Ajax(url);
         }
         Identify.prototype.identify = function (data) {
-            var req = Object.assign({
+            var req = lang.mixin({
                 sr: 4326,
                 tolerance: 10,
                 f: "pjson"
             }, data);
             req.mapExtent = req.mapExtent.join(",");
-            req.imageDisplay = req.imageDisplay.width + "," + req.imageDisplay.height + "," + req.imageDisplay.dpi;
+            req.imageDisplay = (req.imageDisplay.width + "," + req.imageDisplay.height + "," + req.imageDisplay.dpi);
             return this.ajax.get(req);
         };
         Identify.test = function () {
@@ -403,7 +410,7 @@ define("ags-map-identify-proxy", ["require", "exports"], function (require, expo
 /**
  * http://sampleserver1.arcgisonline.com/ArcGIS/SDK/REST/query.html
  */
-define("ags-map-query-proxy", ["require", "exports"], function (require, exports) {
+define("ags-map-query-proxy", ["require", "exports", "dojo/_base/lang"], function (require, exports, lang) {
     "use strict";
     /**
      * mapserver query
@@ -413,7 +420,7 @@ define("ags-map-query-proxy", ["require", "exports"], function (require, exports
             this.ajax = new Ajax(url);
         }
         Query.prototype.query = function (data) {
-            var req = Object.assign({
+            var req = lang.mixin({
                 inSR: 4326,
                 outSR: 4326,
                 f: "pjson"
@@ -434,14 +441,17 @@ define("ags-map-query-proxy", ["require", "exports"], function (require, exports
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Query;
 });
-define("ags-reverse-geocode-proxy", ["require", "exports"], function (require, exports) {
+/**
+ * http://resources.arcgis.com/EN/HELP/REST/APIREF/INDEX.HTML?REVERSE.HTML
+ */
+define("ags-reverse-geocode-proxy", ["require", "exports", "dojo/_base/lang"], function (require, exports, lang) {
     "use strict";
     var ReverseGeocode = (function () {
         function ReverseGeocode(url) {
             this.ajax = new Ajax(url);
         }
         ReverseGeocode.prototype.reverseGeocode = function (data) {
-            var req = Object.assign({
+            var req = lang.mixin({
                 outSRS: "wkid:4326",
                 distance: 10,
                 langCode: "en",
@@ -485,7 +495,7 @@ define("ags-solve-proxy", ["require", "exports"], function (require, exports) {
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = BaseSolve;
 });
-define("ags-route-solve-proxy", ["require", "exports", "ags-solve-proxy"], function (require, exports, ags_solve_proxy_1) {
+define("ags-route-solve-proxy", ["require", "exports", "ags-solve-proxy", "dojo/_base/lang"], function (require, exports, ags_solve_proxy_1, lang) {
     "use strict";
     /**
      * http://sampleserver6.arcgisonline.com/arcgis/sdk/rest/index.html#/Network_Layer/02ss0000009p000000/
@@ -499,7 +509,7 @@ define("ags-route-solve-proxy", ["require", "exports", "ags-solve-proxy"], funct
          * http://sampleserver6.arcgisonline.com/arcgis/sdk/rest/index.html#/Solve_Route/02ss0000001t000000/
          */
         RouteSolve.prototype.solve = function (data) {
-            var req = Object.assign({
+            var req = lang.mixin({
                 returnDirections: true,
                 returnRoutes: true,
                 preserveFirstStop: true,
@@ -533,7 +543,7 @@ define("ags-route-solve-proxy", ["require", "exports", "ags-solve-proxy"], funct
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = RouteSolve;
 });
-define("ags-servicearea-solve-proxy", ["require", "exports", "ags-solve-proxy"], function (require, exports, ags_solve_proxy_2) {
+define("ags-servicearea-solve-proxy", ["require", "exports", "ags-solve-proxy", "dojo/_base/lang"], function (require, exports, ags_solve_proxy_2, lang) {
     "use strict";
     var ServiceAreaSolve = (function (_super) {
         __extends(ServiceAreaSolve, _super);
@@ -583,7 +593,7 @@ define("ags-servicearea-solve-proxy", ["require", "exports", "ags-solve-proxy"],
              * &outputGeometryPrecisionUnits=esriMeters
              * &f=html
             */
-            var req = Object.assign({
+            var req = lang.mixin({
                 travelDirection: "esriNATravelDirectionFromFacility",
                 returnFacilities: false,
                 f: "pjson"
@@ -614,14 +624,14 @@ define("ags-servicearea-solve-proxy", ["require", "exports", "ags-solve-proxy"],
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = ServiceAreaSolve;
 });
-define("ags-suggest-proxy", ["require", "exports"], function (require, exports) {
+define("ags-suggest-proxy", ["require", "exports", "dojo/_base/lang"], function (require, exports, lang) {
     "use strict";
     var Suggest = (function () {
         function Suggest(url) {
             this.ajax = new Ajax(url);
         }
         Suggest.prototype.suggest = function (data) {
-            var req = Object.assign({
+            var req = lang.mixin({
                 f: "pjson",
                 category: "Address",
                 countryCode: "USA"
@@ -658,9 +668,7 @@ var Ajax = (function () {
         var promise = new Promise(function (resolve, reject) {
             args["callback"] = "define";
             var uri = url + "?" + Object.keys(args).map(function (k) { return (k + "=" + args[k]); }).join('&');
-            require([uri], function (data) {
-                resolve(data);
-            });
+            require([uri], function (data) { return resolve(data); });
         });
         return promise;
     };

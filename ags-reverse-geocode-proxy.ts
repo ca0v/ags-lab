@@ -1,6 +1,9 @@
 /**
  * http://resources.arcgis.com/EN/HELP/REST/APIREF/INDEX.HTML?REVERSE.HTML 
  */
+
+import lang = require("dojo/_base/lang");
+
 export default class ReverseGeocode {
     private ajax: Ajax;
     
@@ -16,7 +19,7 @@ export default class ReverseGeocode {
         returnIntersection?: boolean;
     }) {
         
-        let req = Object.assign({
+        let req = lang.mixin({
             outSRS: "wkid:4326",
             distance: 10,
             langCode: "en",

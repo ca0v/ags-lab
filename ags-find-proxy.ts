@@ -1,6 +1,9 @@
 /**
  * geocode find 
  */
+
+import lang = require("dojo/_base/lang");
+
 export default class Find {
     private ajax: Ajax;
     
@@ -19,7 +22,7 @@ export default class Find {
         category?: string;
     }) {
         
-        let req = Object.assign({
+        let req = lang.mixin({
             outFields: "*",
             outSRS: "wkid:4326",
             maxLocations: 1,

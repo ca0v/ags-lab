@@ -1,4 +1,5 @@
 import Base from "./ags-solve-proxy";
+import lang = require("dojo/_base/lang");
 
 /**
  * http://sampleserver6.arcgisonline.com/arcgis/sdk/rest/index.html#/Network_Layer/02ss0000009p000000/
@@ -13,7 +14,7 @@ export default class RouteSolve extends Base {
         returnDirections?: boolean;
         returnRoutes?: boolean;                        
     }) {
-        let req = Object.assign({
+        let req = lang.mixin({
             returnDirections: true,
             returnRoutes: true,
             preserveFirstStop: true,

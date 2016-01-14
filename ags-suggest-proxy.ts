@@ -1,3 +1,5 @@
+import lang = require("dojo/_base/lang");
+
 export default class Suggest {
     
     private ajax: Ajax;
@@ -15,7 +17,7 @@ export default class Suggest {
         maxSuggestions?: number;
         countryCode?: string;
     }) {
-        let req = Object.assign({
+        let req = lang.mixin({
            f: "pjson",
            category: "Address",
            countryCode: "USA"

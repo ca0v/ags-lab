@@ -2,6 +2,8 @@
  * http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/find?searchText=Woonsocket&contains=true&searchFields=&sr=&layers=0%2C2&layerdefs=&returnGeometry=true&maxAllowableOffset=&f=pjson
  */
 
+import lang = require("dojo/_base/lang");
+
 interface Dictionary<T> {
     [n: string]: T;
 }
@@ -41,12 +43,12 @@ export default class Find {
         returnM?: boolean;
     }) {
 
-        let req = Object.assign({
+        let req = lang.mixin({
             sr: 4326,
             f: "pjson"
         }, data);
         
-        req.layers = req.layers.join(",");
+        req.layers = <any>req.layers.join(",");
 
         return this.ajax.get(req);
     }

@@ -4,8 +4,6 @@
 
 "use strict";
 
-declare var require: Function;
-
 const use_jsonp = true;
 
 class Ajax {
@@ -19,9 +17,7 @@ class Ajax {
 
             args["callback"] = "define";
             let uri = url + "?" + Object.keys(args).map(k => `${k}=${args[k]}`).join('&');
-            require([uri], (data: T) => {
-                resolve(data);
-            });
+            require([uri], (data: T) => resolve(data));
         });
 
         return promise;
