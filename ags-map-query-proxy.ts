@@ -36,8 +36,7 @@ export default class Query {
             f: "pjson"
         }, data);
 
-        if (req.outFields) req.outFields = req.outFields.join(",");
-        if (req.layers) req.layers = req.layers.join(",");
+        if (req.outFields) req.outFields = <any>req.outFields.join(",");
 
         return this.ajax.get<{
             displayFieldName: string;

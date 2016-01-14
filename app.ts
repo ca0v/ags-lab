@@ -11,6 +11,7 @@ import ServiceSolve from "./ags-servicearea-solve-proxy";
 import MapFind from "./ags-map-find-proxy";
 import MapIdentify from "./ags-map-identify-proxy";
 import MapQuery from "./ags-map-query-proxy";
+import FeatureServer from "./ags-feature-proxy";
 
 let asList = (nodeList: NodeList) => {
     let result = <Array<HTMLElement>>[];
@@ -61,8 +62,9 @@ let run = () => {
         content.insertBefore(div, null);
     }
     
-    Maplet.test();
-    MapQuery.test();
+    //Maplet.test();
+    FeatureServer.test();
+    //MapQuery.test();
     //MapIdentify.test();
     //MapFind.test();
     //Query.test();
