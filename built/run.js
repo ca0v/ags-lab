@@ -903,3 +903,70 @@ define("app", ["require", "exports", "pubsub", "ags-catalog-proxy"], function (r
     };
     return run;
 });
+/**
+ * https://developers.google.com/earth-engine/geometries_planar_geodesic?hl=en
+ * geodesic: shortest path on the surface of a earth
+ * planar: shortest path on paper
+ *
+ * Renders scaleline and measurement controls
+ * Uses geometry services to calculate planar and geodesic lengths
+ * Confirms the measure tool reports geodesic measurements
+ */
+define("ux/geodesic-planar-ux", ["require", "exports", "esri/map", "esri/dijit/Scalebar", "esri/dijit/Measurement", "esri/units", "esri/config", "esri/tasks/GeometryService", "esri/tasks/BufferParameters", "esri/tasks/LengthsParameters", "esri/symbols/SimpleFillSymbol", "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/Color"], function (require, exports, Map, Scalebar, Measurement, Units, Config, GeometryService, BufferParameters, LengthsParameters, SimpleFillSymbol, SimpleLineSymbol, Graphic, Color) {
+    "use strict";
+    var geometryService = Config.defaults.geometryService = new GeometryService("https://sampleserver6.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer");
+    function run() {
+        var map = new Map("map", {
+            basemap: "dark-gray",
+            center: [-82.39, 34.85],
+            zoom: 15
+        });
+        var scalebar = new Scalebar({
+            map: map,
+            scalebarUnit: "dual"
+        });
+        var measurement = new Measurement({
+            map: map,
+            advancedLocationUnits: true,
+            defaultAreaUnit: Units.SQUARE_METERS,
+            defaultLengthUnit: Units.METERS
+        }, document.getElementById("measurement"));
+        measurement.on("measure-end", function (args) {
+            console.log("measure", args);
+            switch (args.geometry.type) {
+                case "point":
+                    break;
+                case "polyline":
+                    var lengths = new LengthsParameters();
+                    lengths.geodesic = false;
+                    lengths.polylines = [args.geometry];
+                    geometryService.lengths(lengths, function (args) {
+                        console.log("planar lengths", args.lengths);
+                        lengths.geodesic = true;
+                        geometryService.lengths(lengths, function (args) {
+                            console.log("geodesic lengths", args.lengths);
+                        });
+                    });
+                    break;
+                default:
+                    break;
+            }
+            if (false) {
+                var buffer = new BufferParameters();
+                buffer.geodesic = true;
+                buffer.bufferSpatialReference = map.spatialReference;
+                buffer.geometries = [args.geometry];
+                buffer.outSpatialReference = map.spatialReference;
+                buffer.distances = [1];
+                buffer.unit = GeometryService.UNIT_METER;
+                geometryService.buffer(buffer, function (bufferedGeometries) {
+                    var symbol = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, new SimpleLineSymbol(SimpleLineSymbol.STYLE_DASHDOT, new Color([255, 0, 0]), 2), new Color([255, 255, 0, 0.25]));
+                    var graphics = bufferedGeometries.map(function (g) { return new Graphic(g, symbol); });
+                    graphics.forEach(function (g) { return map.graphics.add(g); });
+                });
+            }
+        });
+        measurement.startup();
+    }
+    exports.run = run;
+});
