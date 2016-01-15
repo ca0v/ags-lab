@@ -205,6 +205,46 @@ define("ags-find-proxy", ["require", "exports", "dojo/_base/lang"], function (re
     exports.default = Find;
 });
 /**
+ * geometry services
+ * http://sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer/distance
+ */
+define("ags-geometry-proxy", ["require", "exports", "dojo/_base/lang"], function (require, exports, lang) {
+    "use strict";
+    // see http://resources.esri.com/help/9.3/ArcGISDesktop/ArcObjects/esriGeometry/esriSRUnitType.htm
+    var esriSRUnitType;
+    (function (esriSRUnitType) {
+        esriSRUnitType[esriSRUnitType["Meter"] = 9001] = "Meter";
+        esriSRUnitType[esriSRUnitType["Kilometer"] = 9036] = "Kilometer";
+    })(esriSRUnitType || (esriSRUnitType = {}));
+    var Geometry = (function () {
+        function Geometry(url) {
+            this.ajax = new Ajax(url);
+        }
+        Geometry.prototype.lengths = function (data) {
+            var req = lang.mixin({
+                sr: 4326,
+                calculationType: "geodesic",
+                lengthUnit: esriSRUnitType.Meter,
+                f: "pjson"
+            }, data);
+            req.polylines = JSON.stringify(req.polylines);
+            return this.ajax.get(req);
+        };
+        Geometry.test = function () {
+            new Geometry("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer/lengths")
+                .lengths({
+                polylines: [{ "paths": [[[-117, 34], [-116, 34], [-117, 33]], [[-115, 44], [-114, 43], [-115, 43]]] }]
+            })
+                .then(function (value) {
+                console.log("lengths", value);
+            });
+        };
+        return Geometry;
+    }());
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = Geometry;
+});
+/**
  * http://roadsandhighwayssample.esri.com/roads/api/index.html
  * http://roadsandhighwayssample.esri.com/ROADS/SAMPLES/
  */
@@ -831,7 +871,7 @@ define("maplet", ["require", "exports", "esri/map", "esri/symbols/SimpleMarkerSy
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Maplet;
 });
-define("app", ["require", "exports", "pubsub", "ags-catalog-proxy"], function (require, exports, pubsub_1, ags_catalog_proxy_1) {
+define("app", ["require", "exports", "pubsub", "ags-geometry-proxy"], function (require, exports, pubsub_1, ags_geometry_proxy_1) {
     "use strict";
     var topic = new pubsub_1.default();
     var asList = function (nodeList) {
@@ -887,7 +927,8 @@ define("app", ["require", "exports", "pubsub", "ags-catalog-proxy"], function (r
         };
         var app = { topic: topic };
         //Maplet.test(app);
-        ags_catalog_proxy_1.default.test();
+        ags_geometry_proxy_1.default.test();
+        //Catalog.test();    
         //FeatureServer.test();
         //MapQuery.test();
         //MapIdentify.test();

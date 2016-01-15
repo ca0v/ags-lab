@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <title>TypeScript HTML App</title>
@@ -9,13 +10,37 @@
     <script src="../built/run.js"></script>
     <script src="../jspm_packages/system.js"></script>
     <script src="../config.js"></script>
+    <script>
+        /** 
+         * does not work for geodesy because it uses commonjs so continue using jspm
+         * which doesn't mix well with typescript+amd and since dojo uses amd
+         * my only option is to invoke System.import myself.  See geodesic-planar-ux.
+         */
+        require({
+            packages: [
+                { 
+                    name: "geodesy", 
+                    location: "../../jspm_packages/npm/geodesy@1.0.2",
+                    main: "npm"
+                },
+                {                
+                    name: "proj4",
+                    location: "../jspm_packages/npm/proj4@2.3.12"                
+                }
+           ]
+        });
+    </script>
 </head>
+
 <body class="claro">
     <h1>TypeScript HTML App</h1>
 
     <div id="measurement"></div>
     <div id="map"></div>
-    
-    <script>require(["ux/geodesic-planar-ux"], Test => Test.run());</script>
+
+    <script>
+        require(["ux/geodesic-planar-ux"], Test => Test.run());
+    </script>
 </body>
+
 </html>

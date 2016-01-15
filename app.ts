@@ -13,6 +13,7 @@ import MapIdentify from "./ags-map-identify-proxy";
 import MapQuery from "./ags-map-query-proxy";
 import FeatureServer from "./ags-feature-proxy";
 import Catalog from "./ags-catalog-proxy";
+import Geometry from "./ags-geometry-proxy";
 
 let topic = new Topic();
 
@@ -68,7 +69,8 @@ let run = () => {
     let app = {topic: topic};
     
     //Maplet.test(app);
-    Catalog.test();    
+    Geometry.test();
+    //Catalog.test();    
     //FeatureServer.test();
     //MapQuery.test();
     //MapIdentify.test();
