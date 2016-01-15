@@ -23,10 +23,52 @@ import SimpleFillSymbol = require("esri/symbols/SimpleFillSymbol");
 import SimpleLineSymbol = require("esri/symbols/SimpleLineSymbol");
 import Graphic = require("esri/graphic");
 import Color = require("esri/Color");
+import Deferred = require("dojo/Deferred");
 
 let geometryService = Config.defaults.geometryService = new GeometryService("https://sampleserver6.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer");
 
+/**
+ * Giving SystemJS a try to transform coordinates to 4326 before using geodesy to calculate distances
+ */
+let distanceTo = (points: number[][]) => {
+
+    let d = new Deferred();
+
+    System.import("proj4").then((proj4: any) => {
+
+        let epsg4326 = new proj4.Proj("EPSG:4326");
+        let epsg3857 = new proj4.Proj("EPSG:3857");
+        let transform = proj4(epsg3857, epsg4326);
+
+        points = points.map(p => transform.forward(p));
+
+        System.import("geodesy").then((geodesy: {
+            Dms: any;
+            LatLonEllipsoidal: any;
+            LatLonSpherical: new (lat: number, lon: number) => {
+                distanceTo: (place: any) => number;
+            };
+            LatLonVectors: any;
+            Mgrs: any;
+            OsGridRef: any;
+            Utm: any;
+            Vector3d: any;
+        }) => {
+            let geodesyPoints = points.map(p => new geodesy.LatLonSpherical(p[1], p[0]));
+            let distance = 0;
+            for (let i = 1; i < geodesyPoints.length; i++) distance += geodesyPoints[i - 1].distanceTo(geodesyPoints[i]);
+
+            d.resolve({
+                distance: distance
+            });
+        });
+    });
+
+    return d;
+}
+
 export function run() {
+
     let map = new Map("map", {
         basemap: "dark-gray",
         center: [-82.39, 34.85],
@@ -56,6 +98,12 @@ export function run() {
             case "point":
                 break;
             case "polyline":
+                // geodesy library
+                distanceTo(args.geometry.paths[0]).then((args: { distance: number }) => {
+                    console.log("geodesy", args.distance);
+                });
+            
+                // esri geometry service
                 let lengths = new LengthsParameters();
                 lengths.geodesic = false;
                 lengths.polylines = [args.geometry];
@@ -65,7 +113,8 @@ export function run() {
                     geometryService.lengths(lengths, (args: { lengths: number[] }) => {
                         console.log("geodesic lengths", args.lengths);
                     })
-                })
+                });
+
                 break;
             default:
                 break;

@@ -912,9 +912,31 @@ define("app", ["require", "exports", "pubsub", "ags-catalog-proxy"], function (r
  * Uses geometry services to calculate planar and geodesic lengths
  * Confirms the measure tool reports geodesic measurements
  */
-define("ux/geodesic-planar-ux", ["require", "exports", "esri/map", "esri/dijit/Scalebar", "esri/dijit/Measurement", "esri/units", "esri/config", "esri/tasks/GeometryService", "esri/tasks/BufferParameters", "esri/tasks/LengthsParameters", "esri/symbols/SimpleFillSymbol", "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/Color"], function (require, exports, Map, Scalebar, Measurement, Units, Config, GeometryService, BufferParameters, LengthsParameters, SimpleFillSymbol, SimpleLineSymbol, Graphic, Color) {
+define("ux/geodesic-planar-ux", ["require", "exports", "esri/map", "esri/dijit/Scalebar", "esri/dijit/Measurement", "esri/units", "esri/config", "esri/tasks/GeometryService", "esri/tasks/BufferParameters", "esri/tasks/LengthsParameters", "esri/symbols/SimpleFillSymbol", "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/Color", "dojo/Deferred"], function (require, exports, Map, Scalebar, Measurement, Units, Config, GeometryService, BufferParameters, LengthsParameters, SimpleFillSymbol, SimpleLineSymbol, Graphic, Color, Deferred) {
     "use strict";
     var geometryService = Config.defaults.geometryService = new GeometryService("https://sampleserver6.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer");
+    /**
+     * Giving SystemJS a try to transform coordinates to 4326 before using geodesy to calculate distances
+     */
+    var distanceTo = function (points) {
+        var d = new Deferred();
+        System.import("proj4").then(function (proj4) {
+            var epsg4326 = new proj4.Proj("EPSG:4326");
+            var epsg3857 = new proj4.Proj("EPSG:3857");
+            var transform = proj4(epsg3857, epsg4326);
+            points = points.map(function (p) { return transform.forward(p); });
+            System.import("geodesy").then(function (geodesy) {
+                var geodesyPoints = points.map(function (p) { return new geodesy.LatLonSpherical(p[1], p[0]); });
+                var distance = 0;
+                for (var i = 1; i < geodesyPoints.length; i++)
+                    distance += geodesyPoints[i - 1].distanceTo(geodesyPoints[i]);
+                d.resolve({
+                    distance: distance
+                });
+            });
+        });
+        return d;
+    };
     function run() {
         var map = new Map("map", {
             basemap: "dark-gray",
@@ -937,6 +959,11 @@ define("ux/geodesic-planar-ux", ["require", "exports", "esri/map", "esri/dijit/S
                 case "point":
                     break;
                 case "polyline":
+                    // geodesy library
+                    distanceTo(args.geometry.paths[0]).then(function (args) {
+                        console.log("geodesy", args.distance);
+                    });
+                    // esri geometry service
                     var lengths = new LengthsParameters();
                     lengths.geodesic = false;
                     lengths.polylines = [args.geometry];
