@@ -230,6 +230,22 @@ define("ags-geometry-proxy", ["require", "exports", "dojo/_base/lang"], function
             req.polylines = JSON.stringify(req.polylines);
             return this.ajax.get(req);
         };
+        Geometry.prototype.buffer = function (data) {
+            var req = lang.mixin({
+                geometryType: "esriGeometryPoint",
+                inSR: 4326,
+                outSR: 4326,
+                bufferSR: 4326,
+                unit: esriSRUnitType.Meter,
+                distances: [1000],
+                unionResults: true,
+                geodesic: true,
+                f: "pjson"
+            }, data);
+            req.geometries = JSON.stringify(req.geometries);
+            req.distances = req.distances.join(",");
+            return this.ajax.get(req);
+        };
         Geometry.test = function () {
             new Geometry("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer/lengths")
                 .lengths({
@@ -237,6 +253,17 @@ define("ags-geometry-proxy", ["require", "exports", "dojo/_base/lang"], function
             })
                 .then(function (value) {
                 console.log("lengths", value);
+            });
+            new Geometry("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer/buffer")
+                .buffer({
+                geometries: {
+                    geometryType: "esriGeometryPoint",
+                    geometries: [{ x: -82.4, y: 34.85 }]
+                },
+                distances: [100]
+            })
+                .then(function (value) {
+                console.log("buffer", value);
             });
         };
         return Geometry;
@@ -871,7 +898,7 @@ define("maplet", ["require", "exports", "esri/map", "esri/symbols/SimpleMarkerSy
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Maplet;
 });
-define("app", ["require", "exports", "pubsub", "ags-geometry-proxy"], function (require, exports, pubsub_1, ags_geometry_proxy_1) {
+define("app", ["require", "exports", "pubsub", "maplet", "ags-geometry-proxy"], function (require, exports, pubsub_1, maplet_1, ags_geometry_proxy_1) {
     "use strict";
     var topic = new pubsub_1.default();
     var asList = function (nodeList) {
@@ -926,7 +953,7 @@ define("app", ["require", "exports", "pubsub", "ags-geometry-proxy"], function (
             content.insertBefore(div, null);
         };
         var app = { topic: topic };
-        //Maplet.test(app);
+        maplet_1.default.test(app);
         ags_geometry_proxy_1.default.test();
         //Catalog.test();    
         //FeatureServer.test();
