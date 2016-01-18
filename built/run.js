@@ -398,6 +398,46 @@ define("ags-lrs-proxy", ["require", "exports", "dojo/_base/lang"], function (req
 /**
  * http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/find?searchText=Woonsocket&contains=true&searchFields=&sr=&layers=0%2C2&layerdefs=&returnGeometry=true&maxAllowableOffset=&f=pjson
  */
+define("ags-map-export-proxy", ["require", "exports", "dojo/_base/lang"], function (require, exports, lang) {
+    "use strict";
+    /**
+     * mapserver export
+     */
+    var Export = (function () {
+        function Export(url) {
+            this.ajax = new Ajax(url);
+        }
+        Export.prototype.export = function (data) {
+            var req = lang.mixin({
+                size: [512, 512],
+                dpi: 96,
+                imageSR: 4326,
+                bboxSR: 4326,
+                format: "png",
+                transparent: true,
+                f: "pjson"
+            }, data);
+            req.bbox = req.bbox.join(",");
+            req.size = req.size.join(",");
+            return this.ajax.get(req);
+        };
+        Export.test = function () {
+            new Export("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/export")
+                .export({
+                bbox: [-82.4, 34.85, -82.25, 35]
+            })
+                .then(function (value) {
+                console.log("export", value);
+            });
+        };
+        return Export;
+    }());
+    Object.defineProperty(exports, "__esModule", { value: true });
+    exports.default = Export;
+});
+/**
+ * http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/find?searchText=Woonsocket&contains=true&searchFields=&sr=&layers=0%2C2&layerdefs=&returnGeometry=true&maxAllowableOffset=&f=pjson
+ */
 define("ags-map-find-proxy", ["require", "exports", "dojo/_base/lang"], function (require, exports, lang) {
     "use strict";
     /**
@@ -898,7 +938,7 @@ define("maplet", ["require", "exports", "esri/map", "esri/symbols/SimpleMarkerSy
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Maplet;
 });
-define("app", ["require", "exports", "pubsub", "maplet", "ags-geometry-proxy"], function (require, exports, pubsub_1, maplet_1, ags_geometry_proxy_1) {
+define("app", ["require", "exports", "pubsub", "maplet", "ags-map-export-proxy"], function (require, exports, pubsub_1, maplet_1, ags_map_export_proxy_1) {
     "use strict";
     var topic = new pubsub_1.default();
     var asList = function (nodeList) {
@@ -954,7 +994,8 @@ define("app", ["require", "exports", "pubsub", "maplet", "ags-geometry-proxy"], 
         };
         var app = { topic: topic };
         maplet_1.default.test(app);
-        ags_geometry_proxy_1.default.test();
+        ags_map_export_proxy_1.default.test();
+        //Geometry.test();
         //Catalog.test();    
         //FeatureServer.test();
         //MapQuery.test();

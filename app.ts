@@ -14,6 +14,7 @@ import MapQuery from "./ags-map-query-proxy";
 import FeatureServer from "./ags-feature-proxy";
 import Catalog from "./ags-catalog-proxy";
 import Geometry from "./ags-geometry-proxy";
+import MapExport from "./ags-map-export-proxy";
 
 let topic = new Topic();
 
@@ -69,7 +70,8 @@ let run = () => {
     let app = {topic: topic};
     
     Maplet.test(app);
-    Geometry.test();
+    MapExport.test();
+    //Geometry.test();
     //Catalog.test();    
     //FeatureServer.test();
     //MapQuery.test();
