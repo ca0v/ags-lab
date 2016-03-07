@@ -1,123 +1,89 @@
-<!-- 
-    Routes are generated daily in a batch process but they can be generated on demand as well as updated
-    or created from any group of selected markers.
-    It's useful to identify one marker as the starting point and another as an ending point and therefore it
-    is important to be able to add these locations to the map as well as move them    
--->
+<!DOCTYPE html>
 <html>
-<style>
-    .link {
-        color: blue;
-        border-bottom: 1px solid blue;
-    }
-    
-    ul > li {
-        list-style: none;
-        margin: 4px;
-    }
-    
-    .marker {
-        display: inline-block;
-        width: 40px;
-        height: 40px;
-        background-repeat: no-repeat;
-    }
-    
-    .step {
-        border: 1px solid black;
-        padding: 20px;
-        margin: 20px;
-    }
-    
-    .start {
-        background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACEAAAAyCAMAAADleEJoAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAWhQTFRFRIQT////RIQTRIQTRIQTRIQTRIQTRIQTRIQTR4YVSYgWRIQTTIsZS4oYRIQTRIQTRYUURIQTRIQTRIQTRIQTTIsZRIQTR4YVRIQTVZMgRIQTSokXVZIfWZYjWpcjRIQTRIQTbacxRIQTSIcWd684X5snT40bc6w1RIQTSIgWh71ERIQTerI6To0bVJIfWpcjRIQTRIQTRG4dRHEbRIQTRoYVSXEfSnYfSokXTXUiTYwaUH0jUY8cUoghUpAdU3wnV5QhWYgoWpcjW4EzW5EmXJklYoU8YpMuYp0pY54qZJwrZ5cxZ6IsaKIta6UwbKQwbKYwbqcxb6gycpBSdK02erI6gLc/gpxqhrxDi8BHjMFHjsBPjsJJkMRKkMVKlchOmcxRmshenc9UoNJWqb2SrNR3t8anvdievd2RyNK9yN6rzdXF1+fE2N/R3+vQ7Ozs8PLt8fHx8vjp9Pfw9fX1+vr6/f39////ZRAX+wAAADJ0Uk5TAAALFiItOENPT09aZHl7goKGjKStusLCyMjOzs7Oztre3uHh4uPk5Ozz8/X19vb3/P7XCCZCAAABoUlEQVQ4y83UaVOCQBjA8W1phUTSSlO7NDtFzQ66b8vu+7DL0rL7vv362S7Cggjvmv7vHuY3MAPPAiqsAn8ngBy08dU11bwNFi/oBCM0taaOT49TrU0CYyS4FjFXTGzhSoXQnqNrF/RCEHPaREEr2K6cvi6WFrA5e6Ev2wwp4YhmS4s6KOFPZ3Dvtxm1tF8VlR1npHz++epMqaNSEezWESlf6PFcHo62WEXwO4ekPO7+hEw7vCo2UqRv0scNnjYosbZP+iK9Xq7+TmuqQPE90ifuem568XeKI0XAzm3SW6G7hdHZTTx1QvV9eJbXcS8vD7tD4ytkWPZQb8zes4R7Ougfnl+S67HTX64xkcQNTCaLJRo137YqNqMvVqXdD+/ElLYJr26DUNuYtjak30JXeIQu7CrZU+gbpPPB0l23BSW1oM3ovNRSotbwRMEGBTRAQwG4bhl0c8anEgC3LNygnEAhDEKorAB1WNSB8gLfRL2FgQD1BVEPzAQXkSKcqWACUoAxFYXHUA8xFE7JaSG4Xs5CoD5kIUANsBLIUPyXP79pPwK/oqonPeNcAAAAAElFTkSuQmCC')
-    }
-    
-    .end {
-        background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD8AAABkCAMAAAAGyBjZAAAAkFBMVEXANSH///+/MRzAMx+/Lxi+LBS+KhG/MBv89fT88/H9+Pf46Oa9JAC/LRT14t++KhDFRTPOY1TbjYP03drpu7Xrwbzv0M3Oal7gnJLTcmXBOSXrxsLHUULuzsrXhnzEPyrjp5/Wf3PJWEvFSTnck4riq6TMZVnou7bGTD3WiYHSd23ms63Te3DgoZq7GADHRS/VgJSXAAAEIElEQVRYhZ2Z67qqIBCGQVA8U5p2MivTVjtXu/u/u42dkwFxz88eXhhG5puBEFaZG6x3dZIk9SWLXV81CoG/eun6siy2jmPbtsPRaV5nqWfMB1lZEU4tgu5GLMrp4dzGRrx3OW4d9mTRaw57VdXpIO83WyrBjykYZXV/Fz1+cwwtmL5PwU8zV817l4mthm9GURmo+OA3sgbwzoV5CvPxPNK4/uFCsYH4vOAm9G0Pmcyn1dDW38bQus97R9PVbx4c0m/eL50RuJhgHnzxO7PQvY2X/gefH9g4HBE6e/P+eczm78ZOwYvP+EjvOwvrFz8Z631nhMcPvlV5LxKfqrIRIbu88/6cwrQTFfPlvEKKrGBFeuPXE3AFm5TrOAiCeFNPwPgQ0tz4BXRwCV/GL9EM6hBywT4Hgo+ngPvWavGZ5XgGHRAyyQW/ucrOkdUOf1sGTRA1gm+A6NM/kuA3K3kZp/SRn8iZY50AqQa+Eqtc5E1lx/hCxvEmlLe53aD4IIWWhFClwFd5oLVA2Vbal3WCcLyXvzPdox2SeHoG+VbeAJujhbx9JwH5TOatKVrIJ2scL69PlyAPHBTBX+R6Zx4/dkStHD/j7yc8RTlw/HkN4DN5+8hOUFDI01qF3Ci4wPkVCoCg3xEr3T7fyPtE5JqC+SMmvvTw9QRQEFZ5cP6KECZfGdwySKK7/AX1Q1i4zJ+9jh8nITiGd/qRVrD625OyzYWAprO6sEFcpK/gvV9F4ScRKqbHaSUaMngAq9JOfxtlx0Usxpi6H4uEygk+Pw13TeDsq/am/+AJMDDrUX/gAjJsN5np+PR/yrf4+u2Dx1AFGjSycp88lFrDy3fl+8570OEeWp7nL96vx/c/dOq+eJyOdoBEP/jNu3+iscsfgw8eZ3ASqpenD4FAanXSGXsq3LN/ninbLNj9p8K++vdiTA9ItkGfB6qj2vge93m3Mo8AobHEQ+VRufy7wL55b2maxtYhBnj8I3ciCu8vPsR7Z7MIdLIJ8TgDShS0/Gd39nV/XZpkATt5Kj41uUWFLVbxOBnWAVr5an5YBwjPsJrHuyEpdvaejg+O+m9oHXKs4zHQTn3tvt8ZSe8fWgc+Ty7M481fDR/22xrg/WavPkTsII2WeeBC8DBCMwNefZd/3tkHePBC1wXvupYHQ+9fM+Cq1c87HY/PkBKxKgCGgnwKtXvfeafloTykBTgS5gPpRYHwDTgS5vGs3/VFNfyEqeC9XghpJd8IdHzvUYGQ/n18iP9OAzqFX081vLd6pwGJ4ODpeNy866EDX2j1vPtKA2urCJ6Wx+tnSyKrhhHvJ/dv+HqrG8nj/HY1JNsfzRgdjy9dBOiv8vF8iPdFOSJMHbwhXjTmhJfaEXoen/lJdfKM+DwCVcOY9xrNtzPgsfqfi7v9AweBO7iV4NgVAAAAAElFTkSuQmCC')
-    }
-    
-    .markers {
-        background-repeat: no-repeat;
-        background-position-y: 16px;
-        height: 48px;
-        background-image: url('data:image/png;base64,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')
-    }
-</style>
 
-<note>No need to create route from MB</note>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+    <title>Directions Widget</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/3.16/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/3.16/esri/css/esri.css">
+    <link rel="stylesheet" href="./routing-prototype.css">
+    
+    <style>
+        html,
+        body,
+        #map {
+            height: 100%;
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background-color: #FFF;
+            overflow: hidden;
+            font-family: "Trebuchet MS";
+        }
+    </style>
 
-<div class="step" title="viewing route(s)">
-    <p>
-        Routing is initiated via Tools
-        <select>
-            <option selected>Routing</option>
-        </select> and not part of the vanilla Map Drawer Once selected a routing window opens with a composite view of zones
-    </p>
-    <ul>
-        <li>Each zone is represented as root node in a composite view</li>
-        <li>Zones can
-            <button>&#127939; Create Route</button>
-        </li>
-        <li>Each route is represented as child of a zone
-            <ul>
-                <li>
-                    <input type="checkbox" checked/><label>Zone</label>
-                    <ul>
-                        <li>
-                            <input type="checkbox" checked/><label>Route</label>
-                            <ol>
-                                <li>
-                                    <label class="link">Inspection A</label>
-                                </li>
-                                <li>
-                                    <label class="link">Inspection B</label>
-                                </li>
-                                <li>
-                                    <label class="link">Inspection C</label>
-                                </li>
-                    </ul>
-                    </li>
-            </ul>
-            </li>
-        </li>
-        <li>Route visibility can be
-            <input type="checkbox" checked/> toggled and clicking inspections center marker on map</li>
-        <li>Routes can be
-            <button>&#128077; Optimize</button>
-        </li>
-        <li>A map with <span class="marker start"></span>start and optional stop location</li>
-        <li class="markers">Each location is numbered 1-9A-Z</li>
-        <li>For any route item (child of route)
-            <ul>
-                <li>
-                    <button>&#215; Remove</button>
-                </li>
-                <li>
-                    <button>&#10548; Move Up</button>
-                </li>
-                <li>
-                    <button>&#10549; Move Down</button>
-                </li>
-                <li>
-                    <button>&#8657; Move First</button>
-                </li>
-                <li>
-                    <button>&#8659; Move Last</button>
-                </li>
-            </ul>
-        </li>
-        <li><b>Zoned marker</b> not associated with a route, user adds to a route via
-            <button>&#43; Add to Route</button>
-        </li>
-        <li>Any marker not associated with a route, user adds to a route via dragging from the markers grid into the list of
-            route items
-        </li>
-    </ul>
-</div>
+    <script src="https://js.arcgis.com/3.16/"></script>
+    <script>
+        require([
+        "esri/urlUtils", "esri/map", "esri/dijit/Directions",
+        "dojo/parser","./routing-prototype.js",
+        "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dojo/domReady!"
+      ], function(
+        urlUtils, Map, Directions,
+        parser,go
+      ) {
+        parser.parse().then(() => {
+        });
+        //all requests to route.arcgis.com will proxy to the proxyUrl defined in this object.
+        urlUtils.addProxyRule({
+          urlPrefix: "route.arcgis.com",
+          proxyUrl: "/sproxy/"
+        });
+        urlUtils.addProxyRule({
+          urlPrefix: "traffic.arcgis.com",
+          proxyUrl: "/sproxy/"
+        });
 
-<div class="step" title="generating a route from multiple points">
-    <p>WILL NOT IMPLEMENT - generating route from markers in Map Browser</p>
-</div>
+        var map = new Map("map", {
+          basemap: "streets",
+          center:[-98.56,39.82],
+          zoom: 4
+        });
+
+        go.initializeMap(map);
+
+        //default will point to ArcGIS world routing service
+        go.initializeDirections("dir", map).addStops(["San Diego Zoo", [-117.138, 32.737]]);
+
+        //default will point to ArcGIS world routing service 
+        go.initializeDirections("dir2", map,"red").addStops(["Baboa Park", [-117.138, 32.738]]);
+        
+        go.parse();
+      });
+    </script>
+</head>
+
+<body class="claro">
+    <div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="design:'headline', gutters:false" style="width:100%;height:100%;">
+        <div data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'right'" style="width:270px;">
+            <div>
+                <input type="checkbox" checked class="toggler" data-ips-toggler-for="dir" />
+                <label>Route 1 - George</label>
+                <div id="dir">Route 1 - George</div>
+            </div>
+            <div>
+                <input type="checkbox" checked class="toggler" data-ips-toggler-for="dir2" />
+                <label>Route 2 - Henry</label>
+                <div id="dir2"></div>
+            </div>
+        </div>
+        <div id="map" data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'center'">
+        </div>
+    </div>
+</body>
 
 </html>

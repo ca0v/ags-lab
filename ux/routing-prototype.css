@@ -1,0 +1,39 @@
+.simpleDirections {
+    border: 1px solid black;
+    margin:20px;
+}
+
+.esriStopsOptionsButton,
+.esriStopsAddDestinationBtn,
+.esriTravelModesContainer,
+.esriResultsContainer {
+    display: none !important;
+}
+
+.hidden {
+    display: none;
+}
+
+.simpleDirections .esriStop .esriStopIcon {
+        background-image:none;
+        border-radius:12px;
+        height:22px;
+        width:22px;
+}
+
+#dir.simpleDirections .esriStop .esriStopIcon {
+        background-color: rgba(60,60,200,.9);
+        border:1pt solid rgba(60,60,200,1);
+}
+
+
+#dir2.simpleDirections .esriStop .esriStopIcon {
+        background-color: rgba(200,60,60,.8);
+        border: 1pt solid rgba(200,60,60,1);
+}
+
+
+.simpleDirections .esriStopsTableContainer {
+    max-height: 300px;
+    overflow: auto;
+}
