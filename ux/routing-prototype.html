@@ -50,19 +50,15 @@
 
         var map = new Map("map", {
           basemap: "streets",
-          center:[-98.56,39.82],
-          zoom: 4
+          center:[-117.138991, 32.739543],
+          zoom: 14
         });
 
         go.initializeMap(map);
-
-        //default will point to ArcGIS world routing service
-        go.initializeDirections("dir", map).addStops(["San Diego Zoo", [-117.138, 32.737]]);
-
-        //default will point to ArcGIS world routing service 
-        go.initializeDirections("dir2", map,"red").addStops(["Baboa Park", [-117.138, 32.738]]);
-        
+        go.initializeDirections("dir", map);
+        go.initializeDirections("dir2", map,"red");
         go.parse();
+        
       });
     </script>
 </head>
