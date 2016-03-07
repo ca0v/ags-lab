@@ -37,6 +37,36 @@ export default class Geometry {
         return this.ajax.get(req);
     }
 
+    buffer(data: {
+        geometries: {
+            geometryType?: string;
+            geometries: Array<any>;
+        };
+        inSR?: number;
+        outSR?: number;
+        bufferSR?: number;
+        distances: Array<number>;
+        unit?: number;
+        unionResults?: boolean;
+        geodesic?: boolean;
+    }) {
+        let req = lang.mixin({
+            geometryType: "esriGeometryPoint",
+            inSR: 4326,
+            outSR: 4326,
+            bufferSR: 4326,
+            unit: esriSRUnitType.Meter,
+            distances: [1000],
+            unionResults: true,
+            geodesic: true,
+            f: "pjson"
+        }, data);
+
+        req.geometries = <any>JSON.stringify(req.geometries);
+        req.distances = <any>req.distances.join(",");
+        return this.ajax.get(req);
+    }
+
     public static test() {
         new Geometry("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer/lengths")
             .lengths({
@@ -44,6 +74,18 @@ export default class Geometry {
             })
             .then((value: {}) => {
                 console.log("lengths", value);
+            });
+
+        new Geometry("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer/buffer")
+            .buffer({
+                geometries: {
+                    geometryType: "esriGeometryPoint",
+                    geometries: [{ x: -82.4, y: 34.85 }]
+                },
+                distances: [100]
+            })
+            .then((value: {}) => {
+                console.log("buffer", value);
             });
     }
 }
