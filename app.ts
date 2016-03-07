@@ -68,7 +68,7 @@ let run = () => {
     
     let app = {topic: topic};
     
-    //Maplet.test(app);
+    Maplet.test(app);
     Geometry.test();
     //Catalog.test();    
     //FeatureServer.test();
