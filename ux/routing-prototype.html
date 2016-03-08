@@ -55,8 +55,9 @@
         });
 
         go.initializeMap(map);
-        go.initializeDirections("dir", map);
+        go.initializeDirections("dir", map, "green");
         go.initializeDirections("dir2", map,"red");
+        go.initializeDirections("dir3", map,"blue");
         go.parse();
         
       });
@@ -75,6 +76,11 @@
                 <input type="checkbox" checked class="toggler" data-ips-toggler-for="dir2" />
                 <label>Route 2 - Henry</label>
                 <div id="dir2"></div>
+            </div>
+            <div>
+                <input type="checkbox" checked class="toggler" data-ips-toggler-for="dir3" />
+                <label>Route 3 - Ian</label>
+                <div id="dir3"></div>
             </div>
         </div>
         <div id="map" data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'center'">

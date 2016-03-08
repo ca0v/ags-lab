@@ -14,6 +14,44 @@ import SimpleFillSymbol = require("esri/symbols/SimpleFillSymbol");
 import Color = require("esri/Color");
 import Graphic = require("esri/graphic");
 import Locator = require("esri/tasks/locator");
+import Extent = require("esri/geometry/Extent");
+import Point = require("esri/geometry/Point");
+import SpatialReference = require("esri/SpatialReference");
+import webMercatorUtils = require("esri/geometry/webMercatorUtils");
+
+let range = (n:number) => {
+    var r = new Array(n);
+    for (var i=0; i<n; i++) r[i] = i;
+    return r;
+}
+
+let epsg4326 = new SpatialReference({ wkid: 4326 });
+let extent = new Extent(-117.14, 32.73, -117.13, 32.74, epsg4326);
+let inspections = range(50).map(i => {
+    let p = new Point(
+        extent.xmin + Math.random() * (extent.xmax - extent.xmin),
+        extent.ymin + Math.random() * (extent.ymax - extent.ymin),
+        epsg4326
+    );
+
+    let result = {
+        "text": `Inspection ${i}`,
+        magicKey: `XY 1234${i}`,
+        location: webMercatorUtils.geographicToWebMercator(p)
+    };
+    return result;
+});
+let headquarters = {
+    "name": "Headquarters",
+    extent: new Extent(-117.1376, 32.7500, -117.13755, 32.7501, epsg4326),
+    "feature": new Graphic({ geometry: new Point(-117.13755, 32.75, epsg4326), attributes: { score: 100 } })
+};
+
+let site1 = {
+    "name": "Site 1",
+    extent: new Extent(-117.139, 32.7500, -117.14, 32.7501, epsg4326),
+    "feature": new Graphic({ geometry: new Point(-117.14, 32.75, epsg4326), attributes: { score: 100 } })
+};
 
 function toArray<T extends HTMLElement>(l: NodeListOf<Element>) {
     let r = <Array<T>>[];
@@ -40,6 +78,7 @@ export function parse() {
 }
 
 export function initializeMap(w: Map) {
+    w.setExtent(extent, true);
     //w.addLayer(new FeatureLayer("http://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/US_Senators/FeatureServer/0"));
     w.on("layer-add-result", (args: { layer: Layer }) => {
         console.log(args.layer.id, args.layer);
@@ -75,28 +114,10 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
     routeLines.color.a = 0.5;
 
 
-    let locator = new Locator("");
+    let inspectionLocator = new Locator("");
 
-    locator.addressesToLocations = (args: {
-        address: {
-            SingleLine: string;
-        },
-        distance: number;
-        location: any;
-        maxLocations: number;
-    }, callback: Function, errback: Function) => {
-        let result = [
-            {
-                address: `XY ${args.address.SingleLine}`,
-                attributes: { "SingleLine": "TEST" },
-                location: {},
-                score: 100
-            }];
-
-        on.emit(Locator, "addresses-to-locations-complete", result);
-    };
-
-    locator.addressToLocations = (args: {
+    inspectionLocator.setOutSpatialReference(map.spatialReference);
+    inspectionLocator.addressesToLocations = (args: {
         magicKey: string;
         address: {
             SingleLine: string;
@@ -106,63 +127,71 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
         maxLocations: number;
     }, callback: Function, errback: Function) => {
         let d = new Deferred();
-        let result = [{
-            address: `XY ${args.magicKey}`,
-            attributes: { "SingleLine": "TEST" },
-            location: {},
-            score: 100
-        }];
+        debugger;
         d.then((result: any) => {
-            on.emit(locator, "address-to-locations-complete", result);
+            on.emit(inspectionLocator, "addresses-to-locations-complete", result);
         });
-        d.resolve(result);
         return d;
     };
 
-    locator.locationToAddress = (location: any, distance: number, callback: Function, errback: Function) => {
-        let result = {
-            address: "TEST3",
-            location: {},
+    inspectionLocator.addressToLocations = (args: {
+        magicKey: string;
+        address: {
+            SingleLine: string;
+        },
+        distance: number;
+        location: Point;
+        maxLocations: number;
+    }, callback: Function, errback: Function) => {
+        let d = new Deferred();
+
+        d.then((result: any) => {
+            callback && callback(result);
+            on.emit(inspectionLocator, "address-to-locations-complete", result);
+        });
+
+        d.resolve(inspections.filter(i => i.text === args.address.SingleLine).map(i => ({
+            address: "BOGUS_" + i.text,
+            attributes: {
+                foo: "foo"
+            },
+            location: i.location,
             score: 100
-        };
-        on.emit(locator, "location-to-address-complete", result);
+        })));
+
+        return d;
     };
 
-    locator.suggestLocations = (args: {
+    inspectionLocator.locationToAddress = (location: any, distance: number, callback: Function, errback: Function) => {
+        let d = new Deferred();
+
+        d.then((result: any) => {
+            callback && callback(result);
+            on.emit(inspectionLocator, "location-to-address-complete", result);
+        });
+
+        //this location gets corrupted in URL until directions are reordered
+        let p = new Point(location);
+        d.resolve({
+            address: "TEST3",
+            extent: new Extent(p.x - 1, p.y - 1, p.x, p.y, p.spatialReference),
+            location: p,
+            score: 100
+        });
+        return d;
+    };
+
+    inspectionLocator.suggestLocations = (args: {
         distance: number;
         maxSuggestions: number;
         text: string;
     }) => {
         let d = new Deferred();
-        //    on(type: "suggest-locations-complete", listener: (event: { suggestions: any[]; target: Locator }) => void): esri.Handle;
-        let result = {
-            suggestions: [
-                {
-                    "text": "Inspection 12345",
-                    magicKey: "12345"
-                },
-                {
-                    "text": "Inspection 12346",
-                    magicKey: "12346"
-                },
-                {
-                    "text": "Inspection 12347",
-                    magicKey: "12347"
-                },
-                {
-                    "text": "Inspection 12348",
-                    magicKey: "12348"
-                },
-                {
-                    "text": "Inspection 12349",
-                    magicKey: "12349"
-                }
-            ]
-        };
+
         d.then((suggestions: any[]) => {
-            on.emit(locator, "suggest-locations-complete", suggestions);
+            on.emit(inspectionLocator, "suggest-locations-complete", suggestions);
         });
-        d.resolve(result.suggestions);
+        d.resolve(inspections);
         return d;
     };
 
@@ -184,57 +213,31 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
         toSymbol: <any>marker,
         textSymbolOffset: { x: 0, y: -4 },
         routeSymbol: routeLines,
+        stops: [headquarters, site1],
         searchOptions: {
             addLayersFromMap: false,
             enableSuggestions: true,
+            allPlaceholder: "Inspection or Address",
+            autoSelect: false,
+            enableSearchingAll: false,
+            enableSourcesMenu: true,
             sources: [
                 {
-                    featureLayer: new FeatureLayer("http://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/US_Senators/FeatureServer/0"),
-                    searchFields: ["Name", "State", "Party"],
-                    suggestionTemplate: "${Name}, ${State} Party: ${Party}",
-                    exactMatch: false,
-                    outFields: ["*"],
-                    name: "Senators",
-                    //labelSymbol: textSymbol,
-                    placeholder: "Senator name",
-                    maxResults: 6,
-                    maxSuggestions: 6,
-                    enableSuggestions: true,
-                    minCharacters: 0,
-                    searchQueryParams: { distance: 5000 },
-                },
-                {
-                    featureLayer: new FeatureLayer("http://sampleserver6.arcgisonline.com/arcgis/rest/services/PoolPermits/FeatureServer/0"),
-                    searchFields: ["objectid", "address"],
-                    suggestionTemplate: "${address}, ${objectid}",
-                    exactMatch: false,
-                    outFields: ["*"],
-                    name: "address",
-                    //labelSymbol: textSymbol,
-                    placeholder: "address",
-                    maxResults: 6,
-                    maxSuggestions: 6,
-                    enableSuggestions: true,
-                    minCharacters: 0,
-                    searchQueryParams: { distance: 5000 },
-                },
-                {
-                    locator: locator,
+                    locator: inspectionLocator,
                     singleLineFieldName: "SingleLine",
-                    name: "Custom Geocoding Service",
+                    name: "Inspections",
                     localSearchOptions: {
-                        minScale: 300000,
-                        distance: 50000
+                        minScale: 3000,
+                        distance: 500
                     },
-                    placeholder: "Search Geocoder",
+                    placeholder: "Inspection #",
                     maxResults: 3,
                     maxSuggestions: 6,
                     enableSuggestions: true,
-                    minCharacters: 0
+                    minCharacters: 3
                 }]
         }
     }, id);
-
 
     w.on("segment-highlight", (g: Graphic) => {
     });
@@ -250,6 +253,8 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
     });
 
     w.startup();
+
+    w.domNode.classList.add(color);
 
     return w;
 }
