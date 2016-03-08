@@ -8,6 +8,7 @@
  * Confirms the measure tool reports geodesic measurements
  */
 define(["require", "exports", "esri/map", "esri/dijit/Scalebar", "esri/dijit/Measurement", "esri/units", "esri/config", "esri/tasks/GeometryService", "esri/tasks/BufferParameters", "esri/tasks/LengthsParameters", "esri/symbols/SimpleFillSymbol", "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/Color", "dojo/Deferred"], function (require, exports, Map, Scalebar, Measurement, Units, Config, GeometryService, BufferParameters, LengthsParameters, SimpleFillSymbol, SimpleLineSymbol, Graphic, Color, Deferred) {
+    "use strict";
     var geometryService = Config.defaults.geometryService = new GeometryService("https://sampleserver6.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer");
     /**
      * Giving SystemJS a try to transform coordinates to 4326 before using geodesy to calculate distances
@@ -58,13 +59,13 @@ define(["require", "exports", "esri/map", "esri/dijit/Scalebar", "esri/dijit/Mea
                         console.log("geodesy", args.distance);
                     });
                     // esri geometry service
-                    var lengths = new LengthsParameters();
-                    lengths.geodesic = false;
-                    lengths.polylines = [args.geometry];
-                    geometryService.lengths(lengths, function (args) {
+                    var lengths_1 = new LengthsParameters();
+                    lengths_1.geodesic = false;
+                    lengths_1.polylines = [args.geometry];
+                    geometryService.lengths(lengths_1, function (args) {
                         console.log("planar lengths", args.lengths);
-                        lengths.geodesic = true;
-                        geometryService.lengths(lengths, function (args) {
+                        lengths_1.geodesic = true;
+                        geometryService.lengths(lengths_1, function (args) {
                             console.log("geodesic lengths", args.lengths);
                         });
                     });
