@@ -1,3 +1,30 @@
+.route.red {
+    border: 1px solid red;
+    position: absolute;
+    top: 18px;
+    z-index: 1;
+    background: white;
+    left: 61px;
+}
+
+.route.green {
+    border: 1px solid green;
+    position: absolute;
+    top: 18px;
+    z-index: 1;
+    background: white;
+    left: 361px;
+}
+
+.route.blue {
+    border: 1px solid blue;
+    position: absolute;
+    top: 18px;
+    z-index: 1;
+    background: white;
+    right: 61px;
+}
+
 .simpleDirections {
     border: 1px solid black;
     margin:20px;

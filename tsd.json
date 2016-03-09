@@ -12,10 +12,13 @@
       "commit": "f11e49cfb77f99678657ddfe5d43017849675c64"
     },
     "dojo/dojo.d.ts": {
-      "commit": "d1f6bde13f2209be42e86c3686761e8bfcbb50a5"
+      "commit": "3a86e056dc018541d82dd74639fca18ba8d605da"
     },
     "systemjs/systemjs.d.ts": {
       "commit": "138ad74b9e8e6c08af7633964962835add4c91e2"
+    },
+    "dojo/dijit.d.ts": {
+      "commit": "3a86e056dc018541d82dd74639fca18ba8d605da"
     }
   }
 }

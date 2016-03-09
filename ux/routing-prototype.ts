@@ -1,4 +1,6 @@
+import registry = require("dijit/registry");
 import on = require("dojo/on");
+import topic = require("dojo/topic");
 import Deferred = require("dojo/Deferred");
 import Map = require("esri/map");
 import InfoTemplate = require("esri/InfoTemplate");
@@ -18,16 +20,17 @@ import Extent = require("esri/geometry/Extent");
 import Point = require("esri/geometry/Point");
 import SpatialReference = require("esri/SpatialReference");
 import webMercatorUtils = require("esri/geometry/webMercatorUtils");
+import RouteParams = require("esri/tasks/RouteParameters");
 
-let range = (n:number) => {
+let range = (n: number) => {
     var r = new Array(n);
-    for (var i=0; i<n; i++) r[i] = i;
+    for (var i = 0; i < n; i++) r[i] = i;
     return r;
 }
 
 let epsg4326 = new SpatialReference({ wkid: 4326 });
-let extent = new Extent(-117.14, 32.73, -117.13, 32.74, epsg4326);
-let inspections = range(50).map(i => {
+let extent = new Extent(-117.13, 32.73, -117.12, 32.74, epsg4326);
+let inspections = range(3 * 5).map(i => {
     let p = new Point(
         extent.xmin + Math.random() * (extent.xmax - extent.xmin),
         extent.ymin + Math.random() * (extent.ymax - extent.ymin),
@@ -37,21 +40,11 @@ let inspections = range(50).map(i => {
     let result = {
         "text": `Inspection ${i}`,
         magicKey: `XY 1234${i}`,
+        zone: ["green", "red", "blue"][i % 3],
         location: webMercatorUtils.geographicToWebMercator(p)
     };
     return result;
 });
-let headquarters = {
-    "name": "Headquarters",
-    extent: new Extent(-117.1376, 32.7500, -117.13755, 32.7501, epsg4326),
-    "feature": new Graphic({ geometry: new Point(-117.13755, 32.75, epsg4326), attributes: { score: 100 } })
-};
-
-let site1 = {
-    "name": "Site 1",
-    extent: new Extent(-117.139, 32.7500, -117.14, 32.7501, epsg4326),
-    "feature": new Graphic({ geometry: new Point(-117.14, 32.75, epsg4326), attributes: { score: 100 } })
-};
 
 function toArray<T extends HTMLElement>(l: NodeListOf<Element>) {
     let r = <Array<T>>[];
@@ -191,29 +184,38 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
         d.then((suggestions: any[]) => {
             on.emit(inspectionLocator, "suggest-locations-complete", suggestions);
         });
-        d.resolve(inspections);
+        d.resolve(inspections.filter(i => i.zone === color));
         return d;
     };
 
     let w = new DirectionsWidget({
         map: map,
+        theme: `${color}-theme`,
         routeTaskUrl: "http://sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/Route",
+        traffic: false,
         optimalRoute: false,
         autoSolve: false,
         returnToStart: false,
         showReturnToStartOption: false,
         showReverseStopsButton: false,
         dragging: false,
+        showActivateButton: true,
+        showClearButton: true,
         showMilesKilometersOption: false,
         showOptimalRouteOption: false,
+        showPrintPage: false,
         showTrafficOption: false,
         showTravelModesOption: false,
         fromSymbol: <any>marker,
         stopSymbol: <any>marker,
         toSymbol: <any>marker,
+        unreachedSymbol: <any>marker,
         textSymbolOffset: { x: 0, y: -4 },
         routeSymbol: routeLines,
-        stops: [headquarters, site1],
+        stops: inspections.filter(i => i.zone === color).map(i => ({
+            name: i.text,
+            feature: new Graphic({ geometry: i.location, attributes: { score: 100 } })
+        })),
         searchOptions: {
             addLayersFromMap: false,
             enableSuggestions: true,
@@ -242,6 +244,14 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
     w.on("segment-highlight", (g: Graphic) => {
     });
 
+    w.on("directions-clear", () => {
+        //
+    });
+
+    w.on("directions-start", () => {
+        //
+    });
+
     w.on("directions-finish", () => {
         let groups = toArray(document.getElementById(id).getElementsByClassName("searchInputGroup"));
         groups = groups.filter(g => g.getElementsByClassName("ips-info").length === 0);
@@ -252,9 +262,26 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
         });
     });
 
+    w.routeParams.returnDirections = false;
+    w.routeParams.preserveLastStop = false;
+    w.routeParams.startTime; // TODO
+
     w.startup();
 
     w.domNode.classList.add(color);
+
+    topic.subscribe("/dnd/drop/before", (source: any, nodes: any, copy: boolean, target: { node: HTMLElement, parent: HTMLElement }, e: MouseEvent) => {
+        let dndFrom = registry.getEnclosingWidget(source.parent);
+        if (dndFrom == w) {
+            let dndTo = registry.getEnclosingWidget(target.parent);
+            if (dndFrom === dndTo) return;
+            let i = dndFrom._dnd.getAllNodes().indexOf(nodes[0]);
+            let stop = dndFrom.stops[i];
+            dndFrom.removeStop(i);
+            let j = dndTo._dnd.getAllNodes().indexOf(target.current);
+            dndTo.addStop(stop, j + 1);
+        }
+    });
 
     return w;
 }
