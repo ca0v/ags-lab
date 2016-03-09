@@ -56,7 +56,7 @@
         });
 
         go.initializeMap(map);
-        go.initializeDirections("dir", map, "red");
+        //go.initializeDirections("dir", map, "red");
         go.initializeDirections("dir2", map,"green");
         go.initializeDirections("dir3", map,"blue");
         go.parse();
@@ -69,14 +69,14 @@
     <div data-dojo-type="dijit/layout/BorderContainer" data-dojo-props="design:'headline', gutters:false" style="width:100%;height:100%;">
         <div id="map" data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'center'">
 
-            <div class="route red">
-                <input type="checkbox" checked class="toggler" data-ips-toggler-for="dir" />
+            <div class="route red" >
+                <input type="checkbox" class="toggler" data-ips-toggler-for="dir" />
                 <label>Route 1 - George</label>
                 <div id="dir">Route 1 - George</div>
             </div>
 
             <div class="route green">
-                <input type="checkbox" checked class="toggler" data-ips-toggler-for="dir2" />
+                <input type="checkbox" class="toggler" data-ips-toggler-for="dir2" />
                 <label>Route 2 - Henry</label>
                 <div id="dir2"></div>
             </div>

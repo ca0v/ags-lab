@@ -212,10 +212,7 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
         unreachedSymbol: <any>marker,
         textSymbolOffset: { x: 0, y: -4 },
         routeSymbol: routeLines,
-        stops: inspections.filter(i => i.zone === color).map(i => ({
-            name: i.text,
-            feature: new Graphic({ geometry: i.location, attributes: { score: 100 } })
-        })),
+        stops: [],
         searchOptions: {
             addLayersFromMap: false,
             enableSuggestions: true,
@@ -268,18 +265,34 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
 
     w.startup();
 
+    w.addStops(inspections.filter(i => i.zone === color).map(i => ({
+        name: i.text,
+        feature: new Graphic({ geometry: i.location, attributes: { score: 100 } })
+    })));
+
     w.domNode.classList.add(color);
 
     topic.subscribe("/dnd/drop/before", (source: any, nodes: any, copy: boolean, target: { node: HTMLElement, parent: HTMLElement }, e: MouseEvent) => {
-        let dndFrom = registry.getEnclosingWidget(source.parent);
+        let dndFrom = <DirectionsWidget>registry.getEnclosingWidget(source.parent);
         if (dndFrom == w) {
-            let dndTo = registry.getEnclosingWidget(target.parent);
+            let dndTo = <DirectionsWidget>registry.getEnclosingWidget(target.parent);
             if (dndFrom === dndTo) return;
             let i = dndFrom._dnd.getAllNodes().indexOf(nodes[0]);
-            let stop = dndFrom.stops[i];
-            dndFrom.removeStop(i);
             let j = dndTo._dnd.getAllNodes().indexOf(target.current);
-            dndTo.addStop(stop, j + 1);
+            let stop = dndFrom.stops[i];
+            let stops1 = dndFrom.stops.filter(s => s !== stop);
+            let stops2 = dndTo.stops.filter(() => true);
+            stops2.splice(j, 0, stop);
+            setTimeout(() => {
+                dndFrom.stops = [];
+                dndFrom.reset().then(() => {
+                    dndFrom.addStops(stops1);
+                });
+                dndTo.stops = [];
+                dndTo.reset().then(() => {
+                    dndTo.addStops(stops2);
+                });
+            }, 500);
         }
     });
 
