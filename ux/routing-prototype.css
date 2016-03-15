@@ -1,39 +1,46 @@
-.route {
+.routes {
     height: auto;
     max-height: 480px;
     overflow: auto;
-}
-
-.route.red {
-    border: 1px solid red;
-    position: absolute;
-    top: 18px;
     z-index: 1;
     background: white;
+    position: absolute;
+    padding: 4px;
+    top: 20px;
+    width: auto;
+    left: 61px;
+    display: flex;
+    opacity: 0.9;
+    border-radius: 6px;
+    border: 1px solid black;
+}
+
+.routes .route {
+    /* display: initial; */
+    /* height: auto; */
+    /* z-index: 1; */
+    /* margin: 4px; */
+    /* background: white; */
+    padding: 4px;
+    opacity: 0.9;
+}
+
+.route:nth-child(1) {
+    top: 18px;
     left: 61px;
 }
 
-.route.green {
-    border: 1px solid green;
-    position: absolute;
+.route:nth-child(2) {
     top: 18px;
-    z-index: 1;
-    background: white;
     left: 361px;
 }
 
-.route.blue {
-    border: 1px solid blue;
-    position: absolute;
+.route:nth-child(3) {
     top: 18px;
-    z-index: 1;
-    background: white;
     left: 661px;
 }
 
 .simpleDirections {
-    border: 1px solid black;
-    margin:20px;
 }
 
 .esriStopsOptionsButton,
@@ -63,33 +70,24 @@
         border:1pt solid rgba(200,200,200,1);
 }
 
-.blue.simpleDirections .esriStop .esriStopIcon.COMPLETE {
-        background-color: rgba(60,60,200,0.2);
+.simpleDirections .esriStop .esriStopIcon.COMPLETE {
+        opacity:0.2
 }
 
-.blue.simpleDirections .esriStop .esriStopIcon {
+.route:nth-child(3) .simpleDirections .esriStop .esriStopIcon {
         background-color: rgba(60,60,200,.9);
         border:1pt solid rgba(60,60,200,1);
 }
 
-.green.simpleDirections .esriStop .esriStopIcon {
+.route:nth-child(2) .simpleDirections .esriStop .esriStopIcon {
         background-color: rgba(60,200,60,.9);
         border:1pt solid rgba(60,200,60,1);
 }
 
-.green.simpleDirections .esriStop .esriStopIcon.COMPLETE {
-        background-color: rgba(60,200,60,.2);
-}
-
-.red.simpleDirections .esriStop .esriStopIcon {
+.route:nth-child(1) .simpleDirections .esriStop .esriStopIcon {
         background-color: rgba(200,60,60,.9);
         border: 1pt solid rgba(200,60,60,1);
 }
-
-.red.simpleDirections .esriStop .esriStopIcon.COMPLETE {
-        background-color: rgba(200,60,60,.2);
-}
-
 
 
 .ips-info:after{

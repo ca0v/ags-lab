@@ -23,6 +23,19 @@ import webMercatorUtils = require("esri/geometry/webMercatorUtils");
 import RouteParams = require("esri/tasks/RouteParameters");
 import UniqueValueRenderer=require("esri/renderers/UniqueValueRenderer");
 
+let config = {
+    zones: [{
+        name: "red",
+        color: new Color([200,60,60])        
+    },{
+        name: "green",
+        color: new Color([60,200,60])        
+    },{
+        name: "blue",
+        color: new Color([60,60,200])        
+    }]    
+};
+
 let range = (n: number) => {
     var r = new Array(n);
     for (var i = 0; i < n; i++) r[i] = i;
@@ -53,7 +66,7 @@ let inspections = range(3 * 5).map(i => {
             recordId: 10000 + i
         },
         magicKey: `XY${i}`,
-        zone: ["green", "red", "blue"][i % 3],
+        zone: config.zones[i % 3].name,
         location: webMercatorUtils.geographicToWebMercator(p)
     };
     return result;
@@ -99,16 +112,17 @@ export function initializeMap(w: Map) {
 }
 
 
-export function initializeDirections(id: string, map: Map, color = "blue"): DirectionsWidget {
+export function initializeDirections(id: string, map: Map, zoneId = "blue"): DirectionsWidget {
+    let zone = config.zones.filter(z=>z.name===zoneId)[0];
     let marker = new SimpleMarkerSymbol({
-        "color": Color.named[color],
+        "color": zone.color,
         "size": 16,
         "xoffset": 0,
         "yoffset": 0,
         "type": "esriSMS",
         "style": SimpleMarkerSymbol.STYLE_CIRCLE,
         "outline": {
-            "color": Color.named[color],
+            "color": zone.color,
             "width": 1,
             "type": "esriSLS",
             "style": "esriSLSSolid"
@@ -126,7 +140,7 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
             
     marker.color.a = 0.5;
 
-    let routeLines = new SimpleLineSymbol("solid", new Color(color), 3);
+    let routeLines = new SimpleLineSymbol("solid", new Color(zone.color), 3);
     routeLines.color.a = 0.5;
 
 
@@ -207,7 +221,7 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
         d.then((suggestions: any[]) => {
             on.emit(inspectionLocator, "suggest-locations-complete", suggestions);
         });
-        d.resolve(inspections.filter(i => i.zone === color));
+        d.resolve(inspections.filter(i => i.zone === zoneId));
         return d;
     };
 
@@ -215,7 +229,6 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
 
     let w = new DirectionsWidget({
         map: map,
-        theme: `${color}-theme`,
         routeTaskUrl: "http://sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/Route",
         traffic: false,
         optimalRoute: false,
@@ -344,12 +357,12 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
         });
     });
     
-    w.addStops(inspections.filter(i => i.zone === color).map(i => ({
+    w.addStops(inspections.filter(i => i.zone === zoneId).map(i => ({
         name: i.text,
         feature: new Graphic({ geometry: i.location, attributes: { score: 100 } })
     })));
 
-    w.domNode.classList.add(color);
+    w.domNode.classList.add(zoneId);
 
     topic.subscribe("/dnd/drop/before", (source: any, nodes: any, copy: boolean, target: { node: HTMLElement, parent: HTMLElement,current:HTMLElement }, e: MouseEvent) => {
         let dndFrom = <DirectionsWidget>registry.getEnclosingWidget(source.parent);
