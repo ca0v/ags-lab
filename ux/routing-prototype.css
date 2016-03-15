@@ -59,6 +59,14 @@
         vertical-align: top;    
 }
 
+.simpleDirections .esriStop .esriStopIcon.COMPLETE {
+        border:1pt solid rgba(200,200,200,1);
+}
+
+.blue.simpleDirections .esriStop .esriStopIcon.COMPLETE {
+        background-color: rgba(60,60,200,0.2);
+}
+
 .blue.simpleDirections .esriStop .esriStopIcon {
         background-color: rgba(60,60,200,.9);
         border:1pt solid rgba(60,60,200,1);
@@ -69,12 +77,23 @@
         border:1pt solid rgba(60,200,60,1);
 }
 
+.green.simpleDirections .esriStop .esriStopIcon.COMPLETE {
+        background-color: rgba(60,200,60,.2);
+}
 
 .red.simpleDirections .esriStop .esriStopIcon {
-        background-color: rgba(200,60,60,.8);
+        background-color: rgba(200,60,60,.9);
         border: 1pt solid rgba(200,60,60,1);
 }
 
+.red.simpleDirections .esriStop .esriStopIcon.COMPLETE {
+        background-color: rgba(200,60,60,.2);
+}
+
+
+
 .ips-info:after{
+    display: none;
     content: "Extended Data Goes Here";
+    user-select:none;
 }

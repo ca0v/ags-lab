@@ -31,10 +31,14 @@ let range = (n: number) => {
 
 let epsg4326 = new SpatialReference({ wkid: 4326 });
 let extent = new Extent(-117.13, 32.73, -117.12, 32.74, epsg4326);
+let dx = 0;
+let dy = 0;
 let inspections = range(3 * 5).map(i => {
+    dx = Math.random() * (extent.xmax - extent.xmin) / 3;
+    dy = Math.random() * (extent.ymax - extent.ymin) / 3;
     let p = new Point(
-        extent.xmin + Math.random() * (extent.xmax - extent.xmin),
-        extent.ymin + Math.random() * (extent.ymax - extent.ymin),
+        extent.xmin + dx * (1 + i % 3),
+        extent.ymin + dy * (1 + i % 3),
         epsg4326
     );
 
@@ -44,7 +48,7 @@ let inspections = range(3 * 5).map(i => {
             applicationType:  "APPTYPE", 
             inspectionType:  "INSPECTIONTYPE",
             inspector:  ["George", "Henry", "Ian"][i % 3],
-            status:  ["ASSIGNED", "COMPLETE"][i % 2],
+            status:  ["ASSIGNED", "COMPLETE"][i > 5 ? 0 : 1],
             scheduledDate:  new Date().toDateString(), 
             recordId: 10000 + i
         },
@@ -111,14 +115,14 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
         }
     });
 
-    marker.getStroke = () => {
-        let color = this.color;
-        return {
-            color: this.color,
-            style: this.style,
-            width: this.width
-        }
-    };
+    // marker.getStroke = () => {
+    //     let color = this.color;
+    //     return {
+    //         color: this.color,
+    //         style: this.style,
+    //         width: this.width
+    //     }
+    // };
             
     marker.color.a = 0.5;
 
@@ -260,6 +264,10 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
         }
     }, id);
 
+    w.zoomToFullRoute = () => {
+        // not allowed
+    };
+
     infoTemplate.setContent((args: {
          attributes: { 
         address: string; 
@@ -271,7 +279,7 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
         recordId: string; 
     } }) => {
         let insp = inspections.filter(n => n.text === args.attributes.address)[0];
-        let data = insp.attributes;
+        let data = <any>insp.attributes;
         let keys = Object.keys(data);
         return `${keys.map(k => `${k}: ${data[k]}`).join("<br/>")}`;
     });
@@ -292,6 +300,13 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
     });
 
     w.on("directions-finish", () => {
+        let stopIcons = w.domNode.getElementsByClassName("esriStopIcon");
+        w.stops.forEach((s,i) => {
+            let insp = inspections.filter(n => n.text === s.name)[0];
+            if (insp) {
+                stopIcons[i].classList.add(insp.attributes.status);
+            }
+        })
     });
 
     w.on("directions-finish", () => {
@@ -312,15 +327,19 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
 
     w.on("load", () => {
         let stopLayer = <GraphicsLayer>w._stopLayer;
+        let i = 0;
         stopLayer.on("graphic-add", (args: {graphic:Graphic}) => {
             let g = args.graphic;
-            if (g.type === "simplemarkersymbol") {
-                debugger;
-            let insp = inspections.filter(n => n.text === g.attributes.address)[0];
-            if (insp) {
-                g.symbol = new SimpleMarkerSymbol(g.symbol.toJson());
-                if (insp.attributes.status === "COMPLETE") g.symbol.color.a  = 0.1;
-            } 
+            if (g.symbol.type === "simplemarkersymbol") {
+                let insp = inspections.filter(n => n.text === g.attributes.address)[0];
+                if (insp) {
+                    let symbol = new SimpleMarkerSymbol(g.symbol.toJson());
+                    if (insp.attributes.status === "COMPLETE") {
+                        symbol.color.a  = 0.1;
+                        symbol.outline.color = new Color([200,200,200]);
+                    }
+                    g.setSymbol(symbol);
+                } 
             }
         });
     });
@@ -332,7 +351,7 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
 
     w.domNode.classList.add(color);
 
-    topic.subscribe("/dnd/drop/before", (source: any, nodes: any, copy: boolean, target: { node: HTMLElement, parent: HTMLElement }, e: MouseEvent) => {
+    topic.subscribe("/dnd/drop/before", (source: any, nodes: any, copy: boolean, target: { node: HTMLElement, parent: HTMLElement,current:HTMLElement }, e: MouseEvent) => {
         let dndFrom = <DirectionsWidget>registry.getEnclosingWidget(source.parent);
         if (dndFrom == w) {
             let dndTo = <DirectionsWidget>registry.getEnclosingWidget(target.parent);
@@ -355,6 +374,6 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
             }, 500);
         }
     });
-
+    
     return w;
 }
