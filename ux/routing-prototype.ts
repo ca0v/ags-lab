@@ -4,7 +4,7 @@ import topic = require("dojo/topic");
 import Deferred = require("dojo/Deferred");
 import Map = require("esri/map");
 import InfoTemplate = require("esri/InfoTemplate");
-import Layer = require("esri/layers/GraphicsLayer");
+import GraphicsLayer = require("esri/layers/GraphicsLayer");
 import FeatureLayer = require("esri/layers/FeatureLayer");
 import DirectionsWidget = require("esri/dijit/Directions");
 import Search = require("esri/dijit/Search");
@@ -21,6 +21,7 @@ import Point = require("esri/geometry/Point");
 import SpatialReference = require("esri/SpatialReference");
 import webMercatorUtils = require("esri/geometry/webMercatorUtils");
 import RouteParams = require("esri/tasks/RouteParameters");
+import UniqueValueRenderer=require("esri/renderers/UniqueValueRenderer");
 
 let range = (n: number) => {
     var r = new Array(n);
@@ -38,8 +39,16 @@ let inspections = range(3 * 5).map(i => {
     );
 
     let result = {
-        "text": `Inspection ${i}`,
-        magicKey: `XY 1234${i}`,
+        text: `Inspection ${i}`,
+        attributes:{ 
+            applicationType:  "APPTYPE", 
+            inspectionType:  "INSPECTIONTYPE",
+            inspector:  ["George", "Henry", "Ian"][i % 3],
+            status:  ["ASSIGNED", "COMPLETE"][i % 2],
+            scheduledDate:  new Date().toDateString(), 
+            recordId: 10000 + i
+        },
+        magicKey: `XY${i}`,
         zone: ["green", "red", "blue"][i % 3],
         location: webMercatorUtils.geographicToWebMercator(p)
     };
@@ -73,7 +82,7 @@ export function parse() {
 export function initializeMap(w: Map) {
     w.setExtent(extent, true);
     //w.addLayer(new FeatureLayer("http://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/US_Senators/FeatureServer/0"));
-    w.on("layer-add-result", (args: { layer: Layer }) => {
+    w.on("layer-add-result", (args: { layer: GraphicsLayer }) => {
         console.log(args.layer.id, args.layer);
         switch (args.layer.id) {
             case "directions_routeLayer_dir":
@@ -101,6 +110,16 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
             "style": "esriSLSSolid"
         }
     });
+
+    marker.getStroke = () => {
+        let color = this.color;
+        return {
+            color: this.color,
+            style: this.style,
+            width: this.width
+        }
+    };
+            
     marker.color.a = 0.5;
 
     let routeLines = new SimpleLineSymbol("solid", new Color(color), 3);
@@ -188,6 +207,8 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
         return d;
     };
 
+    let infoTemplate = new InfoTemplate();
+
     let w = new DirectionsWidget({
         map: map,
         theme: `${color}-theme`,
@@ -213,6 +234,7 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
         textSymbolOffset: { x: 0, y: -4 },
         routeSymbol: routeLines,
         stops: [],
+        stopsInfoTemplate: infoTemplate,
         searchOptions: {
             addLayersFromMap: false,
             enableSuggestions: true,
@@ -238,6 +260,26 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
         }
     }, id);
 
+    infoTemplate.setContent((args: {
+         attributes: { 
+        address: string; 
+        applicationType: string; 
+        inspectionType: string; 
+        inspector: string; 
+        status: string; 
+        scheduledDate: string; 
+        recordId: string; 
+    } }) => {
+        let insp = inspections.filter(n => n.text === args.attributes.address)[0];
+        let data = insp.attributes;
+        let keys = Object.keys(data);
+        return `${keys.map(k => `${k}: ${data[k]}`).join("<br/>")}`;
+    });
+
+    infoTemplate.setTitle((args: { attributes: { address: string; } }) => {
+        return `${args.attributes.address}`;
+    });
+
     w.on("segment-highlight", (g: Graphic) => {
     });
 
@@ -247,6 +289,9 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
 
     w.on("directions-start", () => {
         //
+    });
+
+    w.on("directions-finish", () => {
     });
 
     w.on("directions-finish", () => {
@@ -265,6 +310,21 @@ export function initializeDirections(id: string, map: Map, color = "blue"): Dire
 
     w.startup();
 
+    w.on("load", () => {
+        let stopLayer = <GraphicsLayer>w._stopLayer;
+        stopLayer.on("graphic-add", (args: {graphic:Graphic}) => {
+            let g = args.graphic;
+            if (g.type === "simplemarkersymbol") {
+                debugger;
+            let insp = inspections.filter(n => n.text === g.attributes.address)[0];
+            if (insp) {
+                g.symbol = new SimpleMarkerSymbol(g.symbol.toJson());
+                if (insp.attributes.status === "COMPLETE") g.symbol.color.a  = 0.1;
+            } 
+            }
+        });
+    });
+    
     w.addStops(inspections.filter(i => i.zone === color).map(i => ({
         name: i.text,
         feature: new Graphic({ geometry: i.location, attributes: { score: 100 } })
