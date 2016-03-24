@@ -1,6 +1,7 @@
 import registry = require("dijit/registry");
 import on = require("dojo/on");
 import topic = require("dojo/topic");
+import dom = require("dojo/dom-construct");
 import Deferred = require("dojo/Deferred");
 import Map = require("esri/map");
 import InfoTemplate = require("esri/InfoTemplate");
@@ -23,6 +24,8 @@ import webMercatorUtils = require("esri/geometry/webMercatorUtils");
 import RouteParams = require("esri/tasks/RouteParameters");
 import UniqueValueRenderer=require("esri/renderers/UniqueValueRenderer");
 import Services = require("../ips/services");
+
+let routeItemMap = <{[s: string]: Services.Routing.RouteItem}>{};
 
 let config = {
     zones: [{
@@ -73,14 +76,41 @@ let inspections = range(3 * 5).map(i => {
     return result;
 });
 
-function getRoutes() {
+let nextColor = ((colors:string[]) => {
+    let i = 0;
+    let f = () => colors[i++ % colors.length];
+    return f;
+})("red,green,blue".split(","));
+
+let template = (routeName: string) => `
+<div class="route">
+    <input type="checkbox" class="toggler" data-ips-toggler-for="${routeName}" />
+    <label>${routeName}</label>
+    <div id="${routeName}"></div>
+</div>`;
+
+export function getRoutes(routesDom: HTMLElement, map: Map) {
+
     let s = new Services.Routing();
-    s.auth().then(() => s.getRoutes().then(routes => {
-        routes.data.forEach(route => {
-            console.log("route", route);
-            debugger;
+
+    console.log("authenticating before getting routes");
+    s.auth().then(() => {
+
+        console.log("getting routes");
+        s.getRoutes().then(routes => {
+
+            console.log("building directions widget");
+            routes.data.forEach(route => {
+                console.log("route", route);
+                // create a container
+                let routeNode = dom.toDom(template(route.employeeId));
+                routesDom.appendChild(routeNode);
+                initializeDirections(route.employeeId, map, route, nextColor());
+            });
+            parse();
+
         });
-    }))
+    });
 }
 
 function toArray<T extends HTMLElement>(l: NodeListOf<Element>) {
@@ -93,8 +123,7 @@ function toArray<T extends HTMLElement>(l: NodeListOf<Element>) {
     return r;
 };
 
-export function parse() {
-    getRoutes();
+function parse() {
     let togglers = toArray<HTMLInputElement>(document.getElementsByClassName("toggler"));
     togglers.forEach(t => {
 
@@ -123,8 +152,14 @@ export function initializeMap(w: Map) {
     })
 }
 
+let getActivityName = (activity: Services.Routing.Activity) => {
+    let map = <any>{
+        "Hansen.CDR.Building.Inspection": "BI"
+    };
+    return `${map[activity.moniker] || activity.moniker}:${activity.primaryKey}`;
+}
 
-export function initializeDirections(id: string, map: Map, zoneId = "blue"): DirectionsWidget {
+function initializeDirections(id: string, map: Map, route: Services.Routing.Route, zoneId = "blue"): DirectionsWidget {
     let zone = config.zones.filter(z=>z.name===zoneId)[0];
     let marker = new SimpleMarkerSymbol({
         "color": zone.color,
@@ -198,7 +233,7 @@ export function initializeDirections(id: string, map: Map, zoneId = "blue"): Dir
                 foo: "foo"
             },
             location: i.location,
-            score: 100
+            score: 99
         })));
 
         return d;
@@ -218,7 +253,7 @@ export function initializeDirections(id: string, map: Map, zoneId = "blue"): Dir
             address: "TEST3",
             extent: new Extent(p.x - 1, p.y - 1, p.x, p.y, p.spatialReference),
             location: p,
-            score: 100
+            score: 98
         });
         return d;
     };
@@ -321,7 +356,11 @@ export function initializeDirections(id: string, map: Map, zoneId = "blue"): Dir
     });
 
     w.on("directions-start", () => {
-        //
+        console.log("notify services of change");
+        let s = new Services.Routing();
+        let routeItems = <Services.Routing.RouteItem[]>w.stops.map(s => routeItemMap[s.name]);
+        routeItems.forEach((r, i) => r.ordinalIndex = i + 1);
+        s.updateRoute(route.id, routeItems.map(i => i.id));
     });
 
     w.on("directions-finish", () => {
@@ -369,10 +408,21 @@ export function initializeDirections(id: string, map: Map, zoneId = "blue"): Dir
         });
     });
     
-    w.addStops(inspections.filter(i => i.zone === zoneId).map(i => ({
-        name: i.text,
-        feature: new Graphic({ geometry: i.location, attributes: { score: 100 } })
-    })));
+    w.addStops(route.routeItems.map(i => {
+        let key = getActivityName(i.activity);
+        routeItemMap[key] = i;
+        return {
+            name: key,
+            routeItem: i,
+            feature: new Graphic({
+                geometry: i.location,
+                attributes: {
+                    score: 100,
+                    routeItem: i
+                }
+            })
+        };
+    }));
 
     w.domNode.classList.add(zoneId);
 

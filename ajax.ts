@@ -23,26 +23,33 @@ class Ajax {
 
     private ajax<T>(method: string, args?: any, url = this.url) {
 
+        let isData = method === "POST" || method === "PUT";
+
         let promise = new Promise<T>((resolve, reject) => {
 
             let client = new XMLHttpRequest();
             let uri = url;
+            let data:any = null;
 
             if (args) {
-                uri += '?';
-                let argcount = 0;
-                for (let key in args) {
-                    if (args.hasOwnProperty(key)) {
-                        if (argcount++) {
-                            uri += '&';
+                if (isData) {
+                    data = args;
+                } else {
+                    uri += '?';
+                    let argcount = 0;
+                    for (let key in args) {
+                        if (args.hasOwnProperty(key)) {
+                            if (argcount++) {
+                                uri += '&';
+                            }
+                            uri += encodeURIComponent(key) + '=' + encodeURIComponent(args[key]);
                         }
-                        uri += encodeURIComponent(key) + '=' + encodeURIComponent(args[key]);
                     }
                 }
             }
 
             client.open(method, uri);
-            client.send();
+            client.send(data);
 
             client.onload = function() {
                 if (this.status >= 200 && this.status < 300) {
