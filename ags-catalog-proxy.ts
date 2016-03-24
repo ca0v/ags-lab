@@ -4,6 +4,7 @@
 
 import lang = require("dojo/_base/lang");
 import FeatureServer from "./ags-feature-proxy";
+import Ajax = require("./ajax");
 
 interface Service {
     name: string;

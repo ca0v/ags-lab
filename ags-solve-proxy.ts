@@ -1,3 +1,5 @@
+import Ajax = require("./ajax");
+
 export default class BaseSolve {
     protected ajax: Ajax;
     

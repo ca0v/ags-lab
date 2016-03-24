@@ -3,6 +3,7 @@
  */
 
 import lang = require("dojo/_base/lang");
+import Ajax = require("./ajax");
 
 /**
  * mapserver query 

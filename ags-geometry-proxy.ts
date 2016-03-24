@@ -5,6 +5,7 @@
 
 import Units = require("esri/units");
 import lang = require("dojo/_base/lang");
+import Ajax = require("./ajax");
 
 // see http://resources.esri.com/help/9.3/ArcGISDesktop/ArcObjects/esriGeometry/esriSRUnitType.htm
 enum esriSRUnitType {

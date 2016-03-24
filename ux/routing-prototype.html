@@ -29,21 +29,33 @@
     <!--<script src="https://js.arcgis.com/3.16/"></script>-->
     <script src="../bower_components/dojo/dojo.js"></script>
     <script>
-        require([
-        "esri/urlUtils", "esri/map", "esri/dijit/Directions",
-        "dojo/parser","./routing-prototype.js",
-        "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dojo/domReady!"
-      ], function(
-        urlUtils, Map, Directions,
-        parser,go
-      ) {
-        parser.parse().then(() => {
+        let path  = location.pathname.split("/");
+        let thisPage = path.pop();
+        path.pop();//ux
+
+        require({
+            packages: [{
+            name: "app",
+            location: path.join("/")                 
+            }]
         });
+        
+        require([
+            "dojo/_base/config",
+        "esri/urlUtils", "esri/map", "esri/dijit/Directions",
+        "dojo/parser",
+        "app/ux/routing-prototype",
+        "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dojo/domReady!"
+      ], function(config, urlUtils, Map, Directions, parser, go) {
+          
+        parser.parse();
+        
         //all requests to route.arcgis.com will proxy to the proxyUrl defined in this object.
         urlUtils.addProxyRule({
           urlPrefix: "route.arcgis.com",
           proxyUrl: "/sproxy/"
         });
+        
         urlUtils.addProxyRule({
           urlPrefix: "traffic.arcgis.com",
           proxyUrl: "/sproxy/"
@@ -54,7 +66,7 @@
           center:[-117.138991, 32.739543],
           zoom: 14
         });
-
+    
         go.initializeMap(map);
         go.initializeDirections("dir", map, "red");
         go.initializeDirections("dir2", map,"green");

@@ -22,6 +22,7 @@ import SpatialReference = require("esri/SpatialReference");
 import webMercatorUtils = require("esri/geometry/webMercatorUtils");
 import RouteParams = require("esri/tasks/RouteParameters");
 import UniqueValueRenderer=require("esri/renderers/UniqueValueRenderer");
+import Services = require("../ips/services");
 
 let config = {
     zones: [{
@@ -72,6 +73,16 @@ let inspections = range(3 * 5).map(i => {
     return result;
 });
 
+function getRoutes() {
+    let s = new Services.Routing();
+    s.auth().then(() => s.getRoutes().then(routes => {
+        routes.data.forEach(route => {
+            console.log("route", route);
+            debugger;
+        });
+    }))
+}
+
 function toArray<T extends HTMLElement>(l: NodeListOf<Element>) {
     let r = <Array<T>>[];
 
@@ -83,6 +94,7 @@ function toArray<T extends HTMLElement>(l: NodeListOf<Element>) {
 };
 
 export function parse() {
+    getRoutes();
     let togglers = toArray<HTMLInputElement>(document.getElementsByClassName("toggler"));
     togglers.forEach(t => {
 
@@ -390,3 +402,4 @@ export function initializeDirections(id: string, map: Map, zoneId = "blue"): Dir
     
     return w;
 }
+

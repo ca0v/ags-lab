@@ -4,11 +4,9 @@
 
 "use strict";
 
-const use_jsonp = true;
-
 class Ajax {
 
-    constructor(public url: string) {
+    constructor(public url: string, public use_jsonp = true) {
     }
 
     private jsonp<T>(args?: any, url = this.url) {
@@ -24,7 +22,6 @@ class Ajax {
     }
 
     private ajax<T>(method: string, args?: any, url = this.url) {
-        if (use_jsonp) return this.jsonp<T>(args, url);
 
         let promise = new Promise<T>((resolve, reject) => {
 
@@ -65,19 +62,28 @@ class Ajax {
         return promise;
     }
 
+    stub<T>(result: T) {
+        return new Promise<T>((resolve, reject) => {
+            resolve(result);
+        });
+    }
+
     get<T>(args?: any) {
+        if (this.use_jsonp) return this.jsonp<T>(args);
         return this.ajax<T>('GET', args);
     }
 
-    post(args?: any) {
-        return this.ajax('POST', args);
+    post<T>(args?: any) {
+        return this.ajax<T>('POST', args);
     }
 
-    put(args?: any) {
-        return this.ajax('PUT', args);
+    put<T>(args?: any) {
+        return this.ajax<T>('PUT', args);
     }
 
     delete(args?: any) {
         return this.ajax('DELETE', args);
     }
 }
+
+export = Ajax;

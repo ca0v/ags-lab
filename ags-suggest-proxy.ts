@@ -1,4 +1,5 @@
 import lang = require("dojo/_base/lang");
+import Ajax = require("./ajax");
 
 export default class Suggest {
     
