@@ -40,41 +40,9 @@ let config = {
     }]    
 };
 
-let range = (n: number) => {
-    var r = new Array(n);
-    for (var i = 0; i < n; i++) r[i] = i;
-    return r;
-}
-
 let epsg4326 = new SpatialReference({ wkid: 4326 });
-let extent = new Extent(-117.13, 32.73, -117.12, 32.74, epsg4326);
-let dx = 0;
-let dy = 0;
-let inspections = range(3 * 5).map(i => {
-    dx = Math.random() * (extent.xmax - extent.xmin) / 3;
-    dy = Math.random() * (extent.ymax - extent.ymin) / 3;
-    let p = new Point(
-        extent.xmin + dx * (1 + i % 3),
-        extent.ymin + dy * (1 + i % 3),
-        epsg4326
-    );
 
-    let result = {
-        text: `Inspection ${i}`,
-        attributes:{ 
-            applicationType:  "APPTYPE", 
-            inspectionType:  "INSPECTIONTYPE",
-            inspector:  ["George", "Henry", "Ian"][i % 3],
-            status:  ["ASSIGNED", "COMPLETE"][i > 5 ? 0 : 1],
-            scheduledDate:  new Date().toDateString(), 
-            recordId: 10000 + i
-        },
-        magicKey: `XY${i}`,
-        zone: config.zones[i % 3].name,
-        location: webMercatorUtils.geographicToWebMercator(p)
-    };
-    return result;
-});
+let extent = new Extent(-117.13, 32.73, -117.12, 32.74, epsg4326);
 
 let nextColor = ((colors:string[]) => {
     let i = 0;
@@ -88,30 +56,6 @@ let template = (routeName: string) => `
     <label>${routeName}</label>
     <div id="${routeName}"></div>
 </div>`;
-
-export function getRoutes(routesDom: HTMLElement, map: Map) {
-
-    let s = new Services.Routing();
-
-    console.log("authenticating before getting routes");
-    s.auth().then(() => {
-
-        console.log("getting routes");
-        s.getRoutes().then(routes => {
-
-            console.log("building directions widget");
-            routes.data.forEach(route => {
-                console.log("route", route);
-                // create a container
-                let routeNode = dom.toDom(template(route.employeeId));
-                routesDom.appendChild(routeNode);
-                initializeDirections(route.employeeId, map, route, nextColor());
-            });
-            parse();
-
-        });
-    });
-}
 
 function toArray<T extends HTMLElement>(l: NodeListOf<Element>) {
     let r = <Array<T>>[];
@@ -140,16 +84,6 @@ function parse() {
 export function initializeMap(w: Map) {
     w.setExtent(extent, true);
     //w.addLayer(new FeatureLayer("http://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/US_Senators/FeatureServer/0"));
-    w.on("layer-add-result", (args: { layer: GraphicsLayer }) => {
-        console.log(args.layer.id, args.layer);
-        switch (args.layer.id) {
-            case "directions_routeLayer_dir":
-                let l = args.layer;
-                l.on("graphic-add", (args: { graphic: Graphic }) => {
-                })
-                break;
-        }
-    })
 }
 
 let getActivityName = (activity: Services.Routing.Activity) => {
@@ -191,86 +125,6 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
     routeLines.color.a = 0.5;
 
 
-    let inspectionLocator = new Locator("");
-
-    inspectionLocator.setOutSpatialReference(map.spatialReference);
-    inspectionLocator.addressesToLocations = (args: {
-        magicKey: string;
-        address: {
-            SingleLine: string;
-        },
-        distance: number;
-        location: any;
-        maxLocations: number;
-    }, callback: Function, errback: Function) => {
-        let d = new Deferred();
-        debugger;
-        d.then((result: any) => {
-            on.emit(inspectionLocator, "addresses-to-locations-complete", result);
-        });
-        return d;
-    };
-
-    inspectionLocator.addressToLocations = (args: {
-        magicKey: string;
-        address: {
-            SingleLine: string;
-        },
-        distance: number;
-        location: Point;
-        maxLocations: number;
-    }, callback: Function, errback: Function) => {
-        let d = new Deferred();
-
-        d.then((result: any) => {
-            callback && callback(result);
-            on.emit(inspectionLocator, "address-to-locations-complete", result);
-        });
-
-        d.resolve(inspections.filter(i => i.text === args.address.SingleLine).map(i => ({
-            address: "BOGUS_" + i.text,
-            attributes: {
-                foo: "foo"
-            },
-            location: i.location,
-            score: 99
-        })));
-
-        return d;
-    };
-
-    inspectionLocator.locationToAddress = (location: any, distance: number, callback: Function, errback: Function) => {
-        let d = new Deferred();
-
-        d.then((result: any) => {
-            callback && callback(result);
-            on.emit(inspectionLocator, "location-to-address-complete", result);
-        });
-
-        //this location gets corrupted in URL until directions are reordered
-        let p = new Point(location);
-        d.resolve({
-            address: "TEST3",
-            extent: new Extent(p.x - 1, p.y - 1, p.x, p.y, p.spatialReference),
-            location: p,
-            score: 98
-        });
-        return d;
-    };
-
-    inspectionLocator.suggestLocations = (args: {
-        distance: number;
-        maxSuggestions: number;
-        text: string;
-    }) => {
-        let d = new Deferred();
-
-        d.then((suggestions: any[]) => {
-            on.emit(inspectionLocator, "suggest-locations-complete", suggestions);
-        });
-        d.resolve(inspections.filter(i => i.zone === zoneId));
-        return d;
-    };
 
     let infoTemplate = new InfoTemplate();
 
@@ -298,30 +152,7 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
         textSymbolOffset: { x: 0, y: -4 },
         routeSymbol: routeLines,
         stops: [],
-        stopsInfoTemplate: infoTemplate,
-        searchOptions: {
-            addLayersFromMap: false,
-            enableSuggestions: true,
-            allPlaceholder: "Inspection or Address",
-            autoSelect: false,
-            enableSearchingAll: false,
-            enableSourcesMenu: true,
-            sources: [
-                {
-                    locator: inspectionLocator,
-                    singleLineFieldName: "SingleLine",
-                    name: "Inspections",
-                    localSearchOptions: {
-                        minScale: 3000,
-                        distance: 500
-                    },
-                    placeholder: "Inspection #",
-                    maxResults: 3,
-                    maxSuggestions: 6,
-                    enableSuggestions: true,
-                    minCharacters: 3
-                }]
-        }
+        stopsInfoTemplate: infoTemplate
     }, id);
 
     w.zoomToFullRoute = () => {
@@ -338,8 +169,9 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
         scheduledDate: string; 
         recordId: string; 
     } }) => {
-        let insp = inspections.filter(n => n.text === args.attributes.address)[0];
-        let data = <any>insp.attributes;
+        debugger;
+        let routeItem = routeItemMap[args.attributes.address];
+        let data = <any>routeItem;
         let keys = Object.keys(data);
         return `${keys.map(k => `${k}: ${data[k]}`).join("<br/>")}`;
     });
@@ -366,9 +198,10 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
     w.on("directions-finish", () => {
         let stopIcons = w.domNode.getElementsByClassName("esriStopIcon");
         w.stops.forEach((s,i) => {
-            let insp = inspections.filter(n => n.text === s.name)[0];
-            if (insp) {
-                stopIcons[i].classList.add(insp.attributes.status);
+            let routeItem = routeItemMap[s.name];
+            if (routeItem) {
+                // really want do know if the insp. has alreay been completed...
+                stopIcons[i].classList.add(routeItem.isActivityCompleted ? "COMPLETE" : "PENDING");
             }
         })
     });
@@ -395,10 +228,12 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
         stopLayer.on("graphic-add", (args: {graphic:Graphic}) => {
             let g = args.graphic;
             if (g.symbol.type === "simplemarkersymbol") {
-                let insp = inspections.filter(n => n.text === g.attributes.address)[0];
-                if (insp) {
+                let routeItem = routeItemMap[g.attributes.address];
+                if (routeItem) {
                     let symbol = new SimpleMarkerSymbol(g.symbol.toJson());
-                    if (insp.attributes.status === "COMPLETE") {
+
+                    // really want do know if the insp. has alreay been completed...
+                    if (routeItem.isActivityCompleted) {
                         symbol.color.a  = 0.1;
                         symbol.outline.color = new Color([200,200,200]);
                     }
@@ -408,7 +243,7 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
         });
     });
     
-    w.addStops(route.routeItems.map(i => {
+    w.addStops(route.routeItems.sort((a,b) => a.ordinalIndex - b.ordinalIndex).map(i => {
         let key = getActivityName(i.activity);
         routeItemMap[key] = i;
         return {
@@ -451,5 +286,29 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
     });
     
     return w;
+}
+
+export function getRoutes(routesDom: HTMLElement, map: Map) {
+
+    let s = new Services.Routing();
+
+    console.log("authenticating before getting routes");
+    s.auth().then(() => {
+
+        console.log("getting routes");
+        s.getRoutes().then(routes => {
+
+            console.log("building directions widget");
+            routes.data.forEach(route => {
+                console.log("route", route);
+                // create a container
+                let routeNode = dom.toDom(template(route.employeeId));
+                routesDom.appendChild(routeNode);
+                initializeDirections(route.employeeId, map, route, nextColor());
+            });
+            parse();
+
+        });
+    });
 }
 

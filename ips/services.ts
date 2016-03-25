@@ -13,6 +13,7 @@ export module Routing {
     }
 
     export interface RouteItem {
+        isActivityCompleted: boolean;
         ordinalIndex: number;
         activity: Activity;
         location: Location;
@@ -387,7 +388,7 @@ export class Routing {
             return routes;
         });
         
-        return ajax.get<Routing.RouteResponse>();
+        return ajax.get<Routing.RouteResponse>().then(v => JSON.parse(<any>v));;
     }
 
     optimizeRoute(routeId: number) {
@@ -402,9 +403,7 @@ export class Routing {
         let ajax = new Ajax(`${this.api}/routing/routes/orderchanged`);
         return ajax.put<Routing.Route>({
             Id: routeId,
-            Permutation: {
-                SetOrder: routeItems
-            }
-        });
+            Items: routeItems
+        }).then(v => JSON.parse(<any>v));
     }    
 }

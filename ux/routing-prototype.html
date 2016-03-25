@@ -50,17 +50,6 @@
           
         parser.parse();
         
-        //all requests to route.arcgis.com will proxy to the proxyUrl defined in this object.
-        urlUtils.addProxyRule({
-          urlPrefix: "route.arcgis.com",
-          proxyUrl: "/sproxy/"
-        });
-        
-        urlUtils.addProxyRule({
-          urlPrefix: "traffic.arcgis.com",
-          proxyUrl: "/sproxy/"
-        });
-
         var map = new Map("map", {
           basemap: "streets",
           center:[-117.138991, 32.739543],

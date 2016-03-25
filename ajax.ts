@@ -6,7 +6,7 @@
 
 class Ajax {
 
-    constructor(public url: string, public use_jsonp = true) {
+    constructor(public url: string, public use_jsonp = false) {
     }
 
     private jsonp<T>(args?: any, url = this.url) {
@@ -21,6 +21,8 @@ class Ajax {
         return promise;
     }
 
+    // http://www.html5rocks.com/en/tutorials/cors/    
+//application/json
     private ajax<T>(method: string, args?: any, url = this.url) {
 
         let isData = method === "POST" || method === "PUT";
@@ -28,12 +30,14 @@ class Ajax {
         let promise = new Promise<T>((resolve, reject) => {
 
             let client = new XMLHttpRequest();
+            client.withCredentials = true;
+
             let uri = url;
             let data:any = null;
 
             if (args) {
                 if (isData) {
-                    data = args;
+                    data = JSON.stringify(args);
                 } else {
                     uri += '?';
                     let argcount = 0;
@@ -48,7 +52,8 @@ class Ajax {
                 }
             }
 
-            client.open(method, uri);
+            client.open(method, uri, true);
+            if (isData) client.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
             client.send(data);
 
             client.onload = function() {
@@ -60,6 +65,7 @@ class Ajax {
                     reject(this.statusText);
                 }
             };
+
             client.onerror = function() {
                 reject(this.statusText);
             };
