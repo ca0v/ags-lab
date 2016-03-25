@@ -10,15 +10,13 @@ class Ajax {
     }
 
     private jsonp<T>(args?: any, url = this.url) {
-        // Creating a promise
-        let promise = new Promise<T>((resolve, reject) => {
+        return new Promise<T>((resolve, reject) => {
 
             args["callback"] = "define";
             let uri = url + "?" + Object.keys(args).map(k => `${k}=${args[k]}`).join('&');
             require([uri], (data: T) => resolve(data));
         });
-
-        return promise;
+        
     }
 
     // http://www.html5rocks.com/en/tutorials/cors/    
@@ -59,7 +57,7 @@ class Ajax {
             client.onload = function() {
                 if (this.status >= 200 && this.status < 300) {
                     // Performs the function "resolve" when this.status is equal to 2xx
-                    resolve(this.response);
+                    resolve(JSON.parse(this.response));
                 } else {
                     // Performs the function "reject" when this.status is different than 2xx
                     reject(this.statusText);

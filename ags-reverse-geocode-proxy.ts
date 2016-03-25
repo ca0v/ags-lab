@@ -65,7 +65,6 @@ export default class ReverseGeocode {
                 }
             }
         }) => {
-            value = JSON.parse(<any>value);
             console.log("ReverseGeocode", value.address);
             console.log(value);
         });

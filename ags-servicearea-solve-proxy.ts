@@ -108,7 +108,6 @@ export default class ServiceAreaSolve extends Base {
                 }
             }) => {
                 // how to get route to return json?
-                value = JSON.parse(<any>value);
                 if (value.error) {
                     console.error(value.error.message);
                 } else {

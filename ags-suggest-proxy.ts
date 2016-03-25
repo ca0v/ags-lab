@@ -38,7 +38,6 @@ export default class Suggest {
                 }>
             }) => {
                 // how to get route to return json?
-                value = JSON.parse(<any>value);
                 console.log("text", value.suggestions.map(s => s.text));            
                 console.log(value);
         });

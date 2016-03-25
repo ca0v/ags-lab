@@ -64,7 +64,6 @@ export default class Find {
                 }
             }>;
         }) => {
-            value = JSON.parse(<any>value);
             console.log("location", value.locations.map(c => c.name));
             console.log(value);
         });

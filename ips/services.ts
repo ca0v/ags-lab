@@ -388,7 +388,7 @@ export class Routing {
             return routes;
         });
         
-        return ajax.get<Routing.RouteResponse>().then(v => JSON.parse(<any>v));;
+        return ajax.get<Routing.RouteResponse>();
     }
 
     optimizeRoute(routeId: number) {
@@ -404,6 +404,6 @@ export class Routing {
         return ajax.put<Routing.Route>({
             Id: routeId,
             Items: routeItems
-        }).then(v => JSON.parse(<any>v));
+        });
     }    
 }

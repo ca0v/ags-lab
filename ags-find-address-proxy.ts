@@ -63,7 +63,6 @@ export default class FindAddress {
                 }
             }>;
         }) => {
-            value = JSON.parse(<any>value);
             console.log("location", value.candidates.map(c => c.location));
             console.log(value);
         });
