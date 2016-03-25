@@ -6,7 +6,13 @@
 
 class Ajax {
 
-    constructor(public url: string, public use_jsonp = false) {
+    public options = {
+        use_json: true,
+        use_jsonp: false,
+        use_cors: true
+    }
+
+    constructor(public url: string) {
     }
 
     private jsonp<T>(args?: any, url = this.url) {
@@ -16,22 +22,23 @@ class Ajax {
             let uri = url + "?" + Object.keys(args).map(k => `${k}=${args[k]}`).join('&');
             require([uri], (data: T) => resolve(data));
         });
-        
+
     }
 
     // http://www.html5rocks.com/en/tutorials/cors/    
-//application/json
     private ajax<T>(method: string, args?: any, url = this.url) {
 
         let isData = method === "POST" || method === "PUT";
+        let isJson = this.options.use_json;
+        let isCors = this.options.use_cors;
 
         let promise = new Promise<T>((resolve, reject) => {
 
             let client = new XMLHttpRequest();
-            client.withCredentials = true;
+            if (isCors) client.withCredentials = true;
 
             let uri = url;
-            let data:any = null;
+            let data: any = null;
 
             if (args) {
                 if (isData) {
@@ -51,16 +58,14 @@ class Ajax {
             }
 
             client.open(method, uri, true);
-            if (isData) client.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+            if (isData && isJson) client.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
             client.send(data);
 
-            client.onload = function() {
-                if (this.status >= 200 && this.status < 300) {
-                    // Performs the function "resolve" when this.status is equal to 2xx
-                    resolve(JSON.parse(this.response));
+            client.onload = () => {
+                if (client.status >= 200 && client.status < 300) {
+                    resolve(isJson ? JSON.parse(client.response) : client.response);
                 } else {
-                    // Performs the function "reject" when this.status is different than 2xx
-                    reject(this.statusText);
+                    reject(client.statusText);
                 }
             };
 
@@ -80,7 +85,7 @@ class Ajax {
     }
 
     get<T>(args?: any) {
-        if (this.use_jsonp) return this.jsonp<T>(args);
+        if (this.options.use_jsonp) return this.jsonp<T>(args);
         return this.ajax<T>('GET', args);
     }
 
