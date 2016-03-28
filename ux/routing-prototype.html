@@ -42,10 +42,10 @@
         
         require([
             "dojo/_base/config",
-        "esri/urlUtils", "esri/map", "esri/dijit/Directions",
-        "dojo/parser",
-        "app/ux/routing-prototype",
-        "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dojo/domReady!"
+            "esri/urlUtils", "esri/map",
+            "dojo/parser",
+            "app/ux/routing-prototype",
+            "dijit/layout/BorderContainer", "dijit/layout/ContentPane", "dojo/domReady!"
       ], function(config, urlUtils, Map, Directions, parser, go) {
           
         parser.parse();
@@ -56,9 +56,8 @@
           zoom: 14
         });
     
-        go.initializeMap(map);
+        go.initializeMap(map);       
         go.getRoutes(document.getElementById("routes"), map);
-        
       });
     </script>
 </head>

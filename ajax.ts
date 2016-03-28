@@ -62,7 +62,9 @@ class Ajax {
             client.send(data);
 
             client.onload = () => {
+                console.log("content-type", client.getResponseHeader("Content-Type"));
                 if (client.status >= 200 && client.status < 300) {
+                    isJson = isJson || 0 === client.getResponseHeader("Content-Type").indexOf("application/json");
                     resolve(isJson ? JSON.parse(client.response) : client.response);
                 } else {
                     reject(client.statusText);

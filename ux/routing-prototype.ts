@@ -1,3 +1,6 @@
+// To use the IdentityManager simply include esri/IdentityManager as part of your require statement.
+import "esri/IdentityManager";
+
 import registry = require("dijit/registry");
 import on = require("dojo/on");
 import topic = require("dojo/topic");
@@ -130,7 +133,7 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
 
     let w = new DirectionsWidget({
         map: map,
-        routeTaskUrl: "http://sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/Route",
+        routeTaskUrl: "http://route.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World",
         traffic: false,
         optimalRoute: false,
         autoSolve: false,
@@ -162,17 +165,11 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
     infoTemplate.setContent((args: {
          attributes: { 
         address: string; 
-        applicationType: string; 
-        inspectionType: string; 
-        inspector: string; 
-        status: string; 
-        scheduledDate: string; 
-        recordId: string; 
     } }) => {
-        debugger;
         let routeItem = routeItemMap[args.attributes.address];
         let data = <any>routeItem;
-        let keys = Object.keys(data);
+        let keys = Object.keys(data).filter(k => typeof data[k] !== "Object");
+        keys = "id,isActivityCompleted,scheduledDate,activityType,lastModifiedBy,lastModifiedDateTime".split(',');
         return `${keys.map(k => `${k}: ${data[k]}`).join("<br/>")}`;
     });
 
