@@ -256,6 +256,7 @@ export module Routing {
 
     export interface Route {
         employeeId: string;
+        employeeFullName: string;
         routeDate: string;
         startLocation: Location;
         endLocation: Location;
@@ -279,11 +280,11 @@ export module Routing {
 
 export class Routing {
 
-    constructor(public api = "http://usrcdpscovis01/restservices/api") {
+    constructor(public api: string) {
     }
 
-    auth(userName = "Hansen8") {
-        let ajax = new Ajax(`${this.api}/auth?username=${userName}&password=`);
+    auth(id: { username: string; password: string }) {
+        let ajax = new Ajax(`${this.api}/auth?username=${id.username}&password=${id.password}`);
         return ajax.get<{sessionId: string}>();
     }
 

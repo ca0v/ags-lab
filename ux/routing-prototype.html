@@ -57,7 +57,11 @@
         });
     
         go.initializeMap(map);       
-        go.getRoutes(document.getElementById("routes"), map);
+        go.getRoutes(document.getElementById("routes"), {
+                map: map,
+                restapi: "http://usrcdpscovis01/restservices/api",
+                auth: {username: "Hansen8", password: ""}
+        });
       });
     </script>
 </head>

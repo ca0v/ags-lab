@@ -6,6 +6,7 @@ import on = require("dojo/on");
 import topic = require("dojo/topic");
 import dom = require("dojo/dom-construct");
 import Deferred = require("dojo/Deferred");
+import debounce = require("dojo/debounce");
 import Map = require("esri/map");
 import InfoTemplate = require("esri/InfoTemplate");
 import GraphicsLayer = require("esri/layers/GraphicsLayer");
@@ -30,7 +31,7 @@ import Services = require("../ips/services");
 
 let routeItemMap = <{[s: string]: Services.Routing.RouteItem}>{};
 
-let RoutingService = new Services.Routing();
+let RoutingService : Services.Routing;
 
 let config = {
     zones: [{
@@ -58,7 +59,7 @@ let nextColor = ((colors:string[]) => {
 let template = (route: Services.Routing.Route) => `
 <div class="route">
     <input type="checkbox" class="toggler" data-ips-toggler-for="${route.employeeId}" />
-    <label>${route.employeeName || route.employeeId}</label>
+    <label>${route.employeeFullName || route.employeeId}</label>
     <div id="${route.employeeId}"></div>
 </div>`;
 
@@ -126,7 +127,12 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
     let routeLines = new SimpleLineSymbol("solid", new Color(zone.color), 3);
     routeLines.color.a = 0.5;
 
-
+    let updateRoute = debounce(() => {
+        console.log("notify services of change");
+        let routeItems = <Services.Routing.RouteItem[]>w.stops.map(s => routeItemMap[s.name]);
+        routeItems.forEach((r, i) => r.ordinalIndex = i + 1);
+        RoutingService.updateRoute(route.id, routeItems.map(i => i.id));
+    }, 500);
 
     let infoTemplate = new InfoTemplate();
 
@@ -185,11 +191,7 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
     });
 
     w.on("directions-start", () => {
-        console.log("notify services of change");
-        let s = RoutingService;
-        let routeItems = <Services.Routing.RouteItem[]>w.stops.map(s => routeItemMap[s.name]);
-        routeItems.forEach((r, i) => r.ordinalIndex = i + 1);
-        s.updateRoute(route.id, routeItems.map(i => i.id));
+        // updateRoute();
     });
 
     w.on("directions-finish", () => {
@@ -307,7 +309,10 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
         let dndFrom = <DirectionsWidget>registry.getEnclosingWidget(source.parent);
         if (dndFrom == w) {
             let dndTo = <DirectionsWidget>registry.getEnclosingWidget(target.parent);
-            if (dndFrom === dndTo) return;
+            if (dndFrom === dndTo) {
+                updateRoute();
+                return; 
+            }
             let i = dndFrom._dnd.getAllNodes().indexOf(nodes[0]);
             let j = dndTo._dnd.getAllNodes().indexOf(target.current);
             let stop = dndFrom.stops[i];
@@ -321,18 +326,27 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
                 });
                 dndTo.stops = [];
                 dndTo.reset().then(() => {
+                    // update the destination route
                     dndTo.addStops(stops2);
                 });
-            }, 500);
+            }, 50);
+        } else {
+            let dndTo = <DirectionsWidget>registry.getEnclosingWidget(target.parent);
+            if (w === dndTo) updateRoute();
         }
     });
     
     return w;
 }
 
-export function getRoutes(routesDom: HTMLElement, map: Map) {
+export function getRoutes(routesDom: HTMLElement, config: {
+    map: Map;
+    restapi: string;
+    auth: { username: string; password: string;}
+}) {
 
-    let s = RoutingService;
+    let s = RoutingService = new Services.Routing(config.restapi);
+
     let status = document.createElement("label");
     status.classList.add("status");
     routesDom.appendChild(status);
@@ -352,7 +366,7 @@ export function getRoutes(routesDom: HTMLElement, map: Map) {
     }
 
     reportStatus("Authenticating before getting routes");
-    s.auth().then(() => {
+    s.auth(config.auth).then(() => {
 
         reportStatus("Getting routes");
         s.getRoutes().then(routes => {
@@ -363,7 +377,7 @@ export function getRoutes(routesDom: HTMLElement, map: Map) {
                 // create a container
                 let routeNode = dom.toDom(template(route));
                 routesDom.appendChild(routeNode);
-                initializeDirections(route.employeeId, map, route, nextColor());
+                initializeDirections(route.employeeId, config.map, route, nextColor());
             });
 
 

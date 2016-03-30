@@ -1,3 +1,10 @@
+.ipsOptimizeButton {
+    display: block;
+    text-align: right;
+    margin: 0 10px 0 10px;
+    height: 30px;
+}
+
 .routes {
     height: auto;
     max-height: 480px;
