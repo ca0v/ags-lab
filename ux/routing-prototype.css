@@ -9,20 +9,25 @@
     top: 20px;
     width: auto;
     left: 61px;
-    display: flex;
+    /*display: flex;*/
     opacity: 0.9;
     border-radius: 6px;
-    border: 1px solid black;
+    /*border: 1px solid black;*/
+}
+
+.routes .status {
+    width: 100%;
+    min-width: 80px;
+    display: inline-block;
+    text-overflow: ellipsis;
 }
 
 .routes .route {
-    /* display: initial; */
-    /* height: auto; */
-    /* z-index: 1; */
-    /* margin: 4px; */
-    /* background: white; */
     padding: 4px;
     opacity: 0.9;
+    border: 1px solid black;
+    border-radius: 4px;
+    margin: 8px;
 }
 
 .route:nth-child(1) {
@@ -43,6 +48,8 @@
 .simpleDirections {
 }
 
+.esriRoutesError,
+.esriDirectionsButton,
 .esriStopsOptionsButton,
 .esriStopsAddDestinationBtn,
 .esriTravelModesContainer,

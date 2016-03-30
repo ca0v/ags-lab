@@ -1,5 +1,5 @@
 // To use the IdentityManager simply include esri/IdentityManager as part of your require statement.
-import "esri/IdentityManager";
+//import "esri/IdentityManager";
 
 import registry = require("dijit/registry");
 import on = require("dojo/on");
@@ -30,6 +30,8 @@ import Services = require("../ips/services");
 
 let routeItemMap = <{[s: string]: Services.Routing.RouteItem}>{};
 
+let RoutingService = new Services.Routing();
+
 let config = {
     zones: [{
         name: "red",
@@ -53,11 +55,11 @@ let nextColor = ((colors:string[]) => {
     return f;
 })("red,green,blue".split(","));
 
-let template = (routeName: string) => `
+let template = (route: Services.Routing.Route) => `
 <div class="route">
-    <input type="checkbox" class="toggler" data-ips-toggler-for="${routeName}" />
-    <label>${routeName}</label>
-    <div id="${routeName}"></div>
+    <input type="checkbox" class="toggler" data-ips-toggler-for="${route.employeeId}" />
+    <label>${route.employeeName || route.employeeId}</label>
+    <div id="${route.employeeId}"></div>
 </div>`;
 
 function toArray<T extends HTMLElement>(l: NodeListOf<Element>) {
@@ -89,11 +91,8 @@ export function initializeMap(w: Map) {
     //w.addLayer(new FeatureLayer("http://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/US_Senators/FeatureServer/0"));
 }
 
-let getActivityName = (activity: Services.Routing.Activity) => {
-    let map = <any>{
-        "Hansen.CDR.Building.Inspection": "BI"
-    };
-    return `${map[activity.moniker] || activity.moniker}:${activity.primaryKey}`;
+let getActivityName = (routeItem: Services.Routing.RouteItem) => {
+    return `${routeItem.activityType} #${routeItem.id}`;
 }
 
 function initializeDirections(id: string, map: Map, route: Services.Routing.Route, zoneId = "blue"): DirectionsWidget {
@@ -133,7 +132,8 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
 
     let w = new DirectionsWidget({
         map: map,
-        routeTaskUrl: "http://route.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World",
+        //routeTaskUrl: "http://sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/Route",
+        //routeTaskUrl: "http://route.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World",
         traffic: false,
         optimalRoute: false,
         autoSolve: false,
@@ -141,15 +141,15 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
         showReturnToStartOption: false,
         showReverseStopsButton: false,
         dragging: false,
-        showActivateButton: true,
-        showClearButton: true,
+        showActivateButton: false, // do not allow adding points via clicking map
+        showClearButton: false, // disallow clearing the route
         showMilesKilometersOption: false,
         showOptimalRouteOption: false,
         showPrintPage: false,
         showTrafficOption: false,
         showTravelModesOption: false,
-        fromSymbol: <any>marker,
-        stopSymbol: <any>marker,
+        // fromSymbol: <any>marker,
+        // stopSymbol: <any>marker,
         toSymbol: <any>marker,
         unreachedSymbol: <any>marker,
         textSymbolOffset: { x: 0, y: -4 },
@@ -186,7 +186,7 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
 
     w.on("directions-start", () => {
         console.log("notify services of change");
-        let s = new Services.Routing();
+        let s = RoutingService;
         let routeItems = <Services.Routing.RouteItem[]>w.stops.map(s => routeItemMap[s.name]);
         routeItems.forEach((r, i) => r.ordinalIndex = i + 1);
         s.updateRoute(route.id, routeItems.map(i => i.id));
@@ -219,6 +219,23 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
 
     w.startup();
 
+    {
+        let optimizeButton = document.createElement("button");
+        optimizeButton.className = "ipsOptimizeButton";
+        optimizeButton.innerHTML = "Optimize";
+        let parent = w.domNode.getElementsByClassName("esriStopsButtons")[0];
+        parent.appendChild(optimizeButton);
+        optimizeButton.onclick = () => {
+            w.reset();
+            RoutingService.optimizeRoute(route.id).then(newRoute => {
+                route = newRoute;
+                w.clearDirections();
+                w.stops = [];
+                addStops();
+            });
+        };
+    }
+
     w.on("load", () => {
         let stopLayer = <GraphicsLayer>w._stopLayer;
         let i = 0;
@@ -239,22 +256,50 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
             }
         });
     });
-    
-    w.addStops(route.routeItems.sort((a,b) => a.ordinalIndex - b.ordinalIndex).map(i => {
-        let key = getActivityName(i.activity);
-        routeItemMap[key] = i;
-        return {
-            name: key,
-            routeItem: i,
+
+    let addStops = () => {
+
+        w.addStops(route.routeItems.sort((a, b) => a.ordinalIndex - b.ordinalIndex).map(i => {
+            let key = getActivityName(i);
+            routeItemMap[key] = i;
+            return {
+                name: key,
+                routeItem: i,
+                feature: new Graphic({
+                    geometry: i.location,
+                    attributes: {
+                        score: 100,
+                        routeItem: i
+                    }
+                })
+            };
+        }));
+
+        return;
+
+        routeItemMap["Start"] = route.routeItems[0];
+
+        w.addStop({
+            name: "Start",
+            routeItem: routeItemMap["Start"],
             feature: new Graphic({
-                geometry: i.location,
-                attributes: {
-                    score: 100,
-                    routeItem: i
-                }
+                geometry: route.startLocation
             })
-        };
-    }));
+        }, 0);
+
+        routeItemMap["Finish"] = route.routeItems[route.routeItems.length - 1];
+
+        w.addStop({
+            name: "Finish",
+            routeItem: routeItemMap["Finish"],
+            feature: new Graphic({
+                geometry: route.endLocation
+            })
+        }, w.stops.length - 1);
+
+    };
+
+    addStops();
 
     w.domNode.classList.add(zoneId);
 
@@ -287,22 +332,41 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
 
 export function getRoutes(routesDom: HTMLElement, map: Map) {
 
-    let s = new Services.Routing();
+    let s = RoutingService;
+    let status = document.createElement("label");
+    status.classList.add("status");
+    routesDom.appendChild(status);
 
-    console.log("authenticating before getting routes");
+    let h = setInterval(() => {
+        status.innerHTML += ".";
+    }, 2000);
+
+    let reportStatus = (text: string) => {
+        status.innerHTML = text + "&nbsp;";
+        status.title = text;
+    };
+
+    let removeStatus = () => {
+        clearInterval(h);
+        status.parentNode.removeChild(status);
+    }
+
+    reportStatus("Authenticating before getting routes");
     s.auth().then(() => {
 
-        console.log("getting routes");
+        reportStatus("Getting routes");
         s.getRoutes().then(routes => {
 
-            console.log("building directions widget");
+            removeStatus();
+
             routes.data.forEach(route => {
-                console.log("route", route);
                 // create a container
-                let routeNode = dom.toDom(template(route.employeeId));
+                let routeNode = dom.toDom(template(route));
                 routesDom.appendChild(routeNode);
                 initializeDirections(route.employeeId, map, route, nextColor());
             });
+
+
             parse();
 
         });
