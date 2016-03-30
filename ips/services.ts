@@ -297,7 +297,7 @@ export class Routing {
         return ajax.get<Routing.RouteResponse>().then(routes => {
             // until Phil gets coordinates working...spoof some locations
             routes.data.forEach((r, i) => {
-                r.employeeName = r.employeeName || r.employeeId;
+                r.employeeFullName = r.employeeFullName || r.employeeId;
                 r.employeeId = `EMP_${r.employeeId}`;
             });
             
@@ -307,8 +307,12 @@ export class Routing {
 
     optimizeRoute(routeId: number) {
         let ajax = new Ajax(`${this.api}/routing/routes/optimize`);
-        return ajax.put<Routing.Route>({
-            Id: routeId
+        return ajax.put<{
+            data: Routing.Route;
+            responseStatus: Routing.ResponseStatus;
+        }>({
+            Id: routeId,
+            Parameters: {}
         });
     }    
 

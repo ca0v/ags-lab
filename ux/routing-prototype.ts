@@ -230,7 +230,7 @@ function initializeDirections(id: string, map: Map, route: Services.Routing.Rout
         optimizeButton.onclick = () => {
             w.reset();
             RoutingService.optimizeRoute(route.id).then(newRoute => {
-                route = newRoute;
+                route = newRoute.data;
                 w.clearDirections();
                 w.stops = [];
                 addStops();
@@ -365,7 +365,7 @@ export function getRoutes(routesDom: HTMLElement, config: {
         status.parentNode.removeChild(status);
     }
 
-    reportStatus("Authenticating before getting routes");
+    reportStatus("Authenticating");
     s.auth(config.auth).then(() => {
 
         reportStatus("Getting routes");
