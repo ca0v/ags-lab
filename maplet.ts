@@ -1,5 +1,4 @@
-﻿/// <reference path="typings/tsd.d.ts" />
-import Topic from "./pubsub";
+﻿import Topic from "./pubsub";
 import esri = require("esri");
 import Map = require("esri/map");
 import MarkerSymbol = require("esri/symbols/SimpleMarkerSymbol");

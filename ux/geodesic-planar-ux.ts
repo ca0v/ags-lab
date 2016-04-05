@@ -8,6 +8,8 @@
  * Confirms the measure tool reports geodesic measurements
  */
 
+declare var System;
+
 import Map = require("esri/map");
 import Scalebar = require("esri/dijit/Scalebar");
 import Measurement = require("esri/dijit/Measurement");

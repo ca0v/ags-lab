@@ -1,3 +1,8 @@
+declare module "dojo/debounce" {
+    function debounce<T>(cb: Function, delay: number): Function;
+    export = debounce;
+}
+
 declare module "proj4" {
 
     interface Transformer {
@@ -11,7 +16,7 @@ declare module "proj4" {
         constructor(x: number, y: number);
     }
 
-    function Proj(a, b): Transformer;
+    function Proj(a: any, b: any): Transformer;
 
     module Proj {
         export function defs(name: string): any;

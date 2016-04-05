@@ -3,7 +3,7 @@
         "declaration": false,
         "module": "amd",
         "target": "es5",
-        "noImplicitAny": true,
+        "noImplicitAny": false,
         "sourceMap": false,
         //"outFile": "./built/run.js",
         "moduleResolution": "node"
@@ -11,7 +11,7 @@
     "exclude": [
         "node_modules",
         "bower_components",
-        "node_modules",
-        "jspm_packages"
+        "typings/main",
+        "typings/main.d.ts"
     ]
 }
