@@ -14,6 +14,8 @@ import MapQuery from "./ags-map-query-proxy";
 import FeatureServer from "./ags-feature-proxy";
 import Catalog from "./ags-catalog-proxy";
 import Geometry from "./ags-geometry-proxy";
+import * as WebMap from "./ags-webmap";
+
 
 let topic = new Topic();
 
@@ -68,8 +70,9 @@ let run = () => {
     
     let app = {topic: topic};
     
-    Maplet.test(app);
-    Geometry.test();
+    WebMap.test();
+    //Maplet.test(app);
+    //Geometry.test();
     //Catalog.test();    
     //FeatureServer.test();
     //MapQuery.test();
