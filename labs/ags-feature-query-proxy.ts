@@ -66,7 +66,7 @@ export default class Query {
 }
 
 export function run() {
-    new Query("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer/3/query")
+    new Query("https://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer/3/query")
         .query({
             outFields: ["symbolname"],
             returnDistinctValues: true

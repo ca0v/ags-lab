@@ -35,7 +35,7 @@ export default class ReverseGeocode {
 }
 
 export function run() {
-    new ReverseGeocode("http://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode")
+    new ReverseGeocode("//geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode")
         .reverseGeocode({
             location: "-82.407548,34.790207"
         })

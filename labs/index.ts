@@ -52,6 +52,4 @@ export function run() {
 
     let testDiv = document.createElement("div");
     document.body.appendChild(testDiv);
-
-    testDiv.innerHTML = `<a href='${l.origin}${l.pathname}?run=tests/index'>tests</a>`;
 };

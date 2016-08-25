@@ -82,7 +82,7 @@ export default class Export {
 }
 
 export function run() {
-    new Export("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/export")
+    new Export("//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/export")
         .export({
             bbox: [-82.4, 34.85, -82.25, 35]
         })

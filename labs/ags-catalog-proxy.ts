@@ -1,5 +1,5 @@
 /**
- * http://sampleserver6.arcgisonline.com/arcgis/rest/?f=pjson 
+ * //sampleserver6.arcgisonline.com/arcgis/rest/?f=pjson 
  */
 
 import lang = require("dojo/_base/lang");
@@ -46,7 +46,7 @@ export default class Catalog {
 }
 
 export function run() {
-    let url = "http://sampleserver6.arcgisonline.com/arcgis/rest/services"
+    let url = "//sampleserver6.arcgisonline.com/arcgis/rest/services"
     let service = new Catalog(url);
     service
         .about()

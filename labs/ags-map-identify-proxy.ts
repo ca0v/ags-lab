@@ -76,7 +76,7 @@ export default class Identify {
 }
 
 export function run() {
-    new Identify("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StateCityHighway_USA/MapServer/identify")
+    new Identify("//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StateCityHighway_USA/MapServer/identify")
         .identify({
             geometryType: "esriGeometryPoint",
             geometry: [-82.4, 34.85],

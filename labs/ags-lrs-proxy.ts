@@ -129,7 +129,7 @@ export default class Lrs {
 export function run() {
 
     // geometryToMeasure
-    new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/geometryToMeasure")
+    new Lrs("//roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/geometryToMeasure")
         .geometryToMeasure({
             locations: [{
                 routeId: "10050601",
@@ -154,7 +154,7 @@ export function run() {
         });
 
     // measureToGeometry
-    new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/measureToGeometry")
+    new Lrs("//roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/measureToGeometry")
         .measureToGeometry({
             locations: [{
                 routeId: "10050601",
@@ -166,7 +166,7 @@ export function run() {
         });
 
     // translate
-    new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/translate")
+    new Lrs("//roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/translate")
         .translate({
             locations: [{
                 routeId: "10050601",
@@ -188,7 +188,7 @@ export function run() {
         });
 
     // query attribute set
-    new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/queryAttributeSet")
+    new Lrs("//roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/queryAttributeSet")
         .queryAttributeSet({
             locations: [{
                 routeId: "10050601",
