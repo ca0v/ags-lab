@@ -38,7 +38,7 @@ export default class Find {
 }
 
 export function run() {
-    new Find("https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/find")
+    new Find("//geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/find")
         .find({
             text: "50 Datastream Plz, Greenville, South Carolina, 29605",
             location: "-82.41,34.79",

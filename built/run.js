@@ -125,7 +125,7 @@ define("labs/ags-feature-proxy", ["require", "exports", "dojo/_base/lang", "labs
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = FeatureServer;
     function run() {
-        var service = new FeatureServer("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer");
+        var service = new FeatureServer("//sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer");
         service
             .about()
             .then(function (value) {
@@ -560,7 +560,7 @@ define("labs/ags-feature-query-proxy", ["require", "exports", "dojo/_base/lang",
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Query;
     function run() {
-        new Query("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer/3/query")
+        new Query("https://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer/3/query")
             .query({
             outFields: ["symbolname"],
             returnDistinctValues: true
@@ -634,7 +634,7 @@ define("labs/ags-find-proxy", ["require", "exports", "dojo/_base/lang", "labs/aj
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Find;
     function run() {
-        new Find("https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/find")
+        new Find("//geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/find")
             .find({
             text: "50 Datastream Plz, Greenville, South Carolina, 29605",
             location: "-82.41,34.79",
@@ -694,14 +694,14 @@ define("labs/ags-geometry-proxy", ["require", "exports", "dojo/_base/lang", "lab
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Geometry;
     function run() {
-        new Geometry("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer/lengths")
+        new Geometry("//sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer/lengths")
             .lengths({
             polylines: [{ "paths": [[[-117, 34], [-116, 34], [-117, 33]], [[-115, 44], [-114, 43], [-115, 43]]] }]
         })
             .then(function (value) {
             console.log("lengths", value);
         });
-        new Geometry("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer/buffer")
+        new Geometry("//sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer/buffer")
             .buffer({
             geometries: {
                 geometryType: "esriGeometryPoint",
@@ -784,7 +784,7 @@ define("labs/ags-lrs-proxy", ["require", "exports", "dojo/_base/lang", "labs/aja
     exports.default = Lrs;
     function run() {
         // geometryToMeasure
-        new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/geometryToMeasure")
+        new Lrs("//roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/geometryToMeasure")
             .geometryToMeasure({
             locations: [{
                     routeId: "10050601",
@@ -799,7 +799,7 @@ define("labs/ags-lrs-proxy", ["require", "exports", "dojo/_base/lang", "labs/aja
             console.log("geometryToMeasure", value);
         });
         // measureToGeometry
-        new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/measureToGeometry")
+        new Lrs("//roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/measureToGeometry")
             .measureToGeometry({
             locations: [{
                     routeId: "10050601",
@@ -810,7 +810,7 @@ define("labs/ags-lrs-proxy", ["require", "exports", "dojo/_base/lang", "labs/aja
             console.log("measureToGeometry", value);
         });
         // translate
-        new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/translate")
+        new Lrs("//roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/translate")
             .translate({
             locations: [{
                     routeId: "10050601",
@@ -821,7 +821,7 @@ define("labs/ags-lrs-proxy", ["require", "exports", "dojo/_base/lang", "labs/aja
             console.log("translate", value);
         });
         // query attribute set
-        new Lrs("http://roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/queryAttributeSet")
+        new Lrs("//roadsandhighwayssample.esri.com/arcgis/rest/services/RoadsHighways/NewYork/MapServer/exts/LRSServer/networkLayers/2/queryAttributeSet")
             .queryAttributeSet({
             locations: [{
                     routeId: "10050601",
@@ -1085,7 +1085,7 @@ define("labs/ags-route-solve-proxy", ["require", "exports", "labs/ags-solve-prox
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = RouteSolve;
     function run() {
-        new RouteSolve("http://sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/Route/solve")
+        new RouteSolve("//sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/Route/solve")
             .solve({ stops: [{ x: -117.141724, y: 32.7122 }, { x: -117.141724, y: 32.72 }] })
             .then(function (value) {
             // how to get route to return json?

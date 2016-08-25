@@ -256,7 +256,7 @@ export default class FeatureServer {
 }
 
 export function run() {
-    let service = new FeatureServer("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer");
+    let service = new FeatureServer("//sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer");
     service
         .about()
         .then(value => {
