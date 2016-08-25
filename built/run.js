@@ -139,7 +139,7 @@ define("labs/ags-feature-proxy", ["require", "exports", "dojo/_base/lang", "labs
     exports.run = run;
 });
 /**
- * http://sampleserver6.arcgisonline.com/arcgis/rest/?f=pjson
+ * //sampleserver6.arcgisonline.com/arcgis/rest/?f=pjson
  */
 define("labs/ags-catalog-proxy", ["require", "exports", "dojo/_base/lang", "labs/ags-feature-proxy", "labs/ajax"], function (require, exports, lang, ags_feature_proxy_1, Ajax) {
     "use strict";
@@ -165,7 +165,7 @@ define("labs/ags-catalog-proxy", ["require", "exports", "dojo/_base/lang", "labs
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Catalog;
     function run() {
-        var url = "http://sampleserver6.arcgisonline.com/arcgis/rest/services";
+        var url = "//sampleserver6.arcgisonline.com/arcgis/rest/services";
         var service = new Catalog(url);
         service
             .about()
@@ -871,7 +871,7 @@ define("labs/ags-map-export-proxy", ["require", "exports", "dojo/_base/lang", "l
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Export;
     function run() {
-        new Export("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/export")
+        new Export("//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/export")
             .export({
             bbox: [-82.4, 34.85, -82.25, 35]
         })
@@ -906,7 +906,7 @@ define("labs/ags-map-find-proxy", ["require", "exports", "dojo/_base/lang", "lab
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Find;
     function run() {
-        new Find("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/find")
+        new Find("//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/find")
             .find({
             searchText: "island",
             layers: ["0"]
@@ -944,7 +944,7 @@ define("labs/ags-map-identify-proxy", ["require", "exports", "dojo/_base/lang", 
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Identify;
     function run() {
-        new Identify("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StateCityHighway_USA/MapServer/identify")
+        new Identify("//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StateCityHighway_USA/MapServer/identify")
             .identify({
             geometryType: "esriGeometryPoint",
             geometry: [-82.4, 34.85],
@@ -989,7 +989,7 @@ define("labs/ags-map-query-proxy", ["require", "exports", "dojo/_base/lang", "la
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Query;
     function run() {
-        new Query("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StateCityHighway_USA/MapServer/1/query")
+        new Query("//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StateCityHighway_USA/MapServer/1/query")
             .query({
             text: "South Carolina"
         })
@@ -1022,7 +1022,7 @@ define("labs/ags-reverse-geocode-proxy", ["require", "exports", "dojo/_base/lang
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = ReverseGeocode;
     function run() {
-        new ReverseGeocode("http://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode")
+        new ReverseGeocode("//geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode")
             .reverseGeocode({
             location: "-82.407548,34.790207"
         })
@@ -1162,7 +1162,7 @@ define("labs/ags-servicearea-solve-proxy", ["require", "exports", "labs/ags-solv
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = ServiceAreaSolve;
     function run() {
-        new ServiceAreaSolve("http://sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/ServiceArea/solveServiceArea")
+        new ServiceAreaSolve("//sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/ServiceArea/solveServiceArea")
             .solve({
             facilities: "-117.141724,32.7122",
             returnFacilities: true,
@@ -1393,7 +1393,7 @@ define("labs/maplet", ["require", "exports", 'dojo/dom-construct', "labs/pubsub"
         };
         // 4326
         Maplet.prototype.addDynamicLayer = function (url) {
-            if (url === void 0) { url = "http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Demographics/ESRI_Population_World/MapServer"; }
+            if (url === void 0) { url = "//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Demographics/ESRI_Population_World/MapServer"; }
             var layer = new ArcGISDynamicMapServiceLayer(url);
             layer.setOpacity(0.5);
             this.map.addLayer(layer);
@@ -1750,7 +1750,7 @@ define("ux/routing-prototype", ["require", "exports", "dijit/registry", "dojo/on
             routeParams.startTime; // TODO
             var w = new DirectionsWidget({
                 map: map,
-                routeTaskUrl: "http://sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/Route",
+                routeTaskUrl: "//sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/Route",
                 //routeTaskUrl: "http://route.arcgis.com/arcgis/rest/services/World/Route/NAServer/Route_World",
                 traffic: false,
                 optimalRoute: false,

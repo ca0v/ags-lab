@@ -87,7 +87,7 @@ export default class Maplet {
     }
 
     // 4326
-    addDynamicLayer(url = "http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Demographics/ESRI_Population_World/MapServer") {
+    addDynamicLayer(url = "//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Demographics/ESRI_Population_World/MapServer") {
         var layer = new ArcGISDynamicMapServiceLayer(url);
         layer.setOpacity(0.5);
         this.map.addLayer(layer);

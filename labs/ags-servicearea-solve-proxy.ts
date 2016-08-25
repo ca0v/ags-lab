@@ -71,7 +71,7 @@ export default class ServiceAreaSolve extends Base {
 }
 
 export function run() {
-    new ServiceAreaSolve("http://sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/ServiceArea/solveServiceArea")
+    new ServiceAreaSolve("//sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/ServiceArea/solveServiceArea")
         .solve({
             facilities: "-117.141724,32.7122",
             returnFacilities: true,

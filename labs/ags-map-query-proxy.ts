@@ -62,7 +62,7 @@ export default class Query {
 }
 
 export function run() {
-    new Query("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StateCityHighway_USA/MapServer/1/query")
+    new Query("//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StateCityHighway_USA/MapServer/1/query")
         .query({
             text: "South Carolina"
         })

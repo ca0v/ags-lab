@@ -57,7 +57,7 @@ export default class Find {
 }
 
 export function run() {
-    new Find("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/find")
+    new Find("//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/find")
         .find({
             searchText: "island",
             layers: ["0"]
