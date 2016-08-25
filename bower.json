@@ -20,7 +20,7 @@
     "tests"
   ],
   "dependencies": {
-    "arcgis-js-api": "3.17"
+    "esri": "arcgis-js-api#~3.17.0"
   },
   "resolutions": {
     "dojo": "v1.11.1/esri-3.17.0",
