@@ -1288,7 +1288,7 @@ define("labs/index", ["require", "exports"], function (require, exports) {
     function run() {
         var l = window.location;
         var path = "" + l.origin + l.pathname + "?run=labs/";
-        var labs = "\n    ags-catalog-proxy\n    ags-feature-proxy\n    ags-feature-query-proxy\n    ags-find-address-proxy\n    ags-find-proxy\n    ags-geometry-proxy\n    ags-lrs-proxy\n    ags-map-export-proxy\n    ags-map-find-proxy\n    ags-map-identify-proxy\n    ags-map-query-proxy\n    ags-reverse-geocode-proxy\n    ags-route-solve-proxy\n    ags-servicearea-solve-proxy\n    ags-solve-proxy\n    ags-suggest-proxy\n    ags-webmap\n    ajax\n    index\n    maplet\n    pubsub    \n    ";
+        var labs = "\n    ags-catalog-proxy\n    ags-feature-proxy\n    ags-feature-query-proxy\n    ags-find-address-proxy\n    ags-find-proxy\n    ags-geometry-proxy\n    ags-lrs-proxy\n    ags-map-export-proxy\n    ags-map-find-proxy\n    ags-map-identify-proxy\n    ags-map-query-proxy\n    ags-reverse-geocode-proxy\n    ags-route-solve-proxy\n    ags-servicearea-solve-proxy\n    ags-solve-proxy\n    ags-suggest-proxy\n    ags-webmap\n    index\n    maplet\n    pubsub    \n    ";
         var styles = document.createElement("style");
         document.head.appendChild(styles);
         styles.innerText += "\n    #map {\n        display: none;\n    }\n    .test {\n        margin: 20px;\n    }\n    ";
