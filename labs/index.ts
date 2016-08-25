@@ -19,10 +19,8 @@ export function run() {
     ags-solve-proxy
     ags-suggest-proxy
     ags-webmap
-    ajax
     index
     maplet
-    parser
     pubsub    
     `;
 

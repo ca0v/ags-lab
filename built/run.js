@@ -724,6 +724,7 @@ define("labs/ags-lrs-proxy", ["require", "exports", "dojo/_base/lang", "labs/aja
     var Lrs = (function () {
         function Lrs(url) {
             this.ajax = new Ajax(url);
+            this.ajax.options.use_jsonp = true;
         }
         Lrs.prototype.geometryToMeasure = function (data) {
             var req = lang.mixin({
@@ -851,6 +852,7 @@ define("labs/ags-map-export-proxy", ["require", "exports", "dojo/_base/lang", "l
     var Export = (function () {
         function Export(url) {
             this.ajax = new Ajax(url);
+            this.ajax.options.use_jsonp = true;
         }
         Export.prototype.export = function (data) {
             var req = lang.mixin({
@@ -892,6 +894,7 @@ define("labs/ags-map-find-proxy", ["require", "exports", "dojo/_base/lang", "lab
     var Find = (function () {
         function Find(url) {
             this.ajax = new Ajax(url);
+            this.ajax.options.use_jsonp = true;
         }
         Find.prototype.find = function (data) {
             var req = lang.mixin({
@@ -928,6 +931,7 @@ define("labs/ags-map-identify-proxy", ["require", "exports", "dojo/_base/lang", 
     var Identify = (function () {
         function Identify(url) {
             this.ajax = new Ajax(url);
+            this.ajax.options.use_jsonp = true;
         }
         Identify.prototype.identify = function (data) {
             var req = lang.mixin({
@@ -973,6 +977,7 @@ define("labs/ags-map-query-proxy", ["require", "exports", "dojo/_base/lang", "la
     var Query = (function () {
         function Query(url) {
             this.ajax = new Ajax(url);
+            this.ajax.options.use_jsonp = true;
         }
         Query.prototype.query = function (data) {
             var req = lang.mixin({
@@ -1005,6 +1010,7 @@ define("labs/ags-reverse-geocode-proxy", ["require", "exports", "dojo/_base/lang
     var ReverseGeocode = (function () {
         function ReverseGeocode(url) {
             this.ajax = new Ajax(url);
+            this.ajax.options.use_jsonp = true;
         }
         ReverseGeocode.prototype.reverseGeocode = function (data) {
             var req = lang.mixin({
@@ -1048,7 +1054,7 @@ define("labs/ags-solve-proxy", ["require", "exports", "labs/ajax"], function (re
     Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = BaseSolve;
     function run() {
-        throw "this is an abstract class for route, closest facility and service area";
+        console.log("this is an abstract class for route, closest facility and service area");
     }
     exports.run = run;
 });
@@ -1214,7 +1220,7 @@ define("labs/ags-webmap", ["require", "exports", "esri/arcgis/utils", "esri/arcg
     "use strict";
     //https://www.arcgis.com/sharing/oauth2/approve?oauth_state=GD6ps1QHrIq-evMlDEj9BkwQqP8qtCMm-r1-zNkUobLFtk4E04D7TJ4Cn0pkeZ56svApgSHK9iRY7HasLI4YrUYIP5wunF_syiATUiY4hyenri_P2OazODUVl28SwOONAOZKzbRVIHamNdtpSo_sBtl_ahDqHArMbiV3dxkDMgr5eLWYpaJxFpGIdMpj0bjaSz_OcgrHej3jmUT-RBRlQrKhgFdHmFmf0k8zhfKIYx8GnlzS6BqZqNo8Hz0ZIpQuTAfza-qg4ZyhMS8DhEI377hLlrb5PMcTeDl7-NpMlfyDjWHecmI0OmOLEOaMSy58LYaFJtZIH46c7fKvE5ESZg..
     // https://www.arcgis.com/sharing/oauth2/authorize?client_id=313b7327133f4802affee46893b4bec7&response_type=token&state=%7B%22portalUrl%22%3A%22https%3A%2F%2Fwww.arcgis.com%22%7D&expiration=20160&redirect_uri=http%3A%2F%2Flocalhost%2Fags-lab%2Foauth-callback.html
-    function test(appId) {
+    function run(appId) {
         if (appId === void 0) { appId = "vK2LJni4ozSNXdmj"; }
         debugger;
         "hereiam: cannot access without OAUTH configuration...read email from Brian";
@@ -1254,7 +1260,7 @@ define("labs/ags-webmap", ["require", "exports", "esri/arcgis/utils", "esri/arcg
             response.itemInfo.itemData.operationalLayers;
         });
     }
-    exports.test = test;
+    exports.run = run;
     ;
 });
 define("labs/console", ["require", "exports"], function (require, exports) {
@@ -1282,7 +1288,7 @@ define("labs/index", ["require", "exports"], function (require, exports) {
     function run() {
         var l = window.location;
         var path = "" + l.origin + l.pathname + "?run=labs/";
-        var labs = "\n    ags-catalog-proxy\n    ags-feature-proxy\n    ags-feature-query-proxy\n    ags-find-address-proxy\n    ags-find-proxy\n    ags-geometry-proxy\n    ags-lrs-proxy\n    ags-map-export-proxy\n    ags-map-find-proxy\n    ags-map-identify-proxy\n    ags-map-query-proxy\n    ags-reverse-geocode-proxy\n    ags-route-solve-proxy\n    ags-servicearea-solve-proxy\n    ags-solve-proxy\n    ags-suggest-proxy\n    ags-webmap\n    ajax\n    index\n    maplet\n    parser\n    pubsub    \n    ";
+        var labs = "\n    ags-catalog-proxy\n    ags-feature-proxy\n    ags-feature-query-proxy\n    ags-find-address-proxy\n    ags-find-proxy\n    ags-geometry-proxy\n    ags-lrs-proxy\n    ags-map-export-proxy\n    ags-map-find-proxy\n    ags-map-identify-proxy\n    ags-map-query-proxy\n    ags-reverse-geocode-proxy\n    ags-route-solve-proxy\n    ags-servicearea-solve-proxy\n    ags-solve-proxy\n    ags-suggest-proxy\n    ags-webmap\n    index\n    maplet\n    pubsub    \n    ";
         var styles = document.createElement("style");
         document.head.appendChild(styles);
         styles.innerText += "\n    #map {\n        display: none;\n    }\n    .test {\n        margin: 20px;\n    }\n    ";

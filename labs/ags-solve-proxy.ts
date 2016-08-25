@@ -14,5 +14,5 @@ export default class BaseSolve {
 }
 
 export function run() {
-    throw "this is an abstract class for route, closest facility and service area";
+    console.log("this is an abstract class for route, closest facility and service area");
 }
