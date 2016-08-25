@@ -22,7 +22,6 @@ export function run() {
     ajax
     index
     maplet
-    parser
     pubsub    
     `;
 

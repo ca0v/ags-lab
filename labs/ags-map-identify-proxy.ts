@@ -23,6 +23,7 @@ export default class Identify {
 
     constructor(url: string) {
         this.ajax = new Ajax(url);
+        this.ajax.options.use_jsonp = true;
     }
 
     identify(data: {

@@ -10,6 +10,7 @@ export default class ReverseGeocode {
 
     constructor(url: string) {
         this.ajax = new Ajax(url);
+        this.ajax.options.use_jsonp = true;
     }
 
     reverseGeocode(data: {

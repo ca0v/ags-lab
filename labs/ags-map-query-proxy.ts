@@ -13,6 +13,7 @@ export default class Query {
 
     constructor(url: string) {
         this.ajax = new Ajax(url);
+        this.ajax.options.use_jsonp = true;
     }
 
     query(data: {
