@@ -43,21 +43,23 @@ export default class Catalog {
         return ajax.get<CatalogInfo>(req);
     }
 
-    public static test() {
-        let service = new Catalog("http://sampleserver6.arcgisonline.com/arcgis/rest/services");
-        service
-            .about()
-            .then(value => {
-                console.log("about", value);
-                value.services.filter(s => s.type === "FeatureServer").forEach(s => {
-                    let featureService = new FeatureServer(`${service.ajax.url}/${s.name}/FeatureServer`);
-                    featureService.about().then(s => console.log("featureServer", s));
-                });
-                value.folders.forEach(f => {
-                    service.aboutFolder(f).then(value => {
-                        console.log("folder", f, value);
-                    })
-                })
+}
+
+export function run() {
+    let url = "http://sampleserver6.arcgisonline.com/arcgis/rest/services"
+    let service = new Catalog(url);
+    service
+        .about()
+        .then(value => {
+            console.log("about", value);
+            value.services.filter(s => s.type === "FeatureServer").forEach(s => {
+                let featureService = new FeatureServer(`${url}/${s.name}/FeatureServer`);
+                featureService.about().then(s => console.log("featureServer", s));
             });
-    }
+            value.folders.forEach(f => {
+                service.aboutFolder(f).then(value => {
+                    console.log("folder", f, value);
+                })
+            })
+        });
 }

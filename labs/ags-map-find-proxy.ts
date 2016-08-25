@@ -14,7 +14,7 @@ interface DefinitionExpression {
     op: string;
     value: string;
 }
-        
+
 /**
  * mapserver find 
  */
@@ -48,31 +48,32 @@ export default class Find {
             sr: 4326,
             f: "pjson"
         }, data);
-        
+
         req.layers = <any>req.layers.join(",");
 
         return this.ajax.get(req);
     }
 
-    public static test() {
-        new Find("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/find")
-            .find({
-                searchText: "island",
-                layers: ["0"]
-            })
-            .then((value: {
-                results: Array<{
-                    layerId: string;
-                    layerName: string;
-                    displayFieldName: string;
-                    foundFieldName: string;
-                    value: string;
-                    attributes: any;
-                    geometryType: string;
-                    geometry: any;
-                }>;
-            }) => {
-                console.log("find", value);
-            });
-    }
+}
+
+export function run() {
+    new Find("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/find")
+        .find({
+            searchText: "island",
+            layers: ["0"]
+        })
+        .then((value: {
+            results: Array<{
+                layerId: string;
+                layerName: string;
+                displayFieldName: string;
+                foundFieldName: string;
+                value: string;
+                attributes: any;
+                geometryType: string;
+                geometry: any;
+            }>;
+        }) => {
+            console.log("find", value);
+        });
 }

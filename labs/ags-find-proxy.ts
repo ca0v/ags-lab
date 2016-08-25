@@ -1,28 +1,28 @@
-/** 
- * https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=50%20Datastream%20Plaza&f=json&outSR=%7B%22wkid%22%3A102100%2C%22latestWkid%22%3A3857%7D&maxLocations=10
+/**
+ * geocode find 
  */
 
 import lang = require("dojo/_base/lang");
 import Ajax = require("./ajax");
 
-export default class FindAddress {
+export default class Find {
     private ajax: Ajax;
-    
+
     constructor(url: string) {
         this.ajax = new Ajax(url);
     }
- 
+
     find(data: {
-        singleLine: string;
+        text?: string;
         outFields?: string;
         outSRS?: string;
         maxLocations?: number;
-        searchExtent?: string;
+        bbox?: string;
         location?: string;
         distance?: number;
         category?: string;
     }) {
-        
+
         let req = lang.mixin({
             outFields: "*",
             outSRS: "wkid:4326",
@@ -31,29 +31,32 @@ export default class FindAddress {
             forStorage: false,
             f: "pjson"
         }, data);
-        
+
         return this.ajax.get(req);
     }
-    
-    public static test() {
-        new FindAddress("https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates")
+
+}
+
+export function run() {
+    new Find("https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/find")
         .find({
-            singleLine: "50 Datastream Plz, Greenville, South Carolina, 29605",
+            text: "50 Datastream Plz, Greenville, South Carolina, 29605",
             location: "-82.41,34.79",
-            category: "Address"            
+            category: "Address"
         })
         .then((value: {
             spatialReference: {
                 wkid: string;
                 latestWkid: string;
             };
-            candidates: Array<{
-                address: string;
-                location: {
-                    x: number; 
-                    y: number
+            locations: Array<{
+                name: string;
+                feature: {
+                    geometry: {
+                        x: number;
+                        y: number
+                    }
                 };
-                score: number;
                 attributes: any;
                 extent: {
                     xmin: number;
@@ -63,8 +66,7 @@ export default class FindAddress {
                 }
             }>;
         }) => {
-            console.log("location", value.candidates.map(c => c.location));
+            console.log("location", value.locations.map(c => c.name));
             console.log(value);
         });
-    } 
-}
+} 

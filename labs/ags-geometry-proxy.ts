@@ -68,25 +68,26 @@ export default class Geometry {
         return this.ajax.get(req);
     }
 
-    public static test() {
-        new Geometry("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer/lengths")
-            .lengths({
-                polylines: [{ "paths": [[[-117, 34], [-116, 34], [-117, 33]], [[-115, 44], [-114, 43], [-115, 43]]] }]
-            })
-            .then((value: {}) => {
-                console.log("lengths", value);
-            });
+}
 
-        new Geometry("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer/buffer")
-            .buffer({
-                geometries: {
-                    geometryType: "esriGeometryPoint",
-                    geometries: [{ x: -82.4, y: 34.85 }]
-                },
-                distances: [100]
-            })
-            .then((value: {}) => {
-                console.log("buffer", value);
-            });
-    }
+export function run() {
+    new Geometry("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer/lengths")
+        .lengths({
+            polylines: [{ "paths": [[[-117, 34], [-116, 34], [-117, 33]], [[-115, 44], [-114, 43], [-115, 43]]] }]
+        })
+        .then((value: {}) => {
+            console.log("lengths", value);
+        });
+
+    new Geometry("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer/buffer")
+        .buffer({
+            geometries: {
+                geometryType: "esriGeometryPoint",
+                geometries: [{ x: -82.4, y: 34.85 }]
+            },
+            distances: [100]
+        })
+        .then((value: {}) => {
+            console.log("buffer", value);
+        });
 }

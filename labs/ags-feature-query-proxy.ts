@@ -7,11 +7,11 @@ import Ajax = require("./ajax");
 
 export default class Query {
     private ajax: Ajax;
-    
+
     constructor(url: string) {
         this.ajax = new Ajax(url);
     }
- 
+
     query(data: {
         where?: string;
         objectIds?: Array<string>;
@@ -45,7 +45,7 @@ export default class Query {
         resultOffset?: number;
         resultRecordCount?: number;
     }) {
-        
+
         let req = lang.mixin({
             where: "1=1",
             inSR: 4326,
@@ -55,16 +55,18 @@ export default class Query {
             returnCountOnly: false,
             f: "pjson"
         }, data);
-        
+
         if (req.objectIds) req.objectIds = <any>req.objectIds.join(',');
         if (req.outFields) req.outFields = <any>req.outFields.join(',');
         if (req.groupByFieldsForStatistics) req.groupByFieldsForStatistics = <any>req.groupByFieldsForStatistics.join(',');
-         
+
         return this.ajax.get(req);
     }
-    
-    public static test() {
-        new Query("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer/3/query")
+
+}
+
+export function run() {
+    new Query("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer/3/query")
         .query({
             outFields: ["symbolname"],
             returnDistinctValues: true
@@ -84,5 +86,4 @@ export default class Query {
         }) => {
             console.log("query", value);
         });
-    } 
-}
+} 

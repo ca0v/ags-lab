@@ -242,9 +242,9 @@ export default class FeatureServer {
 
         return this.ajax.get<FeatureServerInfo>(req);
     }
-    
+
     aboutLayer(layer: number) {
-        
+
         let ajax = new Ajax(`${this.ajax.url}/${layer}`);
         let req = lang.mixin({
             f: "pjson"
@@ -253,16 +253,17 @@ export default class FeatureServer {
         return ajax.get<FeatureLayerInfo>(req);
     }
 
-    public static test() {
-        let service = new FeatureServer("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer");
-        service
-            .about()
-            .then(value => {
-                console.log("about", value);
-                console.log("currentVersion", value.currentVersion);
-                service.aboutLayer(2).then(value => {
-                    console.log("layer2", value);
-                })
-            });
-    }
+}
+
+export function run() {
+    let service = new FeatureServer("http://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer");
+    service
+        .about()
+        .then(value => {
+            console.log("about", value);
+            console.log("currentVersion", value.currentVersion);
+            service.aboutLayer(2).then(value => {
+                console.log("layer2", value);
+            })
+        });
 }

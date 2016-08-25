@@ -7,11 +7,11 @@ import Ajax = require("./ajax");
 
 export default class ReverseGeocode {
     private ajax: Ajax;
-    
+
     constructor(url: string) {
         this.ajax = new Ajax(url);
     }
- 
+
     reverseGeocode(data: {
         location: string;
         distance?: number;
@@ -19,7 +19,7 @@ export default class ReverseGeocode {
         langCode?: string;
         returnIntersection?: boolean;
     }) {
-        
+
         let req = lang.mixin({
             outSRS: "wkid:4326",
             distance: 10,
@@ -28,20 +28,22 @@ export default class ReverseGeocode {
             returnIntersection: false,
             f: "pjson"
         }, data);
-        
+
         return this.ajax.get(req);
     }
-    
-    public static test() {
-        new ReverseGeocode("http://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode")
+
+}
+
+export function run() {
+    new ReverseGeocode("http://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode")
         .reverseGeocode({
             location: "-82.407548,34.790207"
         })
         .then((value: {
             error: {
-              code: number;
-              message: string;
-              details: Array<string>;  
+                code: number;
+                message: string;
+                details: Array<string>;
             };
             address: {
                 Address: string;
@@ -54,7 +56,7 @@ export default class ReverseGeocode {
                 CountryCode: string;
                 State: string;
                 Zip: string;
-                Loc_name: string;                
+                Loc_name: string;
             };
             location: {
                 x: number;
@@ -68,5 +70,4 @@ export default class ReverseGeocode {
             console.log("ReverseGeocode", value.address);
             console.log(value);
         });
-    } 
-}
+} 

@@ -59,11 +59,12 @@ export default class Query {
         }>(req);
     }
 
-    public static test() {
-        new Query("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StateCityHighway_USA/MapServer/1/query")
-            .query({
-                text: "South Carolina"
-            })
-            .then(value => console.log("query", value));
-    }
+}
+
+export function run() {
+    new Query("http://sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StateCityHighway_USA/MapServer/1/query")
+        .query({
+            text: "South Carolina"
+        })
+        .then(value => console.log("query", value));
 }

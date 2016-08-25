@@ -1,25 +1,50 @@
 ﻿<!DOCTYPE html>
 
 <html lang="en">
+
 <head>
     <meta charset="utf-8" />
     <title>TypeScript HTML App</title>
     <link rel="stylesheet" href="app.css" type="text/css" />
     <link href="bower_components/esri/css/esri.css" rel="stylesheet" />
     <script src="bower_components/dojo/dojo.js"></script>
-    <script src="built/run.js"></script>
+    <script src="./built/run.js"></script>
+
+    <script>
+        (() => {
+
+        function getParameterByName(name, url = window.location.href) {
+            name = name.replace(/[\[\]]/g, "\\$&");
+            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            return decodeURIComponent(results[2].replace(/\+/g, " "));
+        }
+
+        let run = getParameterByName("run") || "labs/index";
+
+        require(["labs/parser", run, "dojo/domReady!"], (parser, test) => {
+            parser.run();
+            setTimeout(() => test.run ? test.run() : test(), 0); 
+        });
+        
+        })();
+    </script>
+
 </head>
+
 <body>
     <h1>TypeScript HTML App</h1>
 
     <div id="map"></div>
-    
+
     <br/><label for="geometry">Add Geometry To Map</label>
     <br/><textarea id="geometry">[-82.4,34.85]</textarea>
-    <br/><button data-event="add-geometry-to-map">Add</button>    
+    <br/><button data-event="add-geometry-to-map">Add</button>
     <br/><label for="console">Console Outputs</label>
-    <br/><div id="console"></div>
-    
-    <script>require(["app"], run => run());</script>
+    <br/>
+    <div id="console"></div>
 </body>
+
 </html>

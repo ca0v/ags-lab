@@ -1,7 +1,7 @@
 /**
  * See http://wiki.infor.com:8080/confluence/display/IPSECTOR/Routing+POC%3A+Rest+Services+Interface
  */
-import Ajax = require("../ajax");
+import Ajax = require("../labs/ajax");
 import lang = require("dojo/_base/lang");
 import all = require("dojo/promise/all");
 import Deferred = require("dojo/Deferred");

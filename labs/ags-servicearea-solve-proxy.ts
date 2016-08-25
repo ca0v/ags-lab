@@ -4,11 +4,11 @@ import lang = require("dojo/_base/lang");
 export default class ServiceAreaSolve extends Base {
 
     solve(data: {
-        facilities: string|{
+        facilities: string | {
             features: Array<{
                 attributes: any;
                 geometry: {
-                    x: number; 
+                    x: number;
                     y: number;
                 }
             }>;
@@ -16,7 +16,7 @@ export default class ServiceAreaSolve extends Base {
         outSR: number;
         returnFacilities: boolean;
         travelDirection?: string;
-        returnRoutes?: boolean;                        
+        returnRoutes?: boolean;
     }) {
         /**
          * ?facilities=
@@ -65,55 +65,55 @@ export default class ServiceAreaSolve extends Base {
             returnFacilities: false,
             f: "pjson"
         }, data);
-        
+
         return this.ajax.get(req);
     }
-    
-    static test() {
-        new ServiceAreaSolve("http://sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/ServiceArea/solveServiceArea")
+}
+
+export function run() {
+    new ServiceAreaSolve("http://sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/ServiceArea/solveServiceArea")
         .solve({
             facilities: "-117.141724,32.7122",
             returnFacilities: true,
             outSR: 4326
         })
         .then((value: {
-                error?: {
-                    code: number; 
-                    message: string; 
-                    details: string[];
+            error?: {
+                code: number;
+                message: string;
+                details: string[];
+            };
+            saPolygons: {
+                spatialReference: {
+                    wkid: number;
                 };
-                saPolygons: {
+                features: Array<{
+                    attributes: any;
+                    geometry: {
+                        rings: number[][][];
+                    }
+                }>;
+                facilities: {
                     spatialReference: {
                         wkid: number;
                     };
                     features: Array<{
                         attributes: any;
                         geometry: {
-                            rings: number[][][];
+                            x: number;
+                            y: number;
                         }
                     }>;
-                    facilities: {
-                        spatialReference: {
-                            wkid: number;
-                        };
-                        features: Array<{
-                            attributes: any;
-                            geometry: {
-                                x: number;
-                                y: number;
-                            }
-                        }>;                        
-                    };
-                    messages: string[];
-                }
-            }) => {
-                // how to get route to return json?
-                if (value.error) {
-                    console.error(value.error.message);
-                } else {
+                };
+                messages: string[];
+            }
+        }) => {
+            // how to get route to return json?
+            if (value.error) {
+                console.error(value.error.message);
+            } else {
                 console.log("solve", value);
-                }
-                return value;
-            });        
-    }
+            }
+            return value;
+        });
 }
