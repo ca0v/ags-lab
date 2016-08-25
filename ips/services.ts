@@ -330,7 +330,8 @@ export class Routing {
 
         let result = <Array<Routing.RouteItem>>[];
         let d = new Deferred<Array<Routing.RouteItem>>();
-
+let x = new Deferred();
+x.reject
         let doit = () => {
             if (!routes.length) {
                 d.resolve(result);

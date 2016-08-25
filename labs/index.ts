@@ -14,6 +14,7 @@ export function run() {
     ags-map-identify-proxy
     ags-map-query-proxy
     ags-reverse-geocode-proxy
+    ags-route-editor
     ags-route-solve-proxy
     ags-servicearea-solve-proxy
     ags-solve-proxy

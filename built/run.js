@@ -456,6 +456,8 @@ define("ips/services", ["require", "exports", "labs/ajax", "dojo/_base/lang", "d
             }); });
             var result = [];
             var d = new Deferred();
+            var x = new Deferred();
+            x.reject;
             var doit = function () {
                 if (!routes.length) {
                     d.resolve(result);
@@ -1039,6 +1041,446 @@ define("labs/ags-reverse-geocode-proxy", ["require", "exports", "dojo/_base/lang
     }
     exports.run = run;
 });
+define("labs/data/route01", ["require", "exports"], function (require, exports) {
+    "use strict";
+    var center = {
+        "x": -115.256673787042,
+        "y": 36.194162517804
+    };
+    var route = {
+        "data": [{
+                "employeeId": "10313",
+                "employeeFullName": "Phil S",
+                "routeDate": "2016-04-05T08:57:42",
+                "startLocation": {
+                    "x": 0,
+                    "y": 0
+                },
+                "endLocation": {
+                    "x": 0,
+                    "y": 0
+                },
+                "routeItems": [{
+                        "ordinalIndex": 2,
+                        "activity": {
+                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "primaryKey": 1013
+                        },
+                        "location": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "activityParentType": "DEMO",
+                        "scheduledDate": "2016-03-21T00:00:00",
+                        "activityType": "M-Insp",
+                        "isActivityCompleted": false,
+                        "lastModifiedBy": "HANSEN8",
+                        "lastModifiedDateTime": "2016-04-05T09:42:56.777",
+                        "id": 1539,
+                        "href": "/generic/Hansen.Routing.RouteItem?query={select:[AddedBy,AddedDateTime,LastModifiedBy,LastModifiedDateTime,OrdinalIndex,RouteItemKey],distinct:False,filter:[{property:RouteItemKey,operator:Equal,value:1539}]}"
+                    },
+                    {
+                        "ordinalIndex": 3,
+                        "activity": {
+                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "primaryKey": 1014
+                        },
+                        "location": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "activityParentType": "DEMO",
+                        "scheduledDate": "2016-03-21T00:00:00",
+                        "activityType": "M-Insp",
+                        "isActivityCompleted": false,
+                        "lastModifiedBy": "HANSEN8",
+                        "lastModifiedDateTime": "2016-04-05T09:42:56.777",
+                        "id": 1540,
+                        "href": "/generic/Hansen.Routing.RouteItem?query={select:[AddedBy,AddedDateTime,LastModifiedBy,LastModifiedDateTime,OrdinalIndex,RouteItemKey],distinct:False,filter:[{property:RouteItemKey,operator:Equal,value:1540}]}"
+                    },
+                    {
+                        "ordinalIndex": 1,
+                        "activity": {
+                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "primaryKey": 1021
+                        },
+                        "location": {
+                            "x": -115.252869380492,
+                            "y": 36.1904151260815
+                        },
+                        "activityParentType": "UseDeposit",
+                        "scheduledDate": "2016-04-05T08:57:42",
+                        "activityType": "Insp 1",
+                        "isActivityCompleted": true,
+                        "lastModifiedBy": "HANSEN8",
+                        "lastModifiedDateTime": "2016-04-05T09:42:56.777",
+                        "id": 1553,
+                        "href": "/generic/Hansen.Routing.RouteItem?query={select:[AddedBy,AddedDateTime,LastModifiedBy,LastModifiedDateTime,OrdinalIndex,RouteItemKey],distinct:False,filter:[{property:RouteItemKey,operator:Equal,value:1553}]}"
+                    }],
+                "lastModifiedBy": "",
+                "lastModifiedDateTime": "0001-01-01T00:00:00",
+                "id": 1170,
+                "href": "/generic/Hansen.Routing.Route?query={select:[ActivityDate,AddedBy,AddedDateTime,EndGpsXCoordinate,EndGpsYCoordinate,EndGpsZCoordinate,LastModifiedBy,LastModifiedDateTime,RouteKey,StartGpsXCoordinate,StartGpsYCoordinate,StartGpsZCoordinate],distinct:False,filter:[{property:RouteKey,operator:Equal,value:1170}]}"
+            },
+            {
+                "employeeId": "1003",
+                "employeeFullName": "Rob Roberts",
+                "routeDate": "2016-04-05T09:06:20",
+                "startLocation": {
+                    "x": 0,
+                    "y": 0
+                },
+                "endLocation": {
+                    "x": 0,
+                    "y": 0
+                },
+                "routeItems": [{
+                        "ordinalIndex": 1,
+                        "activity": {
+                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "primaryKey": 1015
+                        },
+                        "location": {
+                            "x": -115.232380018892,
+                            "y": 36.172993425676
+                        },
+                        "activityParentType": "DEMO",
+                        "scheduledDate": "2016-03-21T00:00:00",
+                        "activityType": "Insp",
+                        "isActivityCompleted": false,
+                        "lastModifiedBy": "",
+                        "lastModifiedDateTime": "0001-01-01T00:00:00",
+                        "id": 1547,
+                        "href": "/generic/Hansen.Routing.RouteItem?query={select:[AddedBy,AddedDateTime,LastModifiedBy,LastModifiedDateTime,OrdinalIndex,RouteItemKey],distinct:False,filter:[{property:RouteItemKey,operator:Equal,value:1547}]}"
+                    },
+                    {
+                        "ordinalIndex": 2,
+                        "activity": {
+                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "primaryKey": 1016
+                        },
+                        "location": {
+                            "x": -115.232380018892,
+                            "y": 36.172993425676
+                        },
+                        "activityParentType": "DEMO",
+                        "scheduledDate": "2016-03-21T00:00:00",
+                        "activityType": "Insp",
+                        "isActivityCompleted": false,
+                        "lastModifiedBy": "",
+                        "lastModifiedDateTime": "0001-01-01T00:00:00",
+                        "id": 1548,
+                        "href": "/generic/Hansen.Routing.RouteItem?query={select:[AddedBy,AddedDateTime,LastModifiedBy,LastModifiedDateTime,OrdinalIndex,RouteItemKey],distinct:False,filter:[{property:RouteItemKey,operator:Equal,value:1548}]}"
+                    },
+                    {
+                        "ordinalIndex": 3,
+                        "activity": {
+                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "primaryKey": 1017
+                        },
+                        "location": {
+                            "x": -115.232380018892,
+                            "y": 36.172993425676
+                        },
+                        "activityParentType": "DEMO",
+                        "scheduledDate": "2016-03-21T00:00:00",
+                        "activityType": "Insp",
+                        "isActivityCompleted": false,
+                        "lastModifiedBy": "",
+                        "lastModifiedDateTime": "0001-01-01T00:00:00",
+                        "id": 1549,
+                        "href": "/generic/Hansen.Routing.RouteItem?query={select:[AddedBy,AddedDateTime,LastModifiedBy,LastModifiedDateTime,OrdinalIndex,RouteItemKey],distinct:False,filter:[{property:RouteItemKey,operator:Equal,value:1549}]}"
+                    },
+                    {
+                        "ordinalIndex": 4,
+                        "activity": {
+                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "primaryKey": 1018
+                        },
+                        "location": {
+                            "x": -115.232380018892,
+                            "y": 36.172993425676
+                        },
+                        "activityParentType": "DEMO",
+                        "scheduledDate": "0001-01-01T00:00:00",
+                        "activityType": "Insp",
+                        "isActivityCompleted": false,
+                        "lastModifiedBy": "",
+                        "lastModifiedDateTime": "0001-01-01T00:00:00",
+                        "id": 1550,
+                        "href": "/generic/Hansen.Routing.RouteItem?query={select:[AddedBy,AddedDateTime,LastModifiedBy,LastModifiedDateTime,OrdinalIndex,RouteItemKey],distinct:False,filter:[{property:RouteItemKey,operator:Equal,value:1550}]}"
+                    },
+                    {
+                        "ordinalIndex": 5,
+                        "activity": {
+                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "primaryKey": 1019
+                        },
+                        "location": {
+                            "x": -115.256673787042,
+                            "y": 36.194162517804
+                        },
+                        "activityParentType": "DEMO",
+                        "scheduledDate": "0001-01-01T00:00:00",
+                        "activityType": "Insp",
+                        "isActivityCompleted": false,
+                        "lastModifiedBy": "",
+                        "lastModifiedDateTime": "0001-01-01T00:00:00",
+                        "id": 1551,
+                        "href": "/generic/Hansen.Routing.RouteItem?query={select:[AddedBy,AddedDateTime,LastModifiedBy,LastModifiedDateTime,OrdinalIndex,RouteItemKey],distinct:False,filter:[{property:RouteItemKey,operator:Equal,value:1551}]}"
+                    },
+                    {
+                        "ordinalIndex": 6,
+                        "activity": {
+                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "primaryKey": 1020
+                        },
+                        "location": {
+                            "x": -115.256673787042,
+                            "y": 36.194162517804
+                        },
+                        "activityParentType": "DEMO",
+                        "scheduledDate": "2016-03-22T00:00:00",
+                        "activityType": "M-Insp",
+                        "isActivityCompleted": false,
+                        "lastModifiedBy": "",
+                        "lastModifiedDateTime": "0001-01-01T00:00:00",
+                        "id": 1552,
+                        "href": "/generic/Hansen.Routing.RouteItem?query={select:[AddedBy,AddedDateTime,LastModifiedBy,LastModifiedDateTime,OrdinalIndex,RouteItemKey],distinct:False,filter:[{property:RouteItemKey,operator:Equal,value:1552}]}"
+                    },
+                    {
+                        "ordinalIndex": 7,
+                        "activity": {
+                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "primaryKey": 1022
+                        },
+                        "location": {
+                            "x": 0,
+                            "y": 0
+                        },
+                        "activityParentType": "DEMO",
+                        "scheduledDate": "2016-03-22T00:00:00",
+                        "activityType": "M-Insp",
+                        "isActivityCompleted": false,
+                        "lastModifiedBy": "HANSEN8",
+                        "lastModifiedDateTime": "2016-04-05T09:42:45.7",
+                        "id": 1554,
+                        "href": "/generic/Hansen.Routing.RouteItem?query={select:[AddedBy,AddedDateTime,LastModifiedBy,LastModifiedDateTime,OrdinalIndex,RouteItemKey],distinct:False,filter:[{property:RouteItemKey,operator:Equal,value:1554}]}"
+                    }],
+                "lastModifiedBy": "",
+                "lastModifiedDateTime": "0001-01-01T00:00:00",
+                "id": 1174,
+                "href": "/generic/Hansen.Routing.Route?query={select:[ActivityDate,AddedBy,AddedDateTime,EndGpsXCoordinate,EndGpsYCoordinate,EndGpsZCoordinate,LastModifiedBy,LastModifiedDateTime,RouteKey,StartGpsXCoordinate,StartGpsYCoordinate,StartGpsZCoordinate],distinct:False,filter:[{property:RouteKey,operator:Equal,value:1174}]}"
+            }],
+        "responseStatus": {
+            "severity": "Success"
+        }
+    };
+    route.data.forEach(function (data, j) {
+        data.startLocation = data.endLocation = center;
+        data.routeItems.forEach(function (item, i) {
+            item.location.x = center.x + 0.001 * (1 + i * Math.random() + j);
+            item.location.y = center.y + 0.001 * (1 + i + j * Math.random());
+        });
+    });
+    return route;
+});
+define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esri/map", "esri/layers/GraphicsLayer", "esri/graphic", "esri/geometry/Point", "esri/geometry/Polyline", "esri/SpatialReference", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/TextSymbol", "esri/Color", "esri/InfoTemplate", "dojo/_base/event", "esri/symbols/Font", "esri/toolbars/edit", "esri/geometry/Extent"], function (require, exports, route, Map, GraphicsLayer, Graphic, Point, Polyline, SpatialReference, SimpleMarkerSymbol, SimpleLineSymbol, TextSymbol, Color, InfoTemplate, event, Font, Edit, Extent) {
+    "use strict";
+    var epsg4326 = new SpatialReference("4326");
+    var epsg3857 = new SpatialReference("102100");
+    var delta = 32;
+    var colors = [new Color("#ffa800"), new Color("#1D5F8A"), new Color("yellow")];
+    var white = new Color("white");
+    var RouteViewer;
+    (function (RouteViewer) {
+        var RouteView = (function () {
+            function RouteView(options) {
+                var _this = this;
+                this.options = options;
+                var map = options.map;
+                var layer = this.layer = new GraphicsLayer();
+                /*
+                layer.on("click", args => {
+                    // need to manually query to register multiple features
+                    map.infoWindow.setFeatures([args.target]);
+                    map.infoWindow.show(args.mapPoint);
+                })
+                */
+                options.map.addLayer(layer);
+                this.routes = [];
+                route.data.map(function (data, colorIndex) { return _this.add({
+                    route: data,
+                    color: colors[colorIndex % colors.length]
+                }); });
+            }
+            RouteView.prototype.add = function (args) {
+                var _this = this;
+                if (args.route) {
+                    var routeInfo = {
+                        routeLine: null,
+                        stops: null
+                    };
+                    this.routes.push(routeInfo);
+                    {
+                        var getGeom = function () {
+                            var path = args.route.routeItems.map(function (item) { return [item.location.x, item.location.y]; });
+                            var geometry = new Polyline(path);
+                            console.log("line", geometry);
+                            return geometry;
+                        };
+                        var attributes = {};
+                        var template = new InfoTemplate(function () { return ("" + args.route.employeeFullName); }, function () { return ("DATE: " + args.route.routeDate); });
+                        routeInfo.routeLine = new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SHORTDOT, args.color, delta / 8), attributes, template);
+                        this.layer.add(new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8)));
+                        this.layer.add(routeInfo.routeLine);
+                    }
+                    routeInfo.stops = args.route.routeItems.map(function (item, itemIndex) {
+                        //let [x, y] = webMercatorUtils.lngLatToXY(route.location.x, route.location.y);
+                        var geometry = new Point(item.location.x, item.location.y);
+                        console.log("point", geometry);
+                        var lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8);
+                        var circleSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, delta, lineSymbol, args.color);
+                        var textSymbol = new TextSymbol({
+                            text: (1 + itemIndex + ""),
+                            font: new Font(delta / 2),
+                            color: white,
+                            yoffset: -delta / 6,
+                            haloColor: args.color,
+                            haloSize: 1
+                        });
+                        var attributes = {};
+                        var template = new InfoTemplate(function () { return (args.route.employeeFullName + " " + item.activity.moniker + " " + item.activity.primaryKey); }, function () { return ("" + JSON.stringify(item)); });
+                        var stop = new Graphic(geometry, circleSymbol, attributes, template);
+                        _this.layer.add(stop);
+                        _this.layer.add(new Graphic(geometry, textSymbol));
+                        return stop;
+                    });
+                }
+            };
+            RouteView.prototype.edit = function (editor, graphic) {
+                var _this = this;
+                editor.deactivate();
+                var routeIndex = -1;
+                if (this.routes.some(function (route, index) {
+                    routeIndex = index;
+                    if (graphic === route.routeLine)
+                        return true;
+                    if (graphic.geometry.type === "point") {
+                        if (0 <= route.stops.indexOf(graphic))
+                            return true;
+                    }
+                })) {
+                    editor.activate(Edit.EDIT_VERTICES, this.routes[routeIndex].routeLine);
+                }
+                ;
+                editor.on("deactivate", function (evt) {
+                    if (evt.info.isModified) {
+                        console.log("change", evt);
+                    }
+                });
+                editor.on("vertex-move-start", function (args) {
+                    console.log("vertex-move-start");
+                });
+                editor.on("vertex-move-stop", function (args) {
+                    // does it intersect with another stop?
+                    console.log("vertext-move-stop");
+                    var routeLine = _this.routes[routeIndex].routeLine;
+                    var pointIndex = args.vertexinfo.pointIndex;
+                    var segmentIndex = args.vertexinfo.segmentIndex;
+                    var location = routeLine.geometry.getPoint(segmentIndex, pointIndex);
+                    // convert to pixel and find an intersecting stop
+                    var map = _this.options.map;
+                    var extent = map.extent;
+                    var _a = [map.width, map.height], width = _a[0], height = _a[1];
+                    var pixel = map.toScreen(location);
+                    pixel.x -= delta / 2;
+                    pixel.y -= delta / 2;
+                    var topLeft = map.toMap(pixel);
+                    pixel.x += delta;
+                    pixel.y += delta;
+                    var bottomRight = map.toMap(pixel);
+                    extent = new Extent(topLeft.x, bottomRight.y, bottomRight.x, topLeft.y, map.spatialReference);
+                    // search for a stop
+                    var targetStop;
+                    var targetRoute;
+                    if (_this.routes.some(function (route, i) {
+                        targetRoute = i;
+                        return route.stops.some(function (stop, i) {
+                            if (extent.contains(stop.geometry)) {
+                                targetStop = i;
+                                return true;
+                            }
+                        });
+                    })) {
+                        console.log("reassign stop " + (targetStop + 1) + " from route " + (targetRoute + 1) + " to route " + (routeIndex + 1));
+                    }
+                    ;
+                });
+                editor.on("vertex-move", function (args) {
+                    // does it intersect with another stop?
+                });
+                editor.on("vertex-add", function (args) {
+                    // does it intersect with another stop?
+                    console.log("vertext-add");
+                });
+            };
+            return RouteView;
+        }());
+        RouteViewer.RouteView = RouteView;
+    })(RouteViewer = exports.RouteViewer || (exports.RouteViewer = {}));
+    function run() {
+        var map = new Map(document.getElementById("map"), {
+            center: [-115.257, 36.194],
+            zoom: 16,
+            basemap: 'streets'
+        });
+        {
+            var editor_1 = new Edit(map, {
+                allowAddVertices: true,
+                allowDeleteVertices: false,
+                ghostLineSymbol: new SimpleLineSymbol({
+                    color: [0, 255, 0],
+                    width: 3,
+                    type: "esriSLS"
+                }),
+                vertexSymbol: new SimpleMarkerSymbol({
+                    color: [0, 255, 0, 20],
+                    size: delta,
+                    type: "esriSMS",
+                    style: "esrSMSCross",
+                    outline: {
+                        color: [0, 255, 0, 128],
+                        width: 3,
+                        type: "esriSLS",
+                        style: "esriSLSSolid"
+                    }
+                }),
+                ghostVertexSymbol: new SimpleMarkerSymbol({
+                    color: [0, 255, 0, 20],
+                    size: delta,
+                    type: "esriSMS",
+                    style: "esrSMSCross",
+                    outline: {
+                        color: [0, 255, 0],
+                        width: 3,
+                        type: "esriSLS",
+                        style: "esriSLSSolid"
+                    }
+                })
+            });
+            var routeView_1 = new RouteViewer.RouteView({
+                map: map,
+                route: route
+            });
+            routeView_1.layer.on("click", function (args) {
+                event.stop(args);
+                routeView_1.edit(editor_1, args.graphic);
+            });
+        }
+    }
+    exports.run = run;
+});
 define("labs/ags-solve-proxy", ["require", "exports", "labs/ajax"], function (require, exports, Ajax) {
     "use strict";
     var BaseSolve = (function () {
@@ -1288,7 +1730,7 @@ define("labs/index", ["require", "exports"], function (require, exports) {
     function run() {
         var l = window.location;
         var path = "" + l.origin + l.pathname + "?run=labs/";
-        var labs = "\n    ags-catalog-proxy\n    ags-feature-proxy\n    ags-feature-query-proxy\n    ags-find-address-proxy\n    ags-find-proxy\n    ags-geometry-proxy\n    ags-lrs-proxy\n    ags-map-export-proxy\n    ags-map-find-proxy\n    ags-map-identify-proxy\n    ags-map-query-proxy\n    ags-reverse-geocode-proxy\n    ags-route-solve-proxy\n    ags-servicearea-solve-proxy\n    ags-solve-proxy\n    ags-suggest-proxy\n    ags-webmap\n    index\n    maplet\n    pubsub    \n    ";
+        var labs = "\n    ags-catalog-proxy\n    ags-feature-proxy\n    ags-feature-query-proxy\n    ags-find-address-proxy\n    ags-find-proxy\n    ags-geometry-proxy\n    ags-lrs-proxy\n    ags-map-export-proxy\n    ags-map-find-proxy\n    ags-map-identify-proxy\n    ags-map-query-proxy\n    ags-reverse-geocode-proxy\n    ags-route-editor\n    ags-route-solve-proxy\n    ags-servicearea-solve-proxy\n    ags-solve-proxy\n    ags-suggest-proxy\n    ags-webmap\n    index\n    maplet\n    pubsub    \n    ";
         var styles = document.createElement("style");
         document.head.appendChild(styles);
         styles.innerText += "\n    #map {\n        display: none;\n    }\n    .test {\n        margin: 20px;\n    }\n    ";
