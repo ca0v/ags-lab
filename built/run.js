@@ -1285,13 +1285,14 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
     });
     return route;
 });
-define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "dojo/_base/lang", "esri/map", "esri/layers/GraphicsLayer", "esri/graphic", "esri/geometry/Point", "esri/geometry/Polyline", "esri/SpatialReference", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/TextSymbol", "esri/Color", "esri/InfoTemplate", "dojo/_base/event", "esri/symbols/Font", "esri/toolbars/edit", "esri/geometry/Extent"], function (require, exports, route, lang, Map, GraphicsLayer, Graphic, Point, Polyline, SpatialReference, SimpleMarkerSymbol, SimpleLineSymbol, TextSymbol, Color, InfoTemplate, event, Font, Edit, Extent) {
+define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esri/map", "esri/layers/GraphicsLayer", "esri/graphic", "esri/geometry/Point", "esri/geometry/Polyline", "esri/SpatialReference", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/TextSymbol", "esri/Color", "esri/InfoTemplate", "dojo/_base/event", "esri/symbols/Font", "esri/toolbars/edit", "esri/geometry/Extent"], function (require, exports, route, Map, GraphicsLayer, Graphic, Point, Polyline, SpatialReference, SimpleMarkerSymbol, SimpleLineSymbol, TextSymbol, Color, InfoTemplate, event, Font, Edit, Extent) {
     "use strict";
     var epsg4326 = new SpatialReference("4326");
     var epsg3857 = new SpatialReference("102100");
     var delta = 32;
     var colors = [new Color("#ffa800"), new Color("#1D5F8A"), new Color("yellow")];
     var white = new Color("white");
+    var red = new Color("red");
     var editorLineStyle = {
         color: [0, 255, 0],
         width: 3,
@@ -1310,8 +1311,10 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "doj
             style: "esriSLSSolid"
         }
     };
-    var editorGhostVertexStyle = lang.mixin({}, editorVertexStyle);
-    editorGhostVertexStyle.size /= 2;
+    var editorGhostVertexStyle = JSON.parse(JSON.stringify(editorVertexStyle));
+    editorGhostVertexStyle.color = [255, 255, 255, 255];
+    editorGhostVertexStyle.size /= 6;
+    editorGhostVertexStyle.outline.width /= 2;
     function first(arr, filter) {
         var result;
         return arr.some(function (v) { result = v; return filter(v); }) ? result : undefined;
@@ -1322,30 +1325,53 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "doj
     }
     var RouteViewer;
     (function (RouteViewer) {
+        ;
+        ;
         var RouteView = (function () {
             function RouteView(options) {
                 var _this = this;
                 this.options = options;
                 var map = options.map;
                 var layer = this.layer = new GraphicsLayer();
-                /*
-                layer.on("click", args => {
-                    // need to manually query to register multiple features
-                    map.infoWindow.setFeatures([args.target]);
-                    map.infoWindow.show(args.mapPoint);
-                })
-                */
                 options.map.addLayer(layer);
                 this.routes = [];
+                this.orphans = [];
                 route.data.map(function (data, colorIndex) { return _this.add({
                     route: data,
                     color: colors[colorIndex % colors.length]
                 }); });
             }
+            RouteView.prototype.removeRoute = function (route) {
+                var routeIndex = (typeof route === "number") ? route : this.routes.indexOf(route);
+                return this.routes.splice(routeIndex, 1)[0];
+            };
+            RouteView.prototype.removeOrphan = function (stop) {
+                var index = this.orphans.indexOf(stop);
+                this.orphans.splice(index, 1);
+            };
+            RouteView.prototype.addOrphan = function (stop) {
+                this.orphans.push(stop);
+            };
+            RouteView.prototype.removeStop = function (route, stop) {
+                var routeIndex = (typeof route === "number") ? route : this.routes.indexOf(route);
+                var stopIndex = (typeof stop === "number") ? stop : this.routes[routeIndex].stops.indexOf(stop);
+                console.log("removeStop from route " + routeIndex + " at position " + stopIndex);
+                return this.routes[routeIndex].stops.splice(stopIndex, 1)[0];
+            };
+            RouteView.prototype.addStop = function (route, stop, stopIndex) {
+                var routeIndex = (typeof route === "number") ? route : this.routes.indexOf(route);
+                console.log("addStop to route " + routeIndex + " at position " + stopIndex);
+                return this.routes[routeIndex].stops.splice(stopIndex, 0, stop)[0];
+            };
+            RouteView.prototype.moveStop = function (stop, location) {
+                stop.stop.setGeometry(location);
+                stop.label.setGeometry(location);
+            };
             RouteView.prototype.add = function (args) {
                 var _this = this;
                 if (args.route) {
                     var routeInfo = {
+                        color: args.color,
                         routeLine: null,
                         stops: null
                     };
@@ -1358,9 +1384,12 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "doj
                         };
                         var attributes = {};
                         var template = new InfoTemplate(function () { return ("" + args.route.employeeFullName); }, function () { return ("DATE: " + args.route.routeDate); });
-                        routeInfo.routeLine = new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SHORTDOT, args.color, delta / 8), attributes, template);
-                        this.layer.add(new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8)));
-                        this.layer.add(routeInfo.routeLine);
+                        routeInfo.routeLine = {
+                            routeLine: new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SHORTDOT, args.color, delta / 8), attributes, template),
+                            underlay: new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 6))
+                        };
+                        this.layer.add(routeInfo.routeLine.underlay);
+                        this.layer.add(routeInfo.routeLine.routeLine);
                     }
                     routeInfo.stops = args.route.routeItems.map(function (item, itemIndex) {
                         //let [x, y] = webMercatorUtils.lngLatToXY(route.location.x, route.location.y);
@@ -1388,45 +1417,112 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "doj
                     });
                 }
             };
-            RouteView.prototype.edit = function (editor, graphic) {
+            RouteView.prototype.redraw = function (route) {
+                {
+                    var lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8);
+                    var circleSymbol_1 = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, delta, lineSymbol, route.color);
+                    route.stops.forEach(function (stop, itemIndex) {
+                        stop.stop.setSymbol(circleSymbol_1);
+                        stop.label.symbol.text = (1 + itemIndex + "");
+                        stop.stop.getShape().moveToFront();
+                        stop.label.getShape().moveToFront();
+                        stop.stop.draw();
+                        stop.label.draw();
+                    });
+                }
+                {
+                    var getGeom = function () {
+                        var path = route.stops.map(function (stop) { return stop.stop.geometry; }).map(function (p) { return [p.getLongitude(), p.getLatitude()]; });
+                        var geometry = new Polyline(path);
+                        return geometry;
+                    };
+                    route.routeLine.routeLine.getShape().moveToBack();
+                    route.routeLine.underlay.getShape().moveToBack();
+                    route.routeLine.underlay.setGeometry(getGeom());
+                    route.routeLine.routeLine.setGeometry(route.routeLine.underlay.geometry);
+                }
+                this.orphans.forEach(function (stop, itemIndex) {
+                    stop.label.symbol.text = (1 + itemIndex + "");
+                    stop.stop.symbol.color = red;
+                    stop.stop.draw();
+                    stop.label.draw();
+                });
+            };
+            RouteView.prototype.edit = function (editor, graphic, options) {
                 var _this = this;
                 // ensures callbacks are unregistered
                 editor.deactivate();
-                var route = first(this.routes, function (route) {
-                    if (graphic === route.routeLine)
+                var activeRoute = first(this.routes, function (route) {
+                    if (graphic === route.routeLine.routeLine)
+                        return true;
+                    if (graphic === route.routeLine.underlay)
                         return true;
                     if (graphic.geometry.type === "point") {
                         return !!first(route.stops, function (stop) { return stop.stop === graphic || stop.label === graphic; });
                     }
                 });
-                if (route) {
-                    editor.activate(Edit.EDIT_VERTICES, route.routeLine);
+                if (activeRoute) {
+                    editor.activate(Edit.EDIT_VERTICES, activeRoute.routeLine.routeLine);
                 }
                 else {
                     console.log("cannot determine route");
+                    return;
                 }
+                var isActiveVertexMinor;
+                var activeVertex;
+                var targetRoute = null && activeRoute;
+                var activeStop = null && activeRoute.stops[0];
+                var targetStop = null && activeRoute.stops[0];
+                var activeLocation;
+                var doit = function () {
+                    console.log("change");
+                    var isSameStop = activeStop === targetStop;
+                    var isSameRoute = targetRoute === activeRoute;
+                    var isRemoveActiveStop = !isActiveVertexMinor && !options.moveStop;
+                    var isMoveActiveStop = !isActiveVertexMinor && options.moveStop && !targetStop;
+                    var isAddTargetStop = !!targetStop;
+                    var isOrphan = !targetRoute && targetStop;
+                    if (isSameStop) {
+                        console.log("dnd onto same stop does nothing");
+                        return;
+                    }
+                    if (isRemoveActiveStop) {
+                        _this.removeStop(activeRoute, activeStop);
+                        _this.addOrphan(activeStop);
+                    }
+                    if (isAddTargetStop) {
+                        targetRoute && _this.removeStop(targetRoute, targetStop);
+                        isOrphan && _this.removeOrphan(targetStop);
+                        _this.addStop(activeRoute, targetStop, activeVertex);
+                    }
+                    if (isMoveActiveStop) {
+                        _this.moveStop(activeStop, activeLocation);
+                    }
+                    !isSameRoute && targetRoute && _this.redraw(targetRoute);
+                    _this.redraw(activeRoute);
+                    _this.edit(editor, activeRoute.routeLine.routeLine, options);
+                };
                 var handles = [
-                    editor.on("deactivate", function (evt) {
-                        handles.forEach(function (h) { return h.remove(); });
-                        if (evt.info.isModified) {
-                            console.log("change");
-                        }
-                    }),
                     editor.on("vertex-move-start", function (args) {
-                        console.log("vertex-move-start");
+                        // were on the move!
+                        isActiveVertexMinor = args.vertexinfo.isGhost;
+                        activeVertex = args.vertexinfo.pointIndex;
+                        activeStop = !isActiveVertexMinor && activeRoute.stops[args.vertexinfo.pointIndex];
                     }),
                     editor.on("vertex-move-stop", function (args) {
+                        if (args.vertexinfo.pointIndex !== activeVertex)
+                            return;
                         // does it intersect with another stop?
                         console.log("vertext-move-stop");
-                        var routeLine = route.routeLine;
+                        var routeLine = activeRoute.routeLine;
                         var pointIndex = args.vertexinfo.pointIndex;
                         var segmentIndex = args.vertexinfo.segmentIndex;
-                        var location = routeLine.geometry.getPoint(segmentIndex, pointIndex);
+                        activeLocation = routeLine.routeLine.geometry.getPoint(segmentIndex, pointIndex);
                         // convert to pixel and find an intersecting stop
                         var map = _this.options.map;
                         var extent = map.extent;
                         var _a = [map.width, map.height], width = _a[0], height = _a[1];
-                        var pixel = map.toScreen(location);
+                        var pixel = map.toScreen(activeLocation);
                         pixel.x -= delta / 2;
                         pixel.y -= delta / 2;
                         var topLeft = map.toMap(pixel);
@@ -1434,25 +1530,25 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "doj
                         pixel.y += delta;
                         var bottomRight = map.toMap(pixel);
                         extent = new Extent(topLeft.x, bottomRight.y, bottomRight.x, topLeft.y, map.spatialReference);
-                        // search for a stop
-                        var targetStop;
-                        var targetRoute;
-                        targetRoute = indexOf(_this.routes, function (route) {
-                            targetStop = indexOf(route.stops, function (stop) { return extent.contains(stop.stop.geometry); });
-                            return (-1 < targetStop);
+                        targetRoute = first(_this.routes, function (route) {
+                            targetStop = first(route.stops, function (stop) { return extent.contains(stop.stop.geometry); });
+                            return !!targetStop;
                         });
-                        if (-1 < targetRoute) {
-                            console.log("reassign stop " + (targetStop + 1) + " from route " + (targetRoute + 1) + " to route " + (_this.routes.indexOf(route) + 1));
+                        if (!targetRoute) {
+                            targetStop = first(_this.orphans, function (stop) { return extent.contains(stop.stop.geometry); });
                         }
-                        ;
+                        doit();
                     }),
                     editor.on("vertex-move", function (args) {
                         // does it intersect with another stop?
                     }),
                     editor.on("vertex-add", function (args) {
                         // does it intersect with another stop?
-                        console.log("vertext-add");
-                    })
+                    }),
+                    editor.on("deactivate", function (evt) {
+                        // stop listening for editor events
+                        handles.forEach(function (h) { return h.remove(); });
+                    }),
                 ];
             };
             return RouteView;
@@ -1477,9 +1573,15 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "doj
                 map: map,
                 route: route
             });
+            map.on("click", function () {
+                console.log("map click");
+                editor_1.deactivate();
+            });
             routeView_1.layer.on("click", function (args) {
                 event.stop(args);
-                routeView_1.edit(editor_1, args.graphic);
+                routeView_1.edit(editor_1, args.graphic, {
+                    moveStop: args.shiftKey
+                });
             });
         }
     }

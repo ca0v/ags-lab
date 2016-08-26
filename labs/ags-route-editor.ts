@@ -35,6 +35,7 @@ const delta = 32;
 
 const colors = [new Color("#ffa800"), new Color("#1D5F8A"), new Color("yellow")];
 const white = new Color("white");
+const red = new Color("red");
 
 const editorLineStyle = {
     color: [0, 255, 0],
@@ -56,8 +57,10 @@ const editorVertexStyle = {
     }
 };
 
-let editorGhostVertexStyle = lang.mixin({}, editorVertexStyle);
-editorGhostVertexStyle.size /= 2;
+let editorGhostVertexStyle = <typeof editorVertexStyle>JSON.parse(JSON.stringify(editorVertexStyle));
+editorGhostVertexStyle.color = [255, 255, 255, 255]
+editorGhostVertexStyle.size /= 6;
+editorGhostVertexStyle.outline.width /= 2;
 
 function first<T>(arr: T[], filter: (v: T) => boolean): T {
     let result: T;
@@ -135,14 +138,29 @@ export namespace RouteViewer {
         modifyFinishLocation?: boolean;
     }
 
+    interface StopInfo {
+        stop: Graphic;
+        label: Graphic;
+    };
+
+    interface RouteLineInfo {
+        routeLine: Graphic;
+        underlay: Graphic;
+    }
+
+    interface RouteInfo {
+        color: Color;
+        routeLine: RouteLineInfo;
+        stops: Array<StopInfo>;
+    };
+
     export class RouteView {
 
-        public layer: GraphicsLayer;
+        public layer: GraphicsLayer; // using onclick to initiate editing
 
-        public routes: Array<{
-            routeLine: Graphic;
-            stops: Array<{ stop: Graphic; label: Graphic; }>;
-        }>;
+        private routes: Array<RouteInfo>;
+
+        private orphans: Array<StopInfo>;
 
         constructor(public options: {
             map: Map,
@@ -152,21 +170,47 @@ export namespace RouteViewer {
 
             let layer = this.layer = new GraphicsLayer();
 
-            /*
-            layer.on("click", args => {
-                // need to manually query to register multiple features
-                map.infoWindow.setFeatures([args.target]);
-                map.infoWindow.show(args.mapPoint);
-            })
-            */
-
             options.map.addLayer(layer);
 
             this.routes = [];
+            this.orphans = [];
+
             route.data.map((data, colorIndex) => this.add({
                 route: data,
                 color: colors[colorIndex % colors.length]
             }));
+        }
+
+        removeRoute(route: RouteInfo | number) {
+            let routeIndex = (typeof route === "number") ? route : this.routes.indexOf(route);
+            return this.routes.splice(routeIndex, 1)[0];
+        }
+
+        removeOrphan(stop: StopInfo) {
+            let index = this.orphans.indexOf(stop);
+            this.orphans.splice(index, 1);
+        }
+
+        addOrphan(stop: StopInfo) {
+            this.orphans.push(stop);
+        }
+
+        removeStop(route: RouteInfo | number, stop: StopInfo | number): StopInfo {
+            let routeIndex = (typeof route === "number") ? route : this.routes.indexOf(route);
+            let stopIndex = (typeof stop === "number") ? stop : this.routes[routeIndex].stops.indexOf(stop);
+            console.log(`removeStop from route ${routeIndex} at position ${stopIndex}`);
+            return this.routes[routeIndex].stops.splice(stopIndex, 1)[0];
+        }
+
+        addStop(route: RouteInfo | number, stop: StopInfo, stopIndex: number): StopInfo {
+            let routeIndex = (typeof route === "number") ? route : this.routes.indexOf(route);
+            console.log(`addStop to route ${routeIndex} at position ${stopIndex}`);
+            return this.routes[routeIndex].stops.splice(stopIndex, 0, stop)[0];
+        }
+
+        moveStop(stop: StopInfo, location: Point) {
+            stop.stop.setGeometry(location);
+            stop.label.setGeometry(location);
         }
 
         add(args: {
@@ -176,7 +220,8 @@ export namespace RouteViewer {
 
             if (args.route) {
 
-                let routeInfo = {
+                let routeInfo = <RouteInfo>{
+                    color: args.color,
                     routeLine: null,
                     stops: null
                 };
@@ -192,9 +237,12 @@ export namespace RouteViewer {
                     let attributes = {};
                     let template = new InfoTemplate(() => `${args.route.employeeFullName}`, () => `DATE: ${args.route.routeDate}`);
 
-                    routeInfo.routeLine = new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SHORTDOT, args.color, delta / 8), attributes, template);
-                    this.layer.add(new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8)));
-                    this.layer.add(routeInfo.routeLine);
+                    routeInfo.routeLine = {
+                        routeLine: new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SHORTDOT, args.color, delta / 8), attributes, template),
+                        underlay: new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 6))
+                    };
+                    this.layer.add(routeInfo.routeLine.underlay);
+                    this.layer.add(routeInfo.routeLine.routeLine);
                 }
 
                 routeInfo.stops = args.route.routeItems.map((item, itemIndex) => {
@@ -233,51 +281,132 @@ export namespace RouteViewer {
             }
         }
 
-        edit(editor: Edit, graphic: Graphic) {
+        redraw(route: RouteInfo) {
+
+            {
+                let lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8);
+                let circleSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, delta, lineSymbol, route.color);
+                route.stops.forEach((stop, itemIndex) => {
+                    stop.stop.setSymbol(circleSymbol);
+                    (<TextSymbol>stop.label.symbol).text = (1 + itemIndex + "");
+                    stop.stop.getShape().moveToFront();
+                    stop.label.getShape().moveToFront();
+                    stop.stop.draw();
+                    stop.label.draw();
+                });
+            }
+
+            {
+                let getGeom = () => {
+                    let path = route.stops.map(stop => <Point>stop.stop.geometry).map(p => [p.getLongitude(), p.getLatitude()]);
+                    let geometry = new Polyline(path);
+                    return geometry;
+                };
+                route.routeLine.routeLine.getShape().moveToBack();
+                route.routeLine.underlay.getShape().moveToBack();
+
+                route.routeLine.underlay.setGeometry(getGeom());
+                route.routeLine.routeLine.setGeometry(route.routeLine.underlay.geometry);
+            }
+
+            this.orphans.forEach((stop, itemIndex) => {
+                (<TextSymbol>stop.label.symbol).text = (1 + itemIndex + "");
+                (<SimpleMarkerSymbol>stop.stop.symbol).color = red;
+                stop.stop.draw();
+                stop.label.draw();
+            });
+
+        }
+
+        edit(editor: Edit, graphic: Graphic, options: {
+            moveStop: boolean;
+        }) {
 
             // ensures callbacks are unregistered
             editor.deactivate();
 
-            let route = first(this.routes, route => {
-                if (graphic === route.routeLine) return true;
+            let activeRoute = first(this.routes, route => {
+                if (graphic === route.routeLine.routeLine) return true;
+                if (graphic === route.routeLine.underlay) return true;
                 if (graphic.geometry.type === "point") {
                     return !!first(route.stops, stop => stop.stop === graphic || stop.label === graphic);
                 }
             });
 
-            if (route) {
-                editor.activate(Edit.EDIT_VERTICES, route.routeLine);
+            if (activeRoute) {
+                editor.activate(Edit.EDIT_VERTICES, activeRoute.routeLine.routeLine);
             } else {
                 console.log("cannot determine route");
+                return;
             }
 
+            let isActiveVertexMinor: boolean;
+            let activeVertex: number;
+            let targetRoute = null && activeRoute;
+            let activeStop = null && activeRoute.stops[0];
+            let targetStop = null && activeRoute.stops[0];
+            let activeLocation: Point;
+
+            let doit = () => {
+                console.log("change");
+                let isSameStop = activeStop === targetStop;
+                let isSameRoute = targetRoute === activeRoute;
+                let isRemoveActiveStop = !isActiveVertexMinor && !options.moveStop;
+                let isMoveActiveStop = !isActiveVertexMinor && options.moveStop && !targetStop;
+                let isAddTargetStop = !!targetStop;
+                let isOrphan = !targetRoute && targetStop;
+
+                if (isSameStop) {
+                    console.log("dnd onto same stop does nothing");
+                    return;
+                }
+
+                if (isRemoveActiveStop) {
+                    this.removeStop(activeRoute, activeStop);
+                    this.addOrphan(activeStop);
+                }
+
+                if (isAddTargetStop) {
+                    targetRoute && this.removeStop(targetRoute, targetStop);
+                    isOrphan && this.removeOrphan(targetStop);
+                    this.addStop(activeRoute, targetStop, activeVertex);
+                }
+
+                if (isMoveActiveStop) {
+                    this.moveStop(activeStop, activeLocation);
+                }
+
+                !isSameRoute && targetRoute && this.redraw(targetRoute);
+                this.redraw(activeRoute);
+
+                this.edit(editor, activeRoute.routeLine.routeLine, options);
+            };
+
             let handles = [
-                editor.on("deactivate", function (evt) {
-                    handles.forEach(h => h.remove());
-                    if (evt.info.isModified) {
-                        console.log("change");
-                    }
-                }),
 
                 editor.on("vertex-move-start", args => {
-                    console.log("vertex-move-start");
+                    // were on the move!
+                    isActiveVertexMinor = args.vertexinfo.isGhost;
+                    activeVertex = args.vertexinfo.pointIndex;
+                    activeStop = !isActiveVertexMinor && activeRoute.stops[args.vertexinfo.pointIndex];
                 }),
 
                 editor.on("vertex-move-stop", args => {
+                    if (args.vertexinfo.pointIndex !== activeVertex) return;
                     // does it intersect with another stop?
                     console.log("vertext-move-stop");
-                    let routeLine = route.routeLine;
+                    let routeLine = activeRoute.routeLine;
 
                     let pointIndex = args.vertexinfo.pointIndex;
                     let segmentIndex = args.vertexinfo.segmentIndex;
-                    let location = (<Polyline>routeLine.geometry).getPoint(segmentIndex, pointIndex);
+                    activeLocation = (<Polyline>routeLine.routeLine.geometry).getPoint(segmentIndex, pointIndex);
 
                     // convert to pixel and find an intersecting stop
                     let map = this.options.map;
                     let extent = map.extent;
                     let [width, height] = [map.width, map.height];
 
-                    let pixel = map.toScreen(location);
+                    let pixel = map.toScreen(activeLocation);
                     pixel.x -= delta / 2;
                     pixel.y -= delta / 2;
                     let topLeft = map.toMap(pixel);
@@ -287,19 +416,16 @@ export namespace RouteViewer {
 
                     extent = new Extent(topLeft.x, bottomRight.y, bottomRight.x, topLeft.y, map.spatialReference);
 
-                    // search for a stop
-                    let targetStop: number;
-                    let targetRoute: number;
-
-                    targetRoute = indexOf(this.routes, route => {
-                        targetStop = indexOf(route.stops, stop => extent.contains(stop.stop.geometry));
-                        return (-1 < targetStop);
+                    targetRoute = first(this.routes, route => {
+                        targetStop = first(route.stops, stop => extent.contains(stop.stop.geometry));
+                        return !!targetStop;
                     });
 
-                    if (-1 < targetRoute) {
-                        console.log(`reassign stop ${targetStop + 1} from route ${targetRoute + 1} to route ${this.routes.indexOf(route) + 1}`);
-                    };
+                    if (!targetRoute) {
+                        targetStop = first(this.orphans, stop => extent.contains(stop.stop.geometry));
+                    }
 
+                    doit();
                 }),
 
                 editor.on("vertex-move", args => {
@@ -308,8 +434,13 @@ export namespace RouteViewer {
 
                 editor.on("vertex-add", args => {
                     // does it intersect with another stop?
-                    console.log("vertext-add");
-                })
+                }),
+
+                editor.on("deactivate", evt => {
+                    // stop listening for editor events
+                    handles.forEach(h => h.remove());
+                }),
+
             ];
 
         }
@@ -344,9 +475,16 @@ export function run() {
             route: route
         });
 
+        map.on("click", () => {
+            console.log("map click");
+            editor.deactivate();
+        });
+
         routeView.layer.on("click", (args: any) => {
             event.stop(args);
-            routeView.edit(editor, args.graphic);
+            routeView.edit(editor, args.graphic, {
+                moveStop: args.shiftKey
+            });
         });
 
     }
