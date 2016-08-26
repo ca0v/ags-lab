@@ -1277,7 +1277,10 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
         }
     };
     route.data.forEach(function (data, j) {
-        data.startLocation = data.endLocation = center;
+        data.startLocation = data.endLocation = {
+            x: center.x + 0.001 * (1 - Math.random()),
+            y: center.y + 0.001 * (1 - Math.random())
+        };
         data.routeItems.forEach(function (item, i) {
             item.location.x = center.x + 0.001 * (1 + i * Math.random() + j);
             item.location.y = center.y + 0.001 * (1 + i + j * Math.random());
@@ -1300,7 +1303,7 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
         style: "esriSLSDash"
     };
     var editorVertexStyle = {
-        color: [0, 255, 0, 20],
+        color: [0, 255, 0, 60],
         size: delta * 3 / 4,
         type: "esriSMS",
         style: "esriSMSCircle",
@@ -1313,7 +1316,7 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
     };
     var editorGhostVertexStyle = JSON.parse(JSON.stringify(editorVertexStyle));
     editorGhostVertexStyle.color = [255, 255, 255, 255];
-    editorGhostVertexStyle.size /= 6;
+    editorGhostVertexStyle.size /= 4;
     editorGhostVertexStyle.outline.width /= 2;
     function first(arr, filter) {
         var result;
@@ -1322,6 +1325,9 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
     function indexOf(arr, filter) {
         var result;
         return arr.some(function (v, i) { result = i; return filter(v); }) ? result : undefined;
+    }
+    function asGeom(location) {
+        return new Point(location.x, location.y);
     }
     var RouteViewer;
     (function (RouteViewer) {
@@ -1339,7 +1345,7 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                 route.data.map(function (data, colorIndex) { return _this.add({
                     route: data,
                     color: colors[colorIndex % colors.length]
-                }); });
+                }); }).forEach(function (route) { return _this.redraw(route); });
             }
             RouteView.prototype.removeRoute = function (route) {
                 var routeIndex = (typeof route === "number") ? route : this.routes.indexOf(route);
@@ -1367,35 +1373,42 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                 stop.stop.setGeometry(location);
                 stop.label.setGeometry(location);
             };
+            RouteView.prototype.addToLayer = function (info) {
+                var isStop = function (object) { return 'stop' in object; };
+                if (isStop(info)) {
+                    this.layer.add(info.stop);
+                    this.layer.add(info.label);
+                }
+                else {
+                    this.layer.add(info.underlay);
+                    this.layer.add(info.routeLine);
+                }
+            };
             RouteView.prototype.add = function (args) {
                 var _this = this;
-                if (args.route) {
-                    var routeInfo = {
-                        color: args.color,
-                        routeLine: null,
-                        stops: null
-                    };
-                    this.routes.push(routeInfo);
-                    {
-                        var getGeom = function () {
-                            var path = args.route.routeItems.map(function (item) { return [item.location.x, item.location.y]; });
-                            var geometry = new Polyline(path);
-                            return geometry;
-                        };
-                        var attributes = {};
-                        var template = new InfoTemplate(function () { return ("" + args.route.employeeFullName); }, function () { return ("DATE: " + args.route.routeDate); });
-                        routeInfo.routeLine = {
-                            routeLine: new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SHORTDOT, args.color, delta / 8), attributes, template),
-                            underlay: new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 6))
-                        };
-                        this.layer.add(routeInfo.routeLine.underlay);
-                        this.layer.add(routeInfo.routeLine.routeLine);
-                    }
+                var routeInfo = {
+                    color: args.color,
+                    routeLine: null,
+                    stops: null,
+                    startLocation: null,
+                    endLocation: null
+                };
+                this.routes.push(routeInfo);
+                if (1) {
                     routeInfo.stops = args.route.routeItems.map(function (item, itemIndex) {
-                        //let [x, y] = webMercatorUtils.lngLatToXY(route.location.x, route.location.y);
-                        var geometry = new Point(item.location.x, item.location.y);
-                        var lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8);
-                        var circleSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, delta, lineSymbol, args.color);
+                        var geometry = asGeom(item.location);
+                        var circleSymbol = new SimpleMarkerSymbol({
+                            type: "esriSMS",
+                            style: "esriSMSCircle",
+                            size: delta,
+                            color: routeInfo.color,
+                            outline: {
+                                type: "esriSLS",
+                                style: "esriSLSSolid",
+                                color: white,
+                                width: delta / 8
+                            }
+                        });
                         var textSymbol = new TextSymbol({
                             text: (1 + itemIndex + ""),
                             font: new Font(delta / 2),
@@ -1408,38 +1421,66 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                         var template = new InfoTemplate(function () { return (args.route.employeeFullName + " " + item.activity.moniker + " " + item.activity.primaryKey); }, function () { return ("" + JSON.stringify(item)); });
                         var stop = new Graphic(geometry, circleSymbol, attributes, template);
                         var label = new Graphic(geometry, textSymbol);
-                        _this.layer.add(stop);
-                        _this.layer.add(label);
                         return {
                             stop: stop,
                             label: label
                         };
                     });
+                    routeInfo.stops.forEach(function (stop) { return _this.addToLayer(stop); });
                 }
+                if (1) {
+                    var lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8);
+                    var circleSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, delta, lineSymbol, args.color);
+                    var textSymbol = new TextSymbol({ text: "X" });
+                    if (args.route.startLocation) {
+                        var geom = asGeom(args.route.startLocation);
+                        routeInfo.startLocation = {
+                            stop: new Graphic(geom, circleSymbol),
+                            label: new Graphic(geom, textSymbol)
+                        };
+                        this.addToLayer(routeInfo.startLocation);
+                    }
+                    if (args.route.endLocation) {
+                        var geom = asGeom(args.route.endLocation);
+                        routeInfo.endLocation = {
+                            stop: new Graphic(geom, circleSymbol),
+                            label: new Graphic(geom, textSymbol)
+                        };
+                        this.addToLayer(routeInfo.endLocation);
+                    }
+                }
+                return routeInfo;
             };
             RouteView.prototype.redraw = function (route) {
-                {
-                    var lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8);
-                    var circleSymbol_1 = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, delta, lineSymbol, route.color);
-                    route.stops.forEach(function (stop, itemIndex) {
-                        stop.stop.setSymbol(circleSymbol_1);
-                        stop.label.symbol.text = (1 + itemIndex + "");
-                        stop.stop.getShape().moveToFront();
-                        stop.label.getShape().moveToFront();
-                        stop.stop.draw();
-                        stop.label.draw();
-                    });
-                }
+                route.stops.forEach(function (stop, itemIndex) {
+                    stop.stop.symbol.color = route.color;
+                    stop.label.symbol.text = (1 + itemIndex + "");
+                    stop.stop.getShapes().forEach(function (s) { return s.moveToFront(); });
+                    stop.label.getShapes().forEach(function (s) { return s.moveToFront(); });
+                    stop.stop.draw();
+                    stop.label.draw();
+                });
                 {
                     var getGeom = function () {
-                        var path = route.stops.map(function (stop) { return stop.stop.geometry; }).map(function (p) { return [p.getLongitude(), p.getLatitude()]; });
-                        var geometry = new Polyline(path);
-                        return geometry;
+                        var stops = [].concat(route.stops);
+                        route.startLocation && stops.unshift(route.startLocation);
+                        route.endLocation && stops.push(route.endLocation);
+                        var path = stops.map(function (stop) { return stop.stop.geometry; }).map(function (p) { return [p.getLongitude(), p.getLatitude()]; });
+                        return new Polyline(path);
                     };
-                    route.routeLine.routeLine.getShape().moveToBack();
-                    route.routeLine.underlay.getShape().moveToBack();
-                    route.routeLine.underlay.setGeometry(getGeom());
-                    route.routeLine.routeLine.setGeometry(route.routeLine.underlay.geometry);
+                    if (!route.routeLine) {
+                        route.routeLine = {
+                            routeLine: new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SHORTDOT, route.color, 4)),
+                            underlay: new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, 6))
+                        };
+                        this.addToLayer(route.routeLine);
+                    }
+                    else {
+                        route.routeLine.underlay.setGeometry(getGeom());
+                        route.routeLine.routeLine.setGeometry(route.routeLine.underlay.geometry);
+                    }
+                    route.routeLine.routeLine.getShapes().forEach(function (s) { return s.moveToBack(); });
+                    route.routeLine.underlay.getShapes().forEach(function (s) { return s.moveToBack(); });
                 }
                 this.orphans.forEach(function (stop, itemIndex) {
                     stop.label.symbol.text = (1 + itemIndex + "");
@@ -1469,7 +1510,7 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                     return;
                 }
                 var isActiveVertexMinor;
-                var activeVertex;
+                var activeVertexIndex;
                 var targetRoute = null && activeRoute;
                 var activeStop = null && activeRoute.stops[0];
                 var targetStop = null && activeRoute.stops[0];
@@ -1478,13 +1519,12 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                     console.log("change");
                     var isSameStop = activeStop === targetStop;
                     var isSameRoute = targetRoute === activeRoute;
-                    var isRemoveActiveStop = !isActiveVertexMinor && !options.moveStop;
-                    var isMoveActiveStop = !isActiveVertexMinor && options.moveStop && !targetStop;
-                    var isAddTargetStop = !!targetStop;
+                    var isRemoveActiveStop = activeStop && !isActiveVertexMinor && !options.moveStop && !isSameStop;
+                    var isMoveActiveStop = activeStop && !isActiveVertexMinor && options.moveStop && (!targetStop || isSameStop);
+                    var isAddTargetStop = !!targetStop && !isSameStop;
                     var isOrphan = !targetRoute && targetStop;
                     if (isSameStop) {
                         console.log("dnd onto same stop does nothing");
-                        return;
                     }
                     if (isRemoveActiveStop) {
                         _this.removeStop(activeRoute, activeStop);
@@ -1493,7 +1533,7 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                     if (isAddTargetStop) {
                         targetRoute && _this.removeStop(targetRoute, targetStop);
                         isOrphan && _this.removeOrphan(targetStop);
-                        _this.addStop(activeRoute, targetStop, activeVertex);
+                        _this.addStop(activeRoute, targetStop, activeVertexIndex - (activeRoute.startLocation ? 1 : 0));
                     }
                     if (isMoveActiveStop) {
                         _this.moveStop(activeStop, activeLocation);
@@ -1506,11 +1546,11 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                     editor.on("vertex-move-start", function (args) {
                         // were on the move!
                         isActiveVertexMinor = args.vertexinfo.isGhost;
-                        activeVertex = args.vertexinfo.pointIndex;
-                        activeStop = !isActiveVertexMinor && activeRoute.stops[args.vertexinfo.pointIndex];
+                        activeVertexIndex = args.vertexinfo.pointIndex;
+                        activeStop = !isActiveVertexMinor && activeRoute.stops[activeVertexIndex - (activeRoute.startLocation ? 1 : 0)];
                     }),
                     editor.on("vertex-move-stop", function (args) {
-                        if (args.vertexinfo.pointIndex !== activeVertex)
+                        if (args.vertexinfo.pointIndex !== activeVertexIndex)
                             return;
                         // does it intersect with another stop?
                         console.log("vertext-move-stop");

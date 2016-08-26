@@ -45,7 +45,7 @@ const editorLineStyle = {
 };
 
 const editorVertexStyle = {
-    color: [0, 255, 0, 20],
+    color: [0, 255, 0, 60],
     size: delta * 3 / 4,
     type: "esriSMS",
     style: "esriSMSCircle",
@@ -59,7 +59,7 @@ const editorVertexStyle = {
 
 let editorGhostVertexStyle = <typeof editorVertexStyle>JSON.parse(JSON.stringify(editorVertexStyle));
 editorGhostVertexStyle.color = [255, 255, 255, 255]
-editorGhostVertexStyle.size /= 6;
+editorGhostVertexStyle.size /= 4;
 editorGhostVertexStyle.outline.width /= 2;
 
 function first<T>(arr: T[], filter: (v: T) => boolean): T {
@@ -70,6 +70,10 @@ function first<T>(arr: T[], filter: (v: T) => boolean): T {
 function indexOf<T>(arr: T[], filter: (v: T) => boolean): number {
     let result: number;
     return arr.some((v, i) => { result = i; return filter(v); }) ? result : undefined;
+}
+
+function asGeom(location: Routing.Location) {
+    return new Point(location.x, location.y);
 }
 
 export module Routing {
@@ -150,6 +154,8 @@ export namespace RouteViewer {
 
     interface RouteInfo {
         color: Color;
+        startLocation: StopInfo;
+        endLocation: StopInfo;
         routeLine: RouteLineInfo;
         stops: Array<StopInfo>;
     };
@@ -178,7 +184,7 @@ export namespace RouteViewer {
             route.data.map((data, colorIndex) => this.add({
                 route: data,
                 color: colors[colorIndex % colors.length]
-            }));
+            })).forEach(route => this.redraw(route));
         }
 
         removeRoute(route: RouteInfo | number) {
@@ -213,45 +219,52 @@ export namespace RouteViewer {
             stop.label.setGeometry(location);
         }
 
+        addToLayer(info: StopInfo | RouteLineInfo) {
+            const isStop = (object: any): object is StopInfo => 'stop' in object;
+
+            if (isStop(info)) {
+                this.layer.add(info.stop);
+                this.layer.add(info.label);
+            } else {
+                this.layer.add(info.underlay);
+                this.layer.add(info.routeLine);
+            }
+        }
+
+
         add(args: {
             color: Color,
             route: Routing.Route
         }) {
 
-            if (args.route) {
+            let routeInfo: RouteInfo = {
+                color: args.color,
+                routeLine: null,
+                stops: null,
+                startLocation: null,
+                endLocation: null
+            };
 
-                let routeInfo = <RouteInfo>{
-                    color: args.color,
-                    routeLine: null,
-                    stops: null
-                };
-                this.routes.push(routeInfo);
+            this.routes.push(routeInfo);
 
-                {
-                    let getGeom = () => {
-                        let path = args.route.routeItems.map(item => [item.location.x, item.location.y]);
-                        let geometry = new Polyline(path);
-                        return geometry;
-                    };
-
-                    let attributes = {};
-                    let template = new InfoTemplate(() => `${args.route.employeeFullName}`, () => `DATE: ${args.route.routeDate}`);
-
-                    routeInfo.routeLine = {
-                        routeLine: new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SHORTDOT, args.color, delta / 8), attributes, template),
-                        underlay: new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 6))
-                    };
-                    this.layer.add(routeInfo.routeLine.underlay);
-                    this.layer.add(routeInfo.routeLine.routeLine);
-                }
-
+            if (1) {
                 routeInfo.stops = args.route.routeItems.map((item, itemIndex) => {
 
-                    //let [x, y] = webMercatorUtils.lngLatToXY(route.location.x, route.location.y);
-                    let geometry = new Point(item.location.x, item.location.y);
+                    let geometry = asGeom(item.location);
 
-                    let lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8);
-                    let circleSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, delta, lineSymbol, args.color);
+                    let circleSymbol = new SimpleMarkerSymbol({
+                        type: "esriSMS",
+                        style: "esriSMSCircle",
+                        size: delta,
+                        color: routeInfo.color,
+                        outline: {
+                            type: "esriSLS",
+                            style: "esriSLSSolid",
+                            color: white,
+                            width: delta / 8
+                        }
+                    });
+
                     let textSymbol = new TextSymbol({
                         text: (1 + itemIndex + ""),
                         font: new Font(delta / 2),
@@ -269,8 +282,6 @@ export namespace RouteViewer {
 
                     let stop = new Graphic(geometry, circleSymbol, attributes, template);
                     let label = new Graphic(geometry, textSymbol);
-                    this.layer.add(stop);
-                    this.layer.add(label);
 
                     return {
                         stop: stop,
@@ -278,35 +289,69 @@ export namespace RouteViewer {
                     };
                 });
 
+                routeInfo.stops.forEach(stop => this.addToLayer(stop));
             }
+
+            if (1) {
+                let lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8);
+                let circleSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, delta, lineSymbol, args.color);
+                let textSymbol = new TextSymbol({ text: "X" });
+
+                if (args.route.startLocation) {
+                    let geom = asGeom(args.route.startLocation);
+                    routeInfo.startLocation = {
+                        stop: new Graphic(geom, circleSymbol),
+                        label: new Graphic(geom, textSymbol)
+                    };
+                    this.addToLayer(routeInfo.startLocation);
+                }
+                if (args.route.endLocation) {
+                    let geom = asGeom(args.route.endLocation);
+                    routeInfo.endLocation = {
+                        stop: new Graphic(geom, circleSymbol),
+                        label: new Graphic(geom, textSymbol)
+                    };
+                    this.addToLayer(routeInfo.endLocation);
+                }
+            }
+
+            return routeInfo;
         }
 
         redraw(route: RouteInfo) {
 
-            {
-                let lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8);
-                let circleSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, delta, lineSymbol, route.color);
-                route.stops.forEach((stop, itemIndex) => {
-                    stop.stop.setSymbol(circleSymbol);
-                    (<TextSymbol>stop.label.symbol).text = (1 + itemIndex + "");
-                    stop.stop.getShape().moveToFront();
-                    stop.label.getShape().moveToFront();
-                    stop.stop.draw();
-                    stop.label.draw();
-                });
-            }
+            route.stops.forEach((stop, itemIndex) => {
+                (<SimpleMarkerSymbol>stop.stop.symbol).color = route.color;
+                (<TextSymbol>stop.label.symbol).text = (1 + itemIndex + "");
+                stop.stop.getShapes().forEach(s => s.moveToFront());
+                stop.label.getShapes().forEach(s => s.moveToFront());
+                stop.stop.draw();
+                stop.label.draw();
+            });
 
             {
                 let getGeom = () => {
-                    let path = route.stops.map(stop => <Point>stop.stop.geometry).map(p => [p.getLongitude(), p.getLatitude()]);
-                    let geometry = new Polyline(path);
-                    return geometry;
-                };
-                route.routeLine.routeLine.getShape().moveToBack();
-                route.routeLine.underlay.getShape().moveToBack();
+                    let stops = [].concat(route.stops);
+                    route.startLocation && stops.unshift(route.startLocation);
+                    route.endLocation && stops.push(route.endLocation);
 
-                route.routeLine.underlay.setGeometry(getGeom());
-                route.routeLine.routeLine.setGeometry(route.routeLine.underlay.geometry);
+                    let path = stops.map(stop => <Point>stop.stop.geometry).map(p => [p.getLongitude(), p.getLatitude()]);
+                    return new Polyline(path);
+                };
+
+                if (!route.routeLine) {
+                    route.routeLine = {
+                        routeLine: new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SHORTDOT, route.color, 4)),
+                        underlay: new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, 6))
+                    };
+                    this.addToLayer(route.routeLine);
+                } else {
+                    route.routeLine.underlay.setGeometry(getGeom());
+                    route.routeLine.routeLine.setGeometry(route.routeLine.underlay.geometry);
+                }
+
+                route.routeLine.routeLine.getShapes().forEach(s => s.moveToBack());
+                route.routeLine.underlay.getShapes().forEach(s => s.moveToBack());
             }
 
             this.orphans.forEach((stop, itemIndex) => {
@@ -341,7 +386,7 @@ export namespace RouteViewer {
             }
 
             let isActiveVertexMinor: boolean;
-            let activeVertex: number;
+            let activeVertexIndex: number;
             let targetRoute = null && activeRoute;
             let activeStop = null && activeRoute.stops[0];
             let targetStop = null && activeRoute.stops[0];
@@ -351,14 +396,13 @@ export namespace RouteViewer {
                 console.log("change");
                 let isSameStop = activeStop === targetStop;
                 let isSameRoute = targetRoute === activeRoute;
-                let isRemoveActiveStop = !isActiveVertexMinor && !options.moveStop;
-                let isMoveActiveStop = !isActiveVertexMinor && options.moveStop && !targetStop;
-                let isAddTargetStop = !!targetStop;
+                let isRemoveActiveStop = activeStop && !isActiveVertexMinor && !options.moveStop && !isSameStop;
+                let isMoveActiveStop = activeStop && !isActiveVertexMinor && options.moveStop && (!targetStop || isSameStop);
+                let isAddTargetStop = !!targetStop && !isSameStop;
                 let isOrphan = !targetRoute && targetStop;
 
                 if (isSameStop) {
                     console.log("dnd onto same stop does nothing");
-                    return;
                 }
 
                 if (isRemoveActiveStop) {
@@ -369,7 +413,7 @@ export namespace RouteViewer {
                 if (isAddTargetStop) {
                     targetRoute && this.removeStop(targetRoute, targetStop);
                     isOrphan && this.removeOrphan(targetStop);
-                    this.addStop(activeRoute, targetStop, activeVertex);
+                    this.addStop(activeRoute, targetStop, activeVertexIndex - (activeRoute.startLocation ? 1 : 0));
                 }
 
                 if (isMoveActiveStop) {
@@ -387,12 +431,12 @@ export namespace RouteViewer {
                 editor.on("vertex-move-start", args => {
                     // were on the move!
                     isActiveVertexMinor = args.vertexinfo.isGhost;
-                    activeVertex = args.vertexinfo.pointIndex;
-                    activeStop = !isActiveVertexMinor && activeRoute.stops[args.vertexinfo.pointIndex];
+                    activeVertexIndex = args.vertexinfo.pointIndex;
+                    activeStop = !isActiveVertexMinor && activeRoute.stops[activeVertexIndex - (activeRoute.startLocation ? 1 : 0)];
                 }),
 
                 editor.on("vertex-move-stop", args => {
-                    if (args.vertexinfo.pointIndex !== activeVertex) return;
+                    if (args.vertexinfo.pointIndex !== activeVertexIndex) return;
                     // does it intersect with another stop?
                     console.log("vertext-move-stop");
                     let routeLine = activeRoute.routeLine;

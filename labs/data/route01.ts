@@ -234,7 +234,10 @@ let route = {
 };
 
 route.data.forEach((data, j) => {
-    data.startLocation = data.endLocation = center;
+    data.startLocation = data.endLocation = {
+        x: center.x + 0.001 * (1 - Math.random()),
+        y: center.y + 0.001 * (1 - Math.random())
+    };
     data.routeItems.forEach((item, i) => {
         item.location.x = center.x + 0.001 * (1 + i * Math.random() + j);
         item.location.y = center.y + 0.001 * (1 + i + j * Math.random());
