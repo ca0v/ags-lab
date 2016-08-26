@@ -1,5 +1,6 @@
 import route = require("./data/route01");
 
+import lang = require("dojo/_base/lang");
 import Map = require("esri/map");
 import GraphicsLayer = require("esri/layers/GraphicsLayer");
 import Graphic = require("esri/graphic");
@@ -34,6 +35,39 @@ const delta = 32;
 
 const colors = [new Color("#ffa800"), new Color("#1D5F8A"), new Color("yellow")];
 const white = new Color("white");
+
+const editorLineStyle = {
+    color: [0, 255, 0],
+    width: 3,
+    type: "esriSLS",
+    style: "esriSLSDash"
+};
+
+const editorVertexStyle = {
+    color: [0, 255, 0, 20],
+    size: delta * 3 / 4,
+    type: "esriSMS",
+    style: "esriSMSCircle",
+    outline: {
+        color: [0, 255, 0, 255],
+        width: 3,
+        type: "esriSLS",
+        style: "esriSLSSolid"
+    }
+};
+
+let editorGhostVertexStyle = lang.mixin({}, editorVertexStyle);
+editorGhostVertexStyle.size /= 2;
+
+function first<T>(arr: T[], filter: (v: T) => boolean): T {
+    let result: T;
+    return arr.some(v => { result = v; return filter(v); }) ? result : undefined;
+}
+
+function indexOf<T>(arr: T[], filter: (v: T) => boolean): number {
+    let result: number;
+    return arr.some((v, i) => { result = i; return filter(v); }) ? result : undefined;
+}
 
 export module Routing {
 
@@ -107,7 +141,7 @@ export namespace RouteViewer {
 
         public routes: Array<{
             routeLine: Graphic;
-            stops: Graphic[];
+            stops: Array<{ stop: Graphic; label: Graphic; }>;
         }>;
 
         constructor(public options: {
@@ -152,7 +186,6 @@ export namespace RouteViewer {
                     let getGeom = () => {
                         let path = args.route.routeItems.map(item => [item.location.x, item.location.y]);
                         let geometry = new Polyline(path);
-                        console.log("line", geometry);
                         return geometry;
                     };
 
@@ -168,7 +201,6 @@ export namespace RouteViewer {
 
                     //let [x, y] = webMercatorUtils.lngLatToXY(route.location.x, route.location.y);
                     let geometry = new Point(item.location.x, item.location.y);
-                    console.log("point", geometry);
 
                     let lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8);
                     let circleSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, delta, lineSymbol, args.color);
@@ -188,90 +220,98 @@ export namespace RouteViewer {
                     );
 
                     let stop = new Graphic(geometry, circleSymbol, attributes, template);
+                    let label = new Graphic(geometry, textSymbol);
                     this.layer.add(stop);
-                    this.layer.add(new Graphic(geometry, textSymbol));
+                    this.layer.add(label);
 
-                    return stop;
+                    return {
+                        stop: stop,
+                        label: label
+                    };
                 });
 
             }
         }
 
         edit(editor: Edit, graphic: Graphic) {
+
+            // ensures callbacks are unregistered
             editor.deactivate();
 
-            let routeIndex = -1;
-
-            if (this.routes.some((route, index) => {
-                routeIndex = index;
+            let route = first(this.routes, route => {
                 if (graphic === route.routeLine) return true;
                 if (graphic.geometry.type === "point") {
-                    if (0 <= route.stops.indexOf(graphic)) return true;
-                }
-            })) {
-                editor.activate(Edit.EDIT_VERTICES, this.routes[routeIndex].routeLine);
-            };
-
-            editor.on("deactivate", function (evt) {
-                if (evt.info.isModified) {
-                    console.log("change");
+                    return !!first(route.stops, stop => stop.stop === graphic || stop.label === graphic);
                 }
             });
 
-            editor.on("vertex-move-start", args => {
-                console.log("vertex-move-start");
-            });
+            if (route) {
+                editor.activate(Edit.EDIT_VERTICES, route.routeLine);
+            } else {
+                console.log("cannot determine route");
+            }
 
-            editor.on("vertex-move-stop", args => {
-                // does it intersect with another stop?
-                console.log("vertext-move-stop");
-                let routeLine = this.routes[routeIndex].routeLine;
+            let handles = [
+                editor.on("deactivate", function (evt) {
+                    handles.forEach(h => h.remove());
+                    if (evt.info.isModified) {
+                        console.log("change");
+                    }
+                }),
 
-                let pointIndex = args.vertexinfo.pointIndex;
-                let segmentIndex = args.vertexinfo.segmentIndex;
-                let location = (<Polyline>routeLine.geometry).getPoint(segmentIndex, pointIndex);
+                editor.on("vertex-move-start", args => {
+                    console.log("vertex-move-start");
+                }),
 
-                // convert to pixel and find an intersecting stop
-                let map = this.options.map;
-                let extent = map.extent;
-                let [width, height] = [map.width, map.height];
+                editor.on("vertex-move-stop", args => {
+                    // does it intersect with another stop?
+                    console.log("vertext-move-stop");
+                    let routeLine = route.routeLine;
 
-                let pixel = map.toScreen(location);
-                pixel.x -= delta / 2;
-                pixel.y -= delta / 2;
-                let topLeft = map.toMap(pixel);
-                pixel.x += delta;
-                pixel.y += delta;
-                let bottomRight = map.toMap(pixel);
+                    let pointIndex = args.vertexinfo.pointIndex;
+                    let segmentIndex = args.vertexinfo.segmentIndex;
+                    let location = (<Polyline>routeLine.geometry).getPoint(segmentIndex, pointIndex);
 
-                extent = new Extent(topLeft.x, bottomRight.y, bottomRight.x, topLeft.y, map.spatialReference);
+                    // convert to pixel and find an intersecting stop
+                    let map = this.options.map;
+                    let extent = map.extent;
+                    let [width, height] = [map.width, map.height];
 
-                // search for a stop
-                let targetStop: number;
-                let targetRoute: number;
+                    let pixel = map.toScreen(location);
+                    pixel.x -= delta / 2;
+                    pixel.y -= delta / 2;
+                    let topLeft = map.toMap(pixel);
+                    pixel.x += delta;
+                    pixel.y += delta;
+                    let bottomRight = map.toMap(pixel);
 
-                if (this.routes.some((route, i) => {
-                    targetRoute = i;
-                    return route.stops.some((stop, i) => {
-                        if (extent.contains(stop.geometry)) {
-                            targetStop = i;
-                            return true;
-                        }
+                    extent = new Extent(topLeft.x, bottomRight.y, bottomRight.x, topLeft.y, map.spatialReference);
+
+                    // search for a stop
+                    let targetStop: number;
+                    let targetRoute: number;
+
+                    targetRoute = indexOf(this.routes, route => {
+                        targetStop = indexOf(route.stops, stop => extent.contains(stop.stop.geometry));
+                        return (-1 < targetStop);
                     });
-                })) {
-                    console.log(`reassign stop ${targetStop + 1} from route ${targetRoute + 1} to route ${routeIndex + 1}`);
-                };
 
-            });
+                    if (-1 < targetRoute) {
+                        console.log(`reassign stop ${targetStop + 1} from route ${targetRoute + 1} to route ${this.routes.indexOf(route) + 1}`);
+                    };
 
-            editor.on("vertex-move", args => {
-                // does it intersect with another stop?
-            });
+                }),
 
-            editor.on("vertex-add", args => {
-                // does it intersect with another stop?
-                console.log("vertext-add");
-            });
+                editor.on("vertex-move", args => {
+                    // does it intersect with another stop?
+                }),
+
+                editor.on("vertex-add", args => {
+                    // does it intersect with another stop?
+                    console.log("vertext-add");
+                })
+            ];
+
         }
 
     }
@@ -288,40 +328,15 @@ export function run() {
             basemap: 'streets'
         });
 
+
     {
 
         let editor = new Edit(map, {
             allowAddVertices: true,
             allowDeleteVertices: false,
-            ghostLineSymbol: new SimpleLineSymbol({
-                color: [0, 255, 0],
-                width: 3,
-                type: "esriSLS"
-            }),
-            vertexSymbol: new SimpleMarkerSymbol({
-                color: [0, 255, 0, 20],
-                size: delta,
-                type: "esriSMS",
-                style: "esrSMSCross",
-                outline: {
-                    color: [0, 255, 0, 128],
-                    width: 3,
-                    type: "esriSLS",
-                    style: "esriSLSSolid"
-                }
-            }),
-            ghostVertexSymbol: new SimpleMarkerSymbol({
-                color: [0, 255, 0, 20],
-                size: delta,
-                type: "esriSMS",
-                style: "esrSMSCross",
-                outline: {
-                    color: [0, 255, 0],
-                    width: 3,
-                    type: "esriSLS",
-                    style: "esriSLSSolid"
-                }
-            })
+            ghostLineSymbol: new SimpleLineSymbol(editorLineStyle),
+            vertexSymbol: new SimpleMarkerSymbol(editorVertexStyle),
+            ghostVertexSymbol: new SimpleMarkerSymbol(editorGhostVertexStyle)
         });
 
         let routeView = new RouteViewer.RouteView({

@@ -1063,7 +1063,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                 "routeItems": [{
                         "ordinalIndex": 2,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1013
                         },
                         "location": {
@@ -1082,7 +1082,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                     {
                         "ordinalIndex": 3,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1014
                         },
                         "location": {
@@ -1101,7 +1101,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                     {
                         "ordinalIndex": 1,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1021
                         },
                         "location": {
@@ -1137,7 +1137,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                 "routeItems": [{
                         "ordinalIndex": 1,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1015
                         },
                         "location": {
@@ -1156,7 +1156,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                     {
                         "ordinalIndex": 2,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1016
                         },
                         "location": {
@@ -1175,7 +1175,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                     {
                         "ordinalIndex": 3,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1017
                         },
                         "location": {
@@ -1194,7 +1194,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                     {
                         "ordinalIndex": 4,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1018
                         },
                         "location": {
@@ -1213,7 +1213,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                     {
                         "ordinalIndex": 5,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1019
                         },
                         "location": {
@@ -1232,7 +1232,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                     {
                         "ordinalIndex": 6,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1020
                         },
                         "location": {
@@ -1251,7 +1251,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                     {
                         "ordinalIndex": 7,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1022
                         },
                         "location": {
@@ -1285,13 +1285,41 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
     });
     return route;
 });
-define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esri/map", "esri/layers/GraphicsLayer", "esri/graphic", "esri/geometry/Point", "esri/geometry/Polyline", "esri/SpatialReference", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/TextSymbol", "esri/Color", "esri/InfoTemplate", "dojo/_base/event", "esri/symbols/Font", "esri/toolbars/edit", "esri/geometry/Extent"], function (require, exports, route, Map, GraphicsLayer, Graphic, Point, Polyline, SpatialReference, SimpleMarkerSymbol, SimpleLineSymbol, TextSymbol, Color, InfoTemplate, event, Font, Edit, Extent) {
+define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "dojo/_base/lang", "esri/map", "esri/layers/GraphicsLayer", "esri/graphic", "esri/geometry/Point", "esri/geometry/Polyline", "esri/SpatialReference", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/TextSymbol", "esri/Color", "esri/InfoTemplate", "dojo/_base/event", "esri/symbols/Font", "esri/toolbars/edit", "esri/geometry/Extent"], function (require, exports, route, lang, Map, GraphicsLayer, Graphic, Point, Polyline, SpatialReference, SimpleMarkerSymbol, SimpleLineSymbol, TextSymbol, Color, InfoTemplate, event, Font, Edit, Extent) {
     "use strict";
     var epsg4326 = new SpatialReference("4326");
     var epsg3857 = new SpatialReference("102100");
     var delta = 32;
     var colors = [new Color("#ffa800"), new Color("#1D5F8A"), new Color("yellow")];
     var white = new Color("white");
+    var editorLineStyle = {
+        color: [0, 255, 0],
+        width: 3,
+        type: "esriSLS",
+        style: "esriSLSDash"
+    };
+    var editorVertexStyle = {
+        color: [0, 255, 0, 20],
+        size: delta * 3 / 4,
+        type: "esriSMS",
+        style: "esriSMSCircle",
+        outline: {
+            color: [0, 255, 0, 255],
+            width: 3,
+            type: "esriSLS",
+            style: "esriSLSSolid"
+        }
+    };
+    var editorGhostVertexStyle = lang.mixin({}, editorVertexStyle);
+    editorGhostVertexStyle.size /= 2;
+    function first(arr, filter) {
+        var result;
+        return arr.some(function (v) { result = v; return filter(v); }) ? result : undefined;
+    }
+    function indexOf(arr, filter) {
+        var result;
+        return arr.some(function (v, i) { result = i; return filter(v); }) ? result : undefined;
+    }
     var RouteViewer;
     (function (RouteViewer) {
         var RouteView = (function () {
@@ -1326,7 +1354,6 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                         var getGeom = function () {
                             var path = args.route.routeItems.map(function (item) { return [item.location.x, item.location.y]; });
                             var geometry = new Polyline(path);
-                            console.log("line", geometry);
                             return geometry;
                         };
                         var attributes = {};
@@ -1338,7 +1365,6 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                     routeInfo.stops = args.route.routeItems.map(function (item, itemIndex) {
                         //let [x, y] = webMercatorUtils.lngLatToXY(route.location.x, route.location.y);
                         var geometry = new Point(item.location.x, item.location.y);
-                        console.log("point", geometry);
                         var lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8);
                         var circleSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, delta, lineSymbol, args.color);
                         var textSymbol = new TextSymbol({
@@ -1352,78 +1378,82 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                         var attributes = {};
                         var template = new InfoTemplate(function () { return (args.route.employeeFullName + " " + item.activity.moniker + " " + item.activity.primaryKey); }, function () { return ("" + JSON.stringify(item)); });
                         var stop = new Graphic(geometry, circleSymbol, attributes, template);
+                        var label = new Graphic(geometry, textSymbol);
                         _this.layer.add(stop);
-                        _this.layer.add(new Graphic(geometry, textSymbol));
-                        return stop;
+                        _this.layer.add(label);
+                        return {
+                            stop: stop,
+                            label: label
+                        };
                     });
                 }
             };
             RouteView.prototype.edit = function (editor, graphic) {
                 var _this = this;
+                // ensures callbacks are unregistered
                 editor.deactivate();
-                var routeIndex = -1;
-                if (this.routes.some(function (route, index) {
-                    routeIndex = index;
+                var route = first(this.routes, function (route) {
                     if (graphic === route.routeLine)
                         return true;
                     if (graphic.geometry.type === "point") {
-                        if (0 <= route.stops.indexOf(graphic))
-                            return true;
+                        return !!first(route.stops, function (stop) { return stop.stop === graphic || stop.label === graphic; });
                     }
-                })) {
-                    editor.activate(Edit.EDIT_VERTICES, this.routes[routeIndex].routeLine);
+                });
+                if (route) {
+                    editor.activate(Edit.EDIT_VERTICES, route.routeLine);
                 }
-                ;
-                editor.on("deactivate", function (evt) {
-                    if (evt.info.isModified) {
-                        console.log("change", evt);
-                    }
-                });
-                editor.on("vertex-move-start", function (args) {
-                    console.log("vertex-move-start");
-                });
-                editor.on("vertex-move-stop", function (args) {
-                    // does it intersect with another stop?
-                    console.log("vertext-move-stop");
-                    var routeLine = _this.routes[routeIndex].routeLine;
-                    var pointIndex = args.vertexinfo.pointIndex;
-                    var segmentIndex = args.vertexinfo.segmentIndex;
-                    var location = routeLine.geometry.getPoint(segmentIndex, pointIndex);
-                    // convert to pixel and find an intersecting stop
-                    var map = _this.options.map;
-                    var extent = map.extent;
-                    var _a = [map.width, map.height], width = _a[0], height = _a[1];
-                    var pixel = map.toScreen(location);
-                    pixel.x -= delta / 2;
-                    pixel.y -= delta / 2;
-                    var topLeft = map.toMap(pixel);
-                    pixel.x += delta;
-                    pixel.y += delta;
-                    var bottomRight = map.toMap(pixel);
-                    extent = new Extent(topLeft.x, bottomRight.y, bottomRight.x, topLeft.y, map.spatialReference);
-                    // search for a stop
-                    var targetStop;
-                    var targetRoute;
-                    if (_this.routes.some(function (route, i) {
-                        targetRoute = i;
-                        return route.stops.some(function (stop, i) {
-                            if (extent.contains(stop.geometry)) {
-                                targetStop = i;
-                                return true;
-                            }
+                else {
+                    console.log("cannot determine route");
+                }
+                var handles = [
+                    editor.on("deactivate", function (evt) {
+                        handles.forEach(function (h) { return h.remove(); });
+                        if (evt.info.isModified) {
+                            console.log("change");
+                        }
+                    }),
+                    editor.on("vertex-move-start", function (args) {
+                        console.log("vertex-move-start");
+                    }),
+                    editor.on("vertex-move-stop", function (args) {
+                        // does it intersect with another stop?
+                        console.log("vertext-move-stop");
+                        var routeLine = route.routeLine;
+                        var pointIndex = args.vertexinfo.pointIndex;
+                        var segmentIndex = args.vertexinfo.segmentIndex;
+                        var location = routeLine.geometry.getPoint(segmentIndex, pointIndex);
+                        // convert to pixel and find an intersecting stop
+                        var map = _this.options.map;
+                        var extent = map.extent;
+                        var _a = [map.width, map.height], width = _a[0], height = _a[1];
+                        var pixel = map.toScreen(location);
+                        pixel.x -= delta / 2;
+                        pixel.y -= delta / 2;
+                        var topLeft = map.toMap(pixel);
+                        pixel.x += delta;
+                        pixel.y += delta;
+                        var bottomRight = map.toMap(pixel);
+                        extent = new Extent(topLeft.x, bottomRight.y, bottomRight.x, topLeft.y, map.spatialReference);
+                        // search for a stop
+                        var targetStop;
+                        var targetRoute;
+                        targetRoute = indexOf(_this.routes, function (route) {
+                            targetStop = indexOf(route.stops, function (stop) { return extent.contains(stop.stop.geometry); });
+                            return (-1 < targetStop);
                         });
-                    })) {
-                        console.log("reassign stop " + (targetStop + 1) + " from route " + (targetRoute + 1) + " to route " + (routeIndex + 1));
-                    }
-                    ;
-                });
-                editor.on("vertex-move", function (args) {
-                    // does it intersect with another stop?
-                });
-                editor.on("vertex-add", function (args) {
-                    // does it intersect with another stop?
-                    console.log("vertext-add");
-                });
+                        if (-1 < targetRoute) {
+                            console.log("reassign stop " + (targetStop + 1) + " from route " + (targetRoute + 1) + " to route " + (_this.routes.indexOf(route) + 1));
+                        }
+                        ;
+                    }),
+                    editor.on("vertex-move", function (args) {
+                        // does it intersect with another stop?
+                    }),
+                    editor.on("vertex-add", function (args) {
+                        // does it intersect with another stop?
+                        console.log("vertext-add");
+                    })
+                ];
             };
             return RouteView;
         }());
@@ -1439,35 +1469,9 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
             var editor_1 = new Edit(map, {
                 allowAddVertices: true,
                 allowDeleteVertices: false,
-                ghostLineSymbol: new SimpleLineSymbol({
-                    color: [0, 255, 0],
-                    width: 3,
-                    type: "esriSLS"
-                }),
-                vertexSymbol: new SimpleMarkerSymbol({
-                    color: [0, 255, 0, 20],
-                    size: delta,
-                    type: "esriSMS",
-                    style: "esrSMSCross",
-                    outline: {
-                        color: [0, 255, 0, 128],
-                        width: 3,
-                        type: "esriSLS",
-                        style: "esriSLSSolid"
-                    }
-                }),
-                ghostVertexSymbol: new SimpleMarkerSymbol({
-                    color: [0, 255, 0, 20],
-                    size: delta,
-                    type: "esriSMS",
-                    style: "esrSMSCross",
-                    outline: {
-                        color: [0, 255, 0],
-                        width: 3,
-                        type: "esriSLS",
-                        style: "esriSLSSolid"
-                    }
-                })
+                ghostLineSymbol: new SimpleLineSymbol(editorLineStyle),
+                vertexSymbol: new SimpleMarkerSymbol(editorVertexStyle),
+                ghostVertexSymbol: new SimpleMarkerSymbol(editorGhostVertexStyle)
             });
             var routeView_1 = new RouteViewer.RouteView({
                 map: map,
