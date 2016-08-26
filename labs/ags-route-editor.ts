@@ -320,15 +320,6 @@ export namespace RouteViewer {
 
         redraw(route: RouteInfo) {
 
-            route.stops.forEach((stop, itemIndex) => {
-                (<SimpleMarkerSymbol>stop.stop.symbol).color = route.color;
-                (<TextSymbol>stop.label.symbol).text = (1 + itemIndex + "");
-                stop.stop.getShapes().forEach(s => s.moveToFront());
-                stop.label.getShapes().forEach(s => s.moveToFront());
-                stop.stop.draw();
-                stop.label.draw();
-            });
-
             {
                 let getGeom = () => {
                     let stops = [].concat(route.stops);
@@ -338,29 +329,51 @@ export namespace RouteViewer {
                     let path = stops.map(stop => <Point>stop.stop.geometry).map(p => [p.getLongitude(), p.getLatitude()]);
                     return new Polyline(path);
                 };
+                let geom = getGeom();
 
                 if (!route.routeLine) {
                     route.routeLine = {
-                        routeLine: new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SHORTDOT, route.color, 4)),
-                        underlay: new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, 6))
+                        routeLine: new Graphic(geom, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SHORTDOT, route.color, 4)),
+                        underlay: new Graphic(geom, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, 6))
                     };
                     this.addToLayer(route.routeLine);
                 } else {
-                    route.routeLine.underlay.setGeometry(getGeom());
-                    route.routeLine.routeLine.setGeometry(route.routeLine.underlay.geometry);
+                    route.routeLine.underlay.setGeometry(geom);
+                    route.routeLine.routeLine.setGeometry(geom);
                 }
 
-                route.routeLine.routeLine.getShapes().forEach(s => s.moveToBack());
-                route.routeLine.underlay.getShapes().forEach(s => s.moveToBack());
             }
 
             this.orphans.forEach((stop, itemIndex) => {
                 (<TextSymbol>stop.label.symbol).text = (1 + itemIndex + "");
                 (<SimpleMarkerSymbol>stop.stop.symbol).color = red;
-                stop.stop.draw();
-                stop.label.draw();
             });
 
+            route.stops.forEach((stop, itemIndex) => {
+                (<SimpleMarkerSymbol>stop.stop.symbol).color = route.color;
+                (<TextSymbol>stop.label.symbol).text = (1 + itemIndex + "");
+            });
+
+            setTimeout(() => {
+                [route.routeLine.routeLine, route.routeLine.underlay].forEach(g => {
+                    g.draw();
+                    g.getShapes().forEach(s => s.moveToBack());
+                });
+
+                route.stops.forEach(stop => {
+                    [stop.stop, stop.label].forEach(g => {
+                        g.draw();
+                        g.getShapes().forEach(s => s.moveToFront());
+                    });
+                });
+
+                this.orphans.forEach(stop => {
+                    [stop.stop, stop.label].forEach(g => {
+                        g.draw();
+                        g.getShapes().forEach(s => s.moveToFront());
+                    });
+                });
+            }, 100);
         }
 
         edit(editor: Edit, graphic: Graphic, options: {

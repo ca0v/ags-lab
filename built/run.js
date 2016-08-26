@@ -1452,14 +1452,7 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                 return routeInfo;
             };
             RouteView.prototype.redraw = function (route) {
-                route.stops.forEach(function (stop, itemIndex) {
-                    stop.stop.symbol.color = route.color;
-                    stop.label.symbol.text = (1 + itemIndex + "");
-                    stop.stop.getShapes().forEach(function (s) { return s.moveToFront(); });
-                    stop.label.getShapes().forEach(function (s) { return s.moveToFront(); });
-                    stop.stop.draw();
-                    stop.label.draw();
-                });
+                var _this = this;
                 {
                     var getGeom = function () {
                         var stops = [].concat(route.stops);
@@ -1468,26 +1461,45 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                         var path = stops.map(function (stop) { return stop.stop.geometry; }).map(function (p) { return [p.getLongitude(), p.getLatitude()]; });
                         return new Polyline(path);
                     };
+                    var geom = getGeom();
                     if (!route.routeLine) {
                         route.routeLine = {
-                            routeLine: new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SHORTDOT, route.color, 4)),
-                            underlay: new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, 6))
+                            routeLine: new Graphic(geom, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SHORTDOT, route.color, 4)),
+                            underlay: new Graphic(geom, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, 6))
                         };
                         this.addToLayer(route.routeLine);
                     }
                     else {
-                        route.routeLine.underlay.setGeometry(getGeom());
-                        route.routeLine.routeLine.setGeometry(route.routeLine.underlay.geometry);
+                        route.routeLine.underlay.setGeometry(geom);
+                        route.routeLine.routeLine.setGeometry(geom);
                     }
-                    route.routeLine.routeLine.getShapes().forEach(function (s) { return s.moveToBack(); });
-                    route.routeLine.underlay.getShapes().forEach(function (s) { return s.moveToBack(); });
                 }
                 this.orphans.forEach(function (stop, itemIndex) {
                     stop.label.symbol.text = (1 + itemIndex + "");
                     stop.stop.symbol.color = red;
-                    stop.stop.draw();
-                    stop.label.draw();
                 });
+                route.stops.forEach(function (stop, itemIndex) {
+                    stop.stop.symbol.color = route.color;
+                    stop.label.symbol.text = (1 + itemIndex + "");
+                });
+                setTimeout(function () {
+                    [route.routeLine.routeLine, route.routeLine.underlay].forEach(function (g) {
+                        g.draw();
+                        g.getShapes().forEach(function (s) { return s.moveToBack(); });
+                    });
+                    route.stops.forEach(function (stop) {
+                        [stop.stop, stop.label].forEach(function (g) {
+                            g.draw();
+                            g.getShapes().forEach(function (s) { return s.moveToFront(); });
+                        });
+                    });
+                    _this.orphans.forEach(function (stop) {
+                        [stop.stop, stop.label].forEach(function (g) {
+                            g.draw();
+                            g.getShapes().forEach(function (s) { return s.moveToFront(); });
+                        });
+                    });
+                }, 100);
             };
             RouteView.prototype.edit = function (editor, graphic, options) {
                 var _this = this;
