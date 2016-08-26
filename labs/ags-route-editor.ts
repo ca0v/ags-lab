@@ -35,6 +35,7 @@ const delta = 32;
 
 const colors = [new Color("#ffa800"), new Color("#1D5F8A"), new Color("yellow")];
 const white = new Color("white");
+const black = new Color("black");
 const red = new Color("red");
 
 const editorLineStyle = {
@@ -56,6 +57,54 @@ const editorVertexStyle = {
         style: "esriSLSSolid"
     }
 };
+
+let textStyle = (routeInfo: RouteViewer.RouteInfo, routeItem: Routing.RouteItem) => ({
+    text: (1 + routeItem.ordinalIndex + ""),
+    font: new Font(delta / 2),
+    color: white,
+    yoffset: -delta / 6,
+    haloColor: routeInfo.color,
+    haloSize: 1
+});
+
+let stopStyle = (routeInfo: RouteViewer.RouteInfo, routeItem: Routing.RouteItem) => ({
+    type: "esriSMS",
+    style: "esriSMSCircle",
+    size: delta,
+    color: routeInfo.color,
+    outline: {
+        type: "esriSLS",
+        style: "esriSLSSolid",
+        color: white,
+        width: delta / 8
+    }
+});
+
+let terminalStyle = (routeInfo: RouteViewer.RouteInfo) => ({
+    type: "esriSMS",
+    style: "esriSMSX",
+    size: delta / 2,
+    color: routeInfo.color,
+    outline: {
+        type: "esriSLS",
+        style: "esriSLSSolid",
+        color: routeInfo.color,
+        width: delta / 8
+    }
+});
+
+let activeVertexStyle = () => ({
+    type: "esriSMS",
+    style: "esriSMSX",
+    size: delta / 2,
+    color: white,
+    outline: {
+        type: "esriSLS",
+        style: "esriSLSSolid",
+        color: black,
+        width: delta / 8
+    }
+});
 
 let editorGhostVertexStyle = <typeof editorVertexStyle>JSON.parse(JSON.stringify(editorVertexStyle));
 editorGhostVertexStyle.color = [255, 255, 255, 255]
@@ -152,7 +201,7 @@ export namespace RouteViewer {
         underlay: Graphic;
     }
 
-    interface RouteInfo {
+    export interface RouteInfo {
         color: Color;
         startLocation: StopInfo;
         endLocation: StopInfo;
@@ -252,27 +301,9 @@ export namespace RouteViewer {
 
                     let geometry = asGeom(item.location);
 
-                    let circleSymbol = new SimpleMarkerSymbol({
-                        type: "esriSMS",
-                        style: "esriSMSCircle",
-                        size: delta,
-                        color: routeInfo.color,
-                        outline: {
-                            type: "esriSLS",
-                            style: "esriSLSSolid",
-                            color: white,
-                            width: delta / 8
-                        }
-                    });
+                    let circleSymbol = new SimpleMarkerSymbol(stopStyle(routeInfo, item));
 
-                    let textSymbol = new TextSymbol({
-                        text: (1 + itemIndex + ""),
-                        font: new Font(delta / 2),
-                        color: white,
-                        yoffset: -delta / 6,
-                        haloColor: args.color,
-                        haloSize: 1
-                    });
+                    let textSymbol = new TextSymbol(textStyle(routeInfo, item));
 
                     let attributes = {};
                     let template = new InfoTemplate(
@@ -293,15 +324,13 @@ export namespace RouteViewer {
             }
 
             if (1) {
-                let lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8);
-                let circleSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, delta, lineSymbol, args.color);
-                let textSymbol = new TextSymbol({ text: "X" });
+                let circleSymbol = new SimpleMarkerSymbol(terminalStyle(routeInfo));
 
                 if (args.route.startLocation) {
                     let geom = asGeom(args.route.startLocation);
                     routeInfo.startLocation = {
                         stop: new Graphic(geom, circleSymbol),
-                        label: new Graphic(geom, textSymbol)
+                        label: new Graphic()
                     };
                     this.addToLayer(routeInfo.startLocation);
                 }
@@ -309,7 +338,7 @@ export namespace RouteViewer {
                     let geom = asGeom(args.route.endLocation);
                     routeInfo.endLocation = {
                         stop: new Graphic(geom, circleSymbol),
-                        label: new Graphic(geom, textSymbol)
+                        label: new Graphic()
                     };
                     this.addToLayer(routeInfo.endLocation);
                 }
@@ -373,7 +402,7 @@ export namespace RouteViewer {
                         g.getShapes().forEach(s => s.moveToFront());
                     });
                 });
-            }, 100);
+            }, 200);
         }
 
         edit(editor: Edit, graphic: Graphic, options: {
@@ -446,6 +475,24 @@ export namespace RouteViewer {
                     isActiveVertexMinor = args.vertexinfo.isGhost;
                     activeVertexIndex = args.vertexinfo.pointIndex;
                     activeStop = !isActiveVertexMinor && activeRoute.stops[activeVertexIndex - (activeRoute.startLocation ? 1 : 0)];
+                    let style = {
+                        "color": [255, 255, 255, 255],
+                        "size": delta / 3,
+                        "angle": 0,
+                        "xoffset": 0,
+                        "yoffset": 0,
+                        "type": "esriSMS",
+                        "style": "esriSMSCircle",
+                        "outline": {
+                            "color": [0, 0, 0, 255],
+                            "width": 2,
+                            "type": "esriSLS",
+                            "style": "esriSLSSolid"
+                        }
+                    };
+                    let g = <Graphic>args.vertexinfo.graphic;
+                    g.setSymbol(new SimpleMarkerSymbol(style));
+                    g.draw();
                 }),
 
                 editor.on("vertex-move-stop", args => {

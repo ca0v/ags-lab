@@ -1295,6 +1295,7 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
     var delta = 32;
     var colors = [new Color("#ffa800"), new Color("#1D5F8A"), new Color("yellow")];
     var white = new Color("white");
+    var black = new Color("black");
     var red = new Color("red");
     var editorLineStyle = {
         color: [0, 255, 0],
@@ -1314,6 +1315,50 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
             style: "esriSLSSolid"
         }
     };
+    var textStyle = function (routeInfo, routeItem) { return ({
+        text: (1 + routeItem.ordinalIndex + ""),
+        font: new Font(delta / 2),
+        color: white,
+        yoffset: -delta / 6,
+        haloColor: routeInfo.color,
+        haloSize: 1
+    }); };
+    var stopStyle = function (routeInfo, routeItem) { return ({
+        type: "esriSMS",
+        style: "esriSMSCircle",
+        size: delta,
+        color: routeInfo.color,
+        outline: {
+            type: "esriSLS",
+            style: "esriSLSSolid",
+            color: white,
+            width: delta / 8
+        }
+    }); };
+    var terminalStyle = function (routeInfo) { return ({
+        type: "esriSMS",
+        style: "esriSMSX",
+        size: delta / 2,
+        color: routeInfo.color,
+        outline: {
+            type: "esriSLS",
+            style: "esriSLSSolid",
+            color: routeInfo.color,
+            width: delta / 8
+        }
+    }); };
+    var activeVertexStyle = function () { return ({
+        type: "esriSMS",
+        style: "esriSMSX",
+        size: delta / 2,
+        color: white,
+        outline: {
+            type: "esriSLS",
+            style: "esriSLSSolid",
+            color: black,
+            width: delta / 8
+        }
+    }); };
     var editorGhostVertexStyle = JSON.parse(JSON.stringify(editorVertexStyle));
     editorGhostVertexStyle.color = [255, 255, 255, 255];
     editorGhostVertexStyle.size /= 4;
@@ -1397,26 +1442,8 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                 if (1) {
                     routeInfo.stops = args.route.routeItems.map(function (item, itemIndex) {
                         var geometry = asGeom(item.location);
-                        var circleSymbol = new SimpleMarkerSymbol({
-                            type: "esriSMS",
-                            style: "esriSMSCircle",
-                            size: delta,
-                            color: routeInfo.color,
-                            outline: {
-                                type: "esriSLS",
-                                style: "esriSLSSolid",
-                                color: white,
-                                width: delta / 8
-                            }
-                        });
-                        var textSymbol = new TextSymbol({
-                            text: (1 + itemIndex + ""),
-                            font: new Font(delta / 2),
-                            color: white,
-                            yoffset: -delta / 6,
-                            haloColor: args.color,
-                            haloSize: 1
-                        });
+                        var circleSymbol = new SimpleMarkerSymbol(stopStyle(routeInfo, item));
+                        var textSymbol = new TextSymbol(textStyle(routeInfo, item));
                         var attributes = {};
                         var template = new InfoTemplate(function () { return (args.route.employeeFullName + " " + item.activity.moniker + " " + item.activity.primaryKey); }, function () { return ("" + JSON.stringify(item)); });
                         var stop = new Graphic(geometry, circleSymbol, attributes, template);
@@ -1429,14 +1456,12 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                     routeInfo.stops.forEach(function (stop) { return _this.addToLayer(stop); });
                 }
                 if (1) {
-                    var lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8);
-                    var circleSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, delta, lineSymbol, args.color);
-                    var textSymbol = new TextSymbol({ text: "X" });
+                    var circleSymbol = new SimpleMarkerSymbol(terminalStyle(routeInfo));
                     if (args.route.startLocation) {
                         var geom = asGeom(args.route.startLocation);
                         routeInfo.startLocation = {
                             stop: new Graphic(geom, circleSymbol),
-                            label: new Graphic(geom, textSymbol)
+                            label: new Graphic()
                         };
                         this.addToLayer(routeInfo.startLocation);
                     }
@@ -1444,7 +1469,7 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                         var geom = asGeom(args.route.endLocation);
                         routeInfo.endLocation = {
                             stop: new Graphic(geom, circleSymbol),
-                            label: new Graphic(geom, textSymbol)
+                            label: new Graphic()
                         };
                         this.addToLayer(routeInfo.endLocation);
                     }
@@ -1499,7 +1524,7 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                             g.getShapes().forEach(function (s) { return s.moveToFront(); });
                         });
                     });
-                }, 100);
+                }, 200);
             };
             RouteView.prototype.edit = function (editor, graphic, options) {
                 var _this = this;
@@ -1560,6 +1585,24 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                         isActiveVertexMinor = args.vertexinfo.isGhost;
                         activeVertexIndex = args.vertexinfo.pointIndex;
                         activeStop = !isActiveVertexMinor && activeRoute.stops[activeVertexIndex - (activeRoute.startLocation ? 1 : 0)];
+                        var style = {
+                            "color": [255, 255, 255, 255],
+                            "size": delta / 3,
+                            "angle": 0,
+                            "xoffset": 0,
+                            "yoffset": 0,
+                            "type": "esriSMS",
+                            "style": "esriSMSCircle",
+                            "outline": {
+                                "color": [0, 0, 0, 255],
+                                "width": 2,
+                                "type": "esriSLS",
+                                "style": "esriSLSSolid"
+                            }
+                        };
+                        var g = args.vertexinfo.graphic;
+                        g.setSymbol(new SimpleMarkerSymbol(style));
+                        g.draw();
                     }),
                     editor.on("vertex-move-stop", function (args) {
                         if (args.vertexinfo.pointIndex !== activeVertexIndex)
