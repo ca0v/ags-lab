@@ -1347,17 +1347,29 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
             width: delta / 8
         }
     }); };
-    var activeVertexStyle = function () { return ({
-        type: "esriSMS",
-        style: "esriSMSX",
-        size: delta / 2,
-        color: white,
-        outline: {
-            type: "esriSLS",
-            style: "esriSLSSolid",
-            color: black,
-            width: delta / 8
+    var activeVertexStyle = function (routeInfo) { return ({
+        "color": routeInfo.color,
+        "size": delta / 2,
+        "angle": 0,
+        "xoffset": 0,
+        "yoffset": 0,
+        "type": "esriSMS",
+        "style": "esriSMSCircle",
+        "outline": {
+            "color": white,
+            "width": delta / 8,
+            "type": "esriSLS",
+            "style": "esriSLSSolid"
         }
+    }); };
+    var cursorStyle = function (routeInfo, text) { return ({
+        text: text,
+        font: new Font(delta / 2),
+        color: routeInfo.color,
+        xoffset: delta,
+        yoffset: -delta / 6,
+        haloColor: white,
+        haloSize: 1
     }); };
     var editorGhostVertexStyle = JSON.parse(JSON.stringify(editorVertexStyle));
     editorGhostVertexStyle.color = [255, 255, 255, 255];
@@ -1552,6 +1564,7 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                 var activeStop = null && activeRoute.stops[0];
                 var targetStop = null && activeRoute.stops[0];
                 var activeLocation;
+                var cursor;
                 var doit = function () {
                     console.log("change");
                     var isSameStop = activeStop === targetStop;
@@ -1585,26 +1598,15 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                         isActiveVertexMinor = args.vertexinfo.isGhost;
                         activeVertexIndex = args.vertexinfo.pointIndex;
                         activeStop = !isActiveVertexMinor && activeRoute.stops[activeVertexIndex - (activeRoute.startLocation ? 1 : 0)];
-                        var style = {
-                            "color": [255, 255, 255, 255],
-                            "size": delta / 3,
-                            "angle": 0,
-                            "xoffset": 0,
-                            "yoffset": 0,
-                            "type": "esriSMS",
-                            "style": "esriSMSCircle",
-                            "outline": {
-                                "color": [0, 0, 0, 255],
-                                "width": 2,
-                                "type": "esriSLS",
-                                "style": "esriSLSSolid"
-                            }
-                        };
                         var g = args.vertexinfo.graphic;
-                        g.setSymbol(new SimpleMarkerSymbol(style));
+                        g.setSymbol(new SimpleMarkerSymbol(activeVertexStyle(activeRoute)));
                         g.draw();
                     }),
                     editor.on("vertex-move-stop", function (args) {
+                        if (cursor) {
+                            _this.layer.remove(cursor);
+                            cursor = null;
+                        }
                         if (args.vertexinfo.pointIndex !== activeVertexIndex)
                             return;
                         // does it intersect with another stop?
@@ -1635,7 +1637,22 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                         doit();
                     }),
                     editor.on("vertex-move", function (args) {
-                        // does it intersect with another stop?
+                        // does it intersect with another stop?                    
+                        var map = _this.options.map;
+                        var g = args.vertexinfo.graphic;
+                        var startPoint = g.geometry;
+                        var tx = args.transform;
+                        var endPoint = map.toMap(map.toScreen(startPoint).offset(tx.dx, tx.dy));
+                        // draw a 'cursor' as a hack to render text over the active vertex
+                        if (!cursor) {
+                            cursor = new Graphic(endPoint, new TextSymbol(cursorStyle(activeRoute, (1 + activeVertexIndex - (activeRoute.startLocation ? 1 : 0) + ""))));
+                            _this.layer.add(cursor);
+                        }
+                        else {
+                            cursor.setGeometry(endPoint);
+                            cursor.draw();
+                            cursor.getShape().moveToFront();
+                        }
                     }),
                     editor.on("vertex-add", function (args) {
                         // does it intersect with another stop?

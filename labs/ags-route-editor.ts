@@ -29,6 +29,8 @@ import Edit = require("esri/toolbars/edit");
 import screenUtils = require("esri/geometry/screenUtils");
 import Extent = require("esri/geometry/Extent");
 
+import jsonUtils = require("esri/symbols/jsonUtils");
+
 const epsg4326 = new SpatialReference("4326");
 const epsg3857 = new SpatialReference("102100");
 const delta = 32;
@@ -93,18 +95,33 @@ let terminalStyle = (routeInfo: RouteViewer.RouteInfo) => ({
     }
 });
 
-let activeVertexStyle = () => ({
-    type: "esriSMS",
-    style: "esriSMSX",
-    size: delta / 2,
-    color: white,
-    outline: {
-        type: "esriSLS",
-        style: "esriSLSSolid",
-        color: black,
-        width: delta / 8
+
+let activeVertexStyle = (routeInfo: RouteViewer.RouteInfo) => ({
+    "color": routeInfo.color,
+    "size": delta / 2,
+    "angle": 0,
+    "xoffset": 0,
+    "yoffset": 0,
+    "type": "esriSMS",
+    "style": "esriSMSCircle",
+    "outline": {
+        "color": white,
+        "width": delta / 8,
+        "type": "esriSLS",
+        "style": "esriSLSSolid"
     }
 });
+
+let cursorStyle = (routeInfo: RouteViewer.RouteInfo, text: string) => ({
+    text: text,
+    font: new Font(delta / 2),
+    color: routeInfo.color,
+    xoffset: delta,
+    yoffset: -delta / 6,
+    haloColor: white,
+    haloSize: 1
+});
+
 
 let editorGhostVertexStyle = <typeof editorVertexStyle>JSON.parse(JSON.stringify(editorVertexStyle));
 editorGhostVertexStyle.color = [255, 255, 255, 255]
@@ -433,6 +450,7 @@ export namespace RouteViewer {
             let activeStop = null && activeRoute.stops[0];
             let targetStop = null && activeRoute.stops[0];
             let activeLocation: Point;
+            let cursor: Graphic;
 
             let doit = () => {
                 console.log("change");
@@ -475,27 +493,16 @@ export namespace RouteViewer {
                     isActiveVertexMinor = args.vertexinfo.isGhost;
                     activeVertexIndex = args.vertexinfo.pointIndex;
                     activeStop = !isActiveVertexMinor && activeRoute.stops[activeVertexIndex - (activeRoute.startLocation ? 1 : 0)];
-                    let style = {
-                        "color": [255, 255, 255, 255],
-                        "size": delta / 3,
-                        "angle": 0,
-                        "xoffset": 0,
-                        "yoffset": 0,
-                        "type": "esriSMS",
-                        "style": "esriSMSCircle",
-                        "outline": {
-                            "color": [0, 0, 0, 255],
-                            "width": 2,
-                            "type": "esriSLS",
-                            "style": "esriSLSSolid"
-                        }
-                    };
                     let g = <Graphic>args.vertexinfo.graphic;
-                    g.setSymbol(new SimpleMarkerSymbol(style));
+                    g.setSymbol(new SimpleMarkerSymbol(activeVertexStyle(activeRoute)));
                     g.draw();
                 }),
 
                 editor.on("vertex-move-stop", args => {
+                    if (cursor) {
+                        this.layer.remove(cursor);
+                        cursor = null;
+                    }
                     if (args.vertexinfo.pointIndex !== activeVertexIndex) return;
                     // does it intersect with another stop?
                     console.log("vertext-move-stop");
@@ -533,7 +540,22 @@ export namespace RouteViewer {
                 }),
 
                 editor.on("vertex-move", args => {
-                    // does it intersect with another stop?
+                    // does it intersect with another stop?                    
+                    let map = this.options.map;
+                    let g = <Graphic>args.vertexinfo.graphic;
+                    let startPoint = <Point>g.geometry;
+                    let tx = args.transform;
+                    let endPoint = map.toMap(map.toScreen(startPoint).offset(tx.dx, tx.dy));
+
+                    // draw a 'cursor' as a hack to render text over the active vertex
+                    if (!cursor) {
+                        cursor = new Graphic(endPoint, new TextSymbol(cursorStyle(activeRoute, (1 + activeVertexIndex - (activeRoute.startLocation ? 1 : 0) + ""))));
+                        this.layer.add(cursor);
+                    } else {
+                        cursor.setGeometry(endPoint);
+                        cursor.draw();
+                        cursor.getShape().moveToFront();
+                    }
                 }),
 
                 editor.on("vertex-add", args => {
