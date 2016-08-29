@@ -30,40 +30,68 @@ import screenUtils = require("esri/geometry/screenUtils");
 import Extent = require("esri/geometry/Extent");
 
 import jsonUtils = require("esri/symbols/jsonUtils");
+import Evented = require("dojo/Evented");
 
 const epsg4326 = new SpatialReference("4326");
 const epsg3857 = new SpatialReference("102100");
-const delta = 32;
+const delta = 24;
 
-const colors = [new Color("#ffa800"), new Color("#1D5F8A"), new Color("yellow")];
-const white = new Color("white");
-const black = new Color("black");
-const red = new Color("red");
+const routeColors = [new Color("#ffa800"), new Color("#1D5F8A"), new Color("yellow")];
+const underlayColor = new Color("white");
+const orphanColor = new Color("red");
+const hiliteColor = new Color("#00FF00");
+
+const routeLineStyle = (routeInfo: RouteViewer.RouteInfo) => ({
+    color: routeInfo.color,
+    width: 2,
+    type: "esriSLS",
+    style: "esriSLSShortDot"
+});
+
+const routeUnderlayStyle = (routeInfo: RouteViewer.RouteInfo) => ({
+    color: underlayColor,
+    width: 4,
+    type: "esriSLS",
+    style: "esriSLSSolid"
+});
 
 const editorLineStyle = {
-    color: [0, 255, 0],
+    color: hiliteColor,
     width: 3,
     type: "esriSLS",
-    style: "esriSLSDash"
+    style: "esriSLSDot"
 };
 
 const editorVertexStyle = {
-    color: [0, 255, 0, 60],
-    size: delta * 3 / 4,
+    color: [0, 0, 0, 0],
+    size: delta,
     type: "esriSMS",
     style: "esriSMSCircle",
     outline: {
-        color: [0, 255, 0, 255],
-        width: 3,
+        color: hiliteColor,
+        width: delta / 8,
         type: "esriSLS",
         style: "esriSLSSolid"
     }
 };
 
+let editorMinorVertexStyle = (routeInfo: RouteViewer.RouteInfo) => ({
+    color: routeInfo.color,
+    size: delta / 2,
+    type: "esriSMS",
+    style: "esriSMSCircle",
+    outline: {
+        color: hiliteColor,
+        width: delta / 8,
+        type: "esriSLS",
+        style: "esriSLSSolid"
+    }
+});
+
 let textStyle = (routeInfo: RouteViewer.RouteInfo, routeItem: Routing.RouteItem) => ({
     text: (1 + routeItem.ordinalIndex + ""),
     font: new Font(delta / 2),
-    color: white,
+    color: underlayColor,
     yoffset: -delta / 6,
     haloColor: routeInfo.color,
     haloSize: 1
@@ -77,7 +105,7 @@ let stopStyle = (routeInfo: RouteViewer.RouteInfo, routeItem: Routing.RouteItem)
     outline: {
         type: "esriSLS",
         style: "esriSLSSolid",
-        color: white,
+        color: underlayColor,
         width: delta / 8
     }
 });
@@ -105,7 +133,7 @@ let activeVertexStyle = (routeInfo: RouteViewer.RouteInfo) => ({
     "type": "esriSMS",
     "style": "esriSMSCircle",
     "outline": {
-        "color": white,
+        "color": underlayColor,
         "width": delta / 8,
         "type": "esriSLS",
         "style": "esriSLSSolid"
@@ -118,15 +146,10 @@ let cursorStyle = (routeInfo: RouteViewer.RouteInfo, text: string) => ({
     color: routeInfo.color,
     xoffset: delta,
     yoffset: -delta / 6,
-    haloColor: white,
+    haloColor: underlayColor,
     haloSize: 1
 });
 
-
-let editorGhostVertexStyle = <typeof editorVertexStyle>JSON.parse(JSON.stringify(editorVertexStyle));
-editorGhostVertexStyle.color = [255, 255, 255, 255]
-editorGhostVertexStyle.size /= 4;
-editorGhostVertexStyle.outline.width /= 2;
 
 function first<T>(arr: T[], filter: (v: T) => boolean): T {
     let result: T;
@@ -234,6 +257,14 @@ export namespace RouteViewer {
 
         private orphans: Array<StopInfo>;
 
+        private events = new Evented();
+        private destroyables: Array<() => void> = [];
+
+        destroy() {
+            this.destroyables.reverse().forEach(d => d());
+            this.destroyables = [];
+        }
+
         constructor(public options: {
             map: Map,
             route: Routing.RouteResponse
@@ -249,43 +280,103 @@ export namespace RouteViewer {
 
             route.data.map((data, colorIndex) => this.add({
                 route: data,
-                color: colors[colorIndex % colors.length]
+                color: routeColors[colorIndex % routeColors.length]
             })).forEach(route => this.redraw(route));
         }
 
-        removeRoute(route: RouteInfo | number) {
+        on(name: "unassign-stop", cb: (args: {
+            route: RouteInfo,
+            stop: StopInfo
+        }) => void): void;
+
+        on(name: "reassign-stop", cb: (args: {
+            source: RouteInfo,
+            target: RouteInfo,
+            item: StopInfo,
+            index: StopInfo
+        }) => void): void;
+
+        on(name: "remove-orphan", cb: (args: { stop: StopInfo; }) => void): void;
+        on(name: "add-orphan", cb: (args: { stop: StopInfo; }) => void): void;
+        on(name: "remove-stop", cb: (args: { route: RouteInfo; stop: StopInfo; }) => void): void;
+        on(name: "add-stop", cb: (args: { route: RouteInfo; stop: StopInfo; }) => void): void;
+        on(name: "move-stop", cb: (args: { route: RouteInfo; stop: StopInfo; location: Point }) => void): void;
+
+        on<T>(name: string, cb: (args: T) => void);
+        on<T>(name: string, cb: (args: T) => void) {
+            let handle = this.events.on(name, cb);
+            this.destroyables.push(() => handle.remove());
+        }
+
+        trigger<T>(name: string, args: T) {
+            // just trigger was invoking the callback many times even with prevent/stop set everywhere
+            this.events.emit(name, <any>args);
+        }
+
+        private removeRoute(route: RouteInfo | number) {
             let routeIndex = (typeof route === "number") ? route : this.routes.indexOf(route);
             return this.routes.splice(routeIndex, 1)[0];
         }
 
-        removeOrphan(stop: StopInfo) {
+        private removeOrphan(stop: StopInfo) {
             let index = this.orphans.indexOf(stop);
-            this.orphans.splice(index, 1);
+            stop = this.orphans.splice(index, 1)[0];
+            this.trigger("remove-orphan", { stop: stop });
         }
 
-        addOrphan(stop: StopInfo) {
+        private addOrphan(stop: StopInfo) {
             this.orphans.push(stop);
+            this.trigger("add-orphan", { stop: stop });
         }
 
-        removeStop(route: RouteInfo | number, stop: StopInfo | number): StopInfo {
+        private removeStop(route: RouteInfo | number, stop: StopInfo | number) {
             let routeIndex = (typeof route === "number") ? route : this.routes.indexOf(route);
             let stopIndex = (typeof stop === "number") ? stop : this.routes[routeIndex].stops.indexOf(stop);
-            console.log(`removeStop from route ${routeIndex} at position ${stopIndex}`);
-            return this.routes[routeIndex].stops.splice(stopIndex, 1)[0];
+            let routeInfo = this.routes[routeIndex];
+            let stopInfo = routeInfo.stops.splice(stopIndex, 1)[0];
+            this.trigger("remove-stop", { route: routeInfo, stop: stopInfo });
         }
 
-        addStop(route: RouteInfo | number, stop: StopInfo, stopIndex: number): StopInfo {
+        private addStop(route: RouteInfo | number, stop: StopInfo, stopIndex: number) {
             let routeIndex = (typeof route === "number") ? route : this.routes.indexOf(route);
-            console.log(`addStop to route ${routeIndex} at position ${stopIndex}`);
-            return this.routes[routeIndex].stops.splice(stopIndex, 0, stop)[0];
+            let routeInfo = this.routes[routeIndex];
+            routeInfo.stops.splice(stopIndex, 0, stop);
+            let stopInfo = routeInfo.stops[stopIndex];
+            this.trigger("add-stop", { route: routeInfo, stop: stopInfo });
         }
 
-        moveStop(stop: StopInfo, location: Point) {
+        private moveStop(stop: StopInfo, location: Point) {
             stop.stop.setGeometry(location);
             stop.label.setGeometry(location);
+            let routeInfo = first(this.routes, r => 0 <= r.stops.indexOf(stop));
+            let stopInfo = routeInfo && stop;
+            this.trigger("move-stop", { route: routeInfo, stop: stopInfo, location: location });
         }
 
-        addToLayer(info: StopInfo | RouteLineInfo) {
+        private reassignStop(activeRoute: RouteInfo, targetRoute: RouteInfo, targetStop: StopInfo, activeIndex: number) {
+            let isOrphan = !targetRoute && targetStop;
+            targetRoute && this.removeStop(targetRoute, targetStop);
+            isOrphan && this.removeOrphan(targetStop);
+            this.addStop(activeRoute, targetStop, activeIndex);
+            this.trigger("reassign-stop", {
+                source: targetRoute,
+                target: activeRoute,
+                stop: targetStop,
+                index: activeIndex
+            });
+
+        }
+
+        private unassignStop(route: RouteInfo, stop: StopInfo) {
+            this.removeStop(route, stop);
+            this.addOrphan(stop);
+            this.trigger("unassign-stop", {
+                route: route,
+                stop: stop
+            });
+        }
+
+        private addToLayer(info: StopInfo | RouteLineInfo) {
             const isStop = (object: any): object is StopInfo => 'stop' in object;
 
             if (isStop(info)) {
@@ -298,7 +389,7 @@ export namespace RouteViewer {
         }
 
 
-        add(args: {
+        private add(args: {
             color: Color,
             route: Routing.Route
         }) {
@@ -364,7 +455,7 @@ export namespace RouteViewer {
             return routeInfo;
         }
 
-        redraw(route: RouteInfo) {
+        private redraw(route: RouteInfo) {
 
             {
                 let getGeom = () => {
@@ -379,8 +470,8 @@ export namespace RouteViewer {
 
                 if (!route.routeLine) {
                     route.routeLine = {
-                        routeLine: new Graphic(geom, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SHORTDOT, route.color, 4)),
-                        underlay: new Graphic(geom, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, 6))
+                        routeLine: new Graphic(geom, new SimpleLineSymbol(routeLineStyle(route))),
+                        underlay: new Graphic(geom, new SimpleLineSymbol(routeUnderlayStyle(route)))
                     };
                     this.addToLayer(route.routeLine);
                 } else {
@@ -392,7 +483,7 @@ export namespace RouteViewer {
 
             this.orphans.forEach((stop, itemIndex) => {
                 (<TextSymbol>stop.label.symbol).text = (1 + itemIndex + "");
-                (<SimpleMarkerSymbol>stop.stop.symbol).color = red;
+                (<SimpleMarkerSymbol>stop.stop.symbol).color = orphanColor;
             });
 
             route.stops.forEach((stop, itemIndex) => {
@@ -400,26 +491,28 @@ export namespace RouteViewer {
                 (<TextSymbol>stop.label.symbol).text = (1 + itemIndex + "");
             });
 
-            setTimeout(() => {
-                [route.routeLine.routeLine, route.routeLine.underlay].forEach(g => {
+            setTimeout(() => this.moveToFront(route), 200);
+        }
+
+        private moveToFront(route: RouteInfo) {
+            [route.routeLine.routeLine, route.routeLine.underlay].forEach(g => {
+                g.draw();
+                g.getShapes().forEach(s => s.moveToBack());
+            });
+
+            route.stops.forEach(stop => {
+                [stop.stop, stop.label].forEach(g => {
                     g.draw();
-                    g.getShapes().forEach(s => s.moveToBack());
+                    g.getShapes().forEach(s => s.moveToFront());
                 });
+            });
 
-                route.stops.forEach(stop => {
-                    [stop.stop, stop.label].forEach(g => {
-                        g.draw();
-                        g.getShapes().forEach(s => s.moveToFront());
-                    });
+            this.orphans.forEach(stop => {
+                [stop.stop, stop.label].forEach(g => {
+                    g.draw();
+                    g.getShapes().forEach(s => s.moveToFront());
                 });
-
-                this.orphans.forEach(stop => {
-                    [stop.stop, stop.label].forEach(g => {
-                        g.draw();
-                        g.getShapes().forEach(s => s.moveToFront());
-                    });
-                });
-            }, 200);
+            });
         }
 
         edit(editor: Edit, graphic: Graphic, options: {
@@ -438,7 +531,10 @@ export namespace RouteViewer {
             });
 
             if (activeRoute) {
-                editor.activate(Edit.EDIT_VERTICES, activeRoute.routeLine.routeLine);
+                this.moveToFront(activeRoute);
+                editor.activate(Edit.EDIT_VERTICES, activeRoute.routeLine.routeLine, {
+                    ghostVertexSymbol: new SimpleMarkerSymbol(editorMinorVertexStyle(activeRoute))
+                });
             } else {
                 console.log("cannot determine route");
                 return;
@@ -453,27 +549,24 @@ export namespace RouteViewer {
             let cursor: Graphic;
 
             let doit = () => {
-                console.log("change");
                 let isSameStop = activeStop === targetStop;
                 let isSameRoute = targetRoute === activeRoute;
                 let isRemoveActiveStop = activeStop && !isActiveVertexMinor && !options.moveStop && !isSameStop;
                 let isMoveActiveStop = activeStop && !isActiveVertexMinor && options.moveStop && (!targetStop || isSameStop);
                 let isAddTargetStop = !!targetStop && !isSameStop;
-                let isOrphan = !targetRoute && targetStop;
 
                 if (isSameStop) {
                     console.log("dnd onto same stop does nothing");
                 }
 
                 if (isRemoveActiveStop) {
-                    this.removeStop(activeRoute, activeStop);
-                    this.addOrphan(activeStop);
+                    this.unassignStop(activeRoute, activeStop);
                 }
 
                 if (isAddTargetStop) {
-                    targetRoute && this.removeStop(targetRoute, targetStop);
-                    isOrphan && this.removeOrphan(targetStop);
-                    this.addStop(activeRoute, targetStop, activeVertexIndex - (activeRoute.startLocation ? 1 : 0));
+                    let activeIndex = activeVertexIndex;
+                    if (activeIndex > 0) activeIndex -= (!!activeRoute.startLocation ? 1 : 0);
+                    this.reassignStop(activeRoute, targetRoute, targetStop, activeIndex);
                 }
 
                 if (isMoveActiveStop) {
@@ -505,7 +598,6 @@ export namespace RouteViewer {
                     }
                     if (args.vertexinfo.pointIndex !== activeVertexIndex) return;
                     // does it intersect with another stop?
-                    console.log("vertext-move-stop");
                     let routeLine = activeRoute.routeLine;
 
                     let pointIndex = args.vertexinfo.pointIndex;
@@ -592,8 +684,7 @@ export function run() {
             allowAddVertices: true,
             allowDeleteVertices: false,
             ghostLineSymbol: new SimpleLineSymbol(editorLineStyle),
-            vertexSymbol: new SimpleMarkerSymbol(editorVertexStyle),
-            ghostVertexSymbol: new SimpleMarkerSymbol(editorGhostVertexStyle)
+            vertexSymbol: new SimpleMarkerSymbol(editorVertexStyle)
         });
 
         let routeView = new RouteViewer.RouteView({
@@ -601,8 +692,18 @@ export function run() {
             route: route
         });
 
+        // primary events
+        routeView.on("unassign-stop", args => console.log("unassign-stop"));
+        routeView.on("reassign-stop", args => console.log("reassign-stop"));
+
+        // low-level events
+        routeView.on("remove-orphan", args => console.log("remove-orphan"));
+        routeView.on("add-orphan", args => console.log("add-orphan"));
+        routeView.on("remove-stop", args => console.log("remove-stop"));
+        routeView.on("add-stop", args => console.log("add-stop"));
+        routeView.on("move-stop", args => console.log("move-stop"));
+
         map.on("click", () => {
-            console.log("map click");
             editor.deactivate();
         });
 

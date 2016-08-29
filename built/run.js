@@ -1309,37 +1309,61 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
     });
     return route;
 });
-define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esri/map", "esri/layers/GraphicsLayer", "esri/graphic", "esri/geometry/Point", "esri/geometry/Polyline", "esri/SpatialReference", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/TextSymbol", "esri/Color", "esri/InfoTemplate", "dojo/_base/event", "esri/symbols/Font", "esri/toolbars/edit", "esri/geometry/Extent"], function (require, exports, route, Map, GraphicsLayer, Graphic, Point, Polyline, SpatialReference, SimpleMarkerSymbol, SimpleLineSymbol, TextSymbol, Color, InfoTemplate, event, Font, Edit, Extent) {
+define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esri/map", "esri/layers/GraphicsLayer", "esri/graphic", "esri/geometry/Point", "esri/geometry/Polyline", "esri/SpatialReference", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/TextSymbol", "esri/Color", "esri/InfoTemplate", "dojo/_base/event", "esri/symbols/Font", "esri/toolbars/edit", "esri/geometry/Extent", "dojo/Evented"], function (require, exports, route, Map, GraphicsLayer, Graphic, Point, Polyline, SpatialReference, SimpleMarkerSymbol, SimpleLineSymbol, TextSymbol, Color, InfoTemplate, event, Font, Edit, Extent, Evented) {
     "use strict";
     var epsg4326 = new SpatialReference("4326");
     var epsg3857 = new SpatialReference("102100");
-    var delta = 32;
-    var colors = [new Color("#ffa800"), new Color("#1D5F8A"), new Color("yellow")];
-    var white = new Color("white");
-    var black = new Color("black");
-    var red = new Color("red");
+    var delta = 24;
+    var routeColors = [new Color("#ffa800"), new Color("#1D5F8A"), new Color("yellow")];
+    var underlayColor = new Color("white");
+    var orphanColor = new Color("red");
+    var hiliteColor = new Color("#00FF00");
+    var routeLineStyle = function (routeInfo) { return ({
+        color: routeInfo.color,
+        width: 2,
+        type: "esriSLS",
+        style: "esriSLSShortDot"
+    }); };
+    var routeUnderlayStyle = function (routeInfo) { return ({
+        color: underlayColor,
+        width: 4,
+        type: "esriSLS",
+        style: "esriSLSSolid"
+    }); };
     var editorLineStyle = {
-        color: [0, 255, 0],
+        color: hiliteColor,
         width: 3,
         type: "esriSLS",
-        style: "esriSLSDash"
+        style: "esriSLSDot"
     };
     var editorVertexStyle = {
-        color: [0, 255, 0, 60],
-        size: delta * 3 / 4,
+        color: [0, 0, 0, 0],
+        size: delta,
         type: "esriSMS",
         style: "esriSMSCircle",
         outline: {
-            color: [0, 255, 0, 255],
-            width: 3,
+            color: hiliteColor,
+            width: delta / 8,
             type: "esriSLS",
             style: "esriSLSSolid"
         }
     };
+    var editorMinorVertexStyle = function (routeInfo) { return ({
+        color: routeInfo.color,
+        size: delta / 2,
+        type: "esriSMS",
+        style: "esriSMSCircle",
+        outline: {
+            color: hiliteColor,
+            width: delta / 8,
+            type: "esriSLS",
+            style: "esriSLSSolid"
+        }
+    }); };
     var textStyle = function (routeInfo, routeItem) { return ({
         text: (1 + routeItem.ordinalIndex + ""),
         font: new Font(delta / 2),
-        color: white,
+        color: underlayColor,
         yoffset: -delta / 6,
         haloColor: routeInfo.color,
         haloSize: 1
@@ -1352,7 +1376,7 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
         outline: {
             type: "esriSLS",
             style: "esriSLSSolid",
-            color: white,
+            color: underlayColor,
             width: delta / 8
         }
     }); };
@@ -1377,7 +1401,7 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
         "type": "esriSMS",
         "style": "esriSMSCircle",
         "outline": {
-            "color": white,
+            "color": underlayColor,
             "width": delta / 8,
             "type": "esriSLS",
             "style": "esriSLSSolid"
@@ -1389,13 +1413,9 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
         color: routeInfo.color,
         xoffset: delta,
         yoffset: -delta / 6,
-        haloColor: white,
+        haloColor: underlayColor,
         haloSize: 1
     }); };
-    var editorGhostVertexStyle = JSON.parse(JSON.stringify(editorVertexStyle));
-    editorGhostVertexStyle.color = [255, 255, 255, 255];
-    editorGhostVertexStyle.size /= 4;
-    editorGhostVertexStyle.outline.width /= 2;
     function first(arr, filter) {
         var result;
         return arr.some(function (v) { result = v; return filter(v); }) ? result : undefined;
@@ -1415,6 +1435,8 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
             function RouteView(options) {
                 var _this = this;
                 this.options = options;
+                this.events = new Evented();
+                this.destroyables = [];
                 var map = options.map;
                 var layer = this.layer = new GraphicsLayer();
                 options.map.addLayer(layer);
@@ -1422,34 +1444,74 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                 this.orphans = [];
                 route.data.map(function (data, colorIndex) { return _this.add({
                     route: data,
-                    color: colors[colorIndex % colors.length]
+                    color: routeColors[colorIndex % routeColors.length]
                 }); }).forEach(function (route) { return _this.redraw(route); });
             }
+            RouteView.prototype.destroy = function () {
+                this.destroyables.reverse().forEach(function (d) { return d(); });
+                this.destroyables = [];
+            };
+            RouteView.prototype.on = function (name, cb) {
+                var handle = this.events.on(name, cb);
+                this.destroyables.push(function () { return handle.remove(); });
+            };
+            RouteView.prototype.trigger = function (name, args) {
+                // just trigger was invoking the callback many times even with prevent/stop set everywhere
+                this.events.emit(name, args);
+            };
             RouteView.prototype.removeRoute = function (route) {
                 var routeIndex = (typeof route === "number") ? route : this.routes.indexOf(route);
                 return this.routes.splice(routeIndex, 1)[0];
             };
             RouteView.prototype.removeOrphan = function (stop) {
                 var index = this.orphans.indexOf(stop);
-                this.orphans.splice(index, 1);
+                stop = this.orphans.splice(index, 1)[0];
+                this.trigger("remove-orphan", { stop: stop });
             };
             RouteView.prototype.addOrphan = function (stop) {
                 this.orphans.push(stop);
+                this.trigger("add-orphan", { stop: stop });
             };
             RouteView.prototype.removeStop = function (route, stop) {
                 var routeIndex = (typeof route === "number") ? route : this.routes.indexOf(route);
                 var stopIndex = (typeof stop === "number") ? stop : this.routes[routeIndex].stops.indexOf(stop);
-                console.log("removeStop from route " + routeIndex + " at position " + stopIndex);
-                return this.routes[routeIndex].stops.splice(stopIndex, 1)[0];
+                var routeInfo = this.routes[routeIndex];
+                var stopInfo = routeInfo.stops.splice(stopIndex, 1)[0];
+                this.trigger("remove-stop", { route: routeInfo, stop: stopInfo });
             };
             RouteView.prototype.addStop = function (route, stop, stopIndex) {
                 var routeIndex = (typeof route === "number") ? route : this.routes.indexOf(route);
-                console.log("addStop to route " + routeIndex + " at position " + stopIndex);
-                return this.routes[routeIndex].stops.splice(stopIndex, 0, stop)[0];
+                var routeInfo = this.routes[routeIndex];
+                routeInfo.stops.splice(stopIndex, 0, stop);
+                var stopInfo = routeInfo.stops[stopIndex];
+                this.trigger("add-stop", { route: routeInfo, stop: stopInfo });
             };
             RouteView.prototype.moveStop = function (stop, location) {
                 stop.stop.setGeometry(location);
                 stop.label.setGeometry(location);
+                var routeInfo = first(this.routes, function (r) { return 0 <= r.stops.indexOf(stop); });
+                var stopInfo = routeInfo && stop;
+                this.trigger("move-stop", { route: routeInfo, stop: stopInfo, location: location });
+            };
+            RouteView.prototype.reassignStop = function (activeRoute, targetRoute, targetStop, activeIndex) {
+                var isOrphan = !targetRoute && targetStop;
+                targetRoute && this.removeStop(targetRoute, targetStop);
+                isOrphan && this.removeOrphan(targetStop);
+                this.addStop(activeRoute, targetStop, activeIndex);
+                this.trigger("reassign-stop", {
+                    source: targetRoute,
+                    target: activeRoute,
+                    stop: targetStop,
+                    index: activeIndex
+                });
+            };
+            RouteView.prototype.unassignStop = function (route, stop) {
+                this.removeStop(route, stop);
+                this.addOrphan(stop);
+                this.trigger("unassign-stop", {
+                    route: route,
+                    stop: stop
+                });
             };
             RouteView.prototype.addToLayer = function (info) {
                 var isStop = function (object) { return 'stop' in object; };
@@ -1522,8 +1584,8 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                     var geom = getGeom();
                     if (!route.routeLine) {
                         route.routeLine = {
-                            routeLine: new Graphic(geom, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SHORTDOT, route.color, 4)),
-                            underlay: new Graphic(geom, new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, 6))
+                            routeLine: new Graphic(geom, new SimpleLineSymbol(routeLineStyle(route))),
+                            underlay: new Graphic(geom, new SimpleLineSymbol(routeUnderlayStyle(route)))
                         };
                         this.addToLayer(route.routeLine);
                     }
@@ -1534,30 +1596,31 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                 }
                 this.orphans.forEach(function (stop, itemIndex) {
                     stop.label.symbol.text = (1 + itemIndex + "");
-                    stop.stop.symbol.color = red;
+                    stop.stop.symbol.color = orphanColor;
                 });
                 route.stops.forEach(function (stop, itemIndex) {
                     stop.stop.symbol.color = route.color;
                     stop.label.symbol.text = (1 + itemIndex + "");
                 });
-                setTimeout(function () {
-                    [route.routeLine.routeLine, route.routeLine.underlay].forEach(function (g) {
+                setTimeout(function () { return _this.moveToFront(route); }, 200);
+            };
+            RouteView.prototype.moveToFront = function (route) {
+                [route.routeLine.routeLine, route.routeLine.underlay].forEach(function (g) {
+                    g.draw();
+                    g.getShapes().forEach(function (s) { return s.moveToBack(); });
+                });
+                route.stops.forEach(function (stop) {
+                    [stop.stop, stop.label].forEach(function (g) {
                         g.draw();
-                        g.getShapes().forEach(function (s) { return s.moveToBack(); });
+                        g.getShapes().forEach(function (s) { return s.moveToFront(); });
                     });
-                    route.stops.forEach(function (stop) {
-                        [stop.stop, stop.label].forEach(function (g) {
-                            g.draw();
-                            g.getShapes().forEach(function (s) { return s.moveToFront(); });
-                        });
+                });
+                this.orphans.forEach(function (stop) {
+                    [stop.stop, stop.label].forEach(function (g) {
+                        g.draw();
+                        g.getShapes().forEach(function (s) { return s.moveToFront(); });
                     });
-                    _this.orphans.forEach(function (stop) {
-                        [stop.stop, stop.label].forEach(function (g) {
-                            g.draw();
-                            g.getShapes().forEach(function (s) { return s.moveToFront(); });
-                        });
-                    });
-                }, 200);
+                });
             };
             RouteView.prototype.edit = function (editor, graphic, options) {
                 var _this = this;
@@ -1573,7 +1636,10 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                     }
                 });
                 if (activeRoute) {
-                    editor.activate(Edit.EDIT_VERTICES, activeRoute.routeLine.routeLine);
+                    this.moveToFront(activeRoute);
+                    editor.activate(Edit.EDIT_VERTICES, activeRoute.routeLine.routeLine, {
+                        ghostVertexSymbol: new SimpleMarkerSymbol(editorMinorVertexStyle(activeRoute))
+                    });
                 }
                 else {
                     console.log("cannot determine route");
@@ -1587,24 +1653,22 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                 var activeLocation;
                 var cursor;
                 var doit = function () {
-                    console.log("change");
                     var isSameStop = activeStop === targetStop;
                     var isSameRoute = targetRoute === activeRoute;
                     var isRemoveActiveStop = activeStop && !isActiveVertexMinor && !options.moveStop && !isSameStop;
                     var isMoveActiveStop = activeStop && !isActiveVertexMinor && options.moveStop && (!targetStop || isSameStop);
                     var isAddTargetStop = !!targetStop && !isSameStop;
-                    var isOrphan = !targetRoute && targetStop;
                     if (isSameStop) {
                         console.log("dnd onto same stop does nothing");
                     }
                     if (isRemoveActiveStop) {
-                        _this.removeStop(activeRoute, activeStop);
-                        _this.addOrphan(activeStop);
+                        _this.unassignStop(activeRoute, activeStop);
                     }
                     if (isAddTargetStop) {
-                        targetRoute && _this.removeStop(targetRoute, targetStop);
-                        isOrphan && _this.removeOrphan(targetStop);
-                        _this.addStop(activeRoute, targetStop, activeVertexIndex - (activeRoute.startLocation ? 1 : 0));
+                        var activeIndex = activeVertexIndex;
+                        if (activeIndex > 0)
+                            activeIndex -= (!!activeRoute.startLocation ? 1 : 0);
+                        _this.reassignStop(activeRoute, targetRoute, targetStop, activeIndex);
                     }
                     if (isMoveActiveStop) {
                         _this.moveStop(activeStop, activeLocation);
@@ -1631,7 +1695,6 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                         if (args.vertexinfo.pointIndex !== activeVertexIndex)
                             return;
                         // does it intersect with another stop?
-                        console.log("vertext-move-stop");
                         var routeLine = activeRoute.routeLine;
                         var pointIndex = args.vertexinfo.pointIndex;
                         var segmentIndex = args.vertexinfo.segmentIndex;
@@ -1699,15 +1762,22 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                 allowAddVertices: true,
                 allowDeleteVertices: false,
                 ghostLineSymbol: new SimpleLineSymbol(editorLineStyle),
-                vertexSymbol: new SimpleMarkerSymbol(editorVertexStyle),
-                ghostVertexSymbol: new SimpleMarkerSymbol(editorGhostVertexStyle)
+                vertexSymbol: new SimpleMarkerSymbol(editorVertexStyle)
             });
             var routeView_1 = new RouteViewer.RouteView({
                 map: map,
                 route: route
             });
+            // primary events
+            routeView_1.on("unassign-stop", function (args) { return console.log("unassign-stop"); });
+            routeView_1.on("reassign-stop", function (args) { return console.log("reassign-stop"); });
+            // low-level events
+            routeView_1.on("remove-orphan", function (args) { return console.log("remove-orphan"); });
+            routeView_1.on("add-orphan", function (args) { return console.log("add-orphan"); });
+            routeView_1.on("remove-stop", function (args) { return console.log("remove-stop"); });
+            routeView_1.on("add-stop", function (args) { return console.log("add-stop"); });
+            routeView_1.on("move-stop", function (args) { return console.log("move-stop"); });
             map.on("click", function () {
-                console.log("map click");
                 editor_1.deactivate();
             });
             routeView_1.layer.on("click", function (args) {
