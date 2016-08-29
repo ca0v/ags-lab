@@ -1048,7 +1048,8 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
         "y": 36.194162517804
     };
     var route = {
-        "data": [{
+        "data": [
+            {
                 "employeeId": "10313",
                 "employeeFullName": "Phil S",
                 "routeDate": "2016-04-05T08:57:42",
@@ -1276,14 +1277,34 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
             "severity": "Success"
         }
     };
+    route.data.push({
+        startLocation: { x: 0, y: 0 },
+        endLocation: { x: 0, y: 0 },
+        routeItems: [
+            { location: { x: 0, y: 0 } },
+            { location: { x: 0, y: 0 } },
+            { location: { x: 0, y: 0 } },
+            { location: { x: 0, y: 0 } },
+            { location: { x: 0, y: 0 } }
+        ]
+    });
+    route.data.forEach(function (data) {
+        for (var i = 0; i < 10; i++)
+            data.routeItems.push({ location: { x: 0, y: 0 } });
+    });
+    var offset = 0.01;
     route.data.forEach(function (data, j) {
-        data.startLocation = data.endLocation = {
-            x: center.x + 0.001 * (1 - Math.random()),
-            y: center.y + 0.001 * (1 - Math.random())
+        data.startLocation = {
+            x: center.x + offset * (1 - Math.random()),
+            y: center.y + offset * (1 - Math.random())
+        };
+        data.endLocation = {
+            x: center.x + offset * (1 - Math.random()),
+            y: center.y + offset * (1 - Math.random())
         };
         data.routeItems.forEach(function (item, i) {
-            item.location.x = center.x + 0.001 * (1 + i * Math.random() + j);
-            item.location.y = center.y + 0.001 * (1 + i + j * Math.random());
+            item.location.x = center.x + offset * ((1 + i + 5 * j) - Math.random());
+            item.location.y = center.y + 5 * offset * (1 - Math.random());
         });
     });
     return route;
@@ -1670,7 +1691,7 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
     function run() {
         var map = new Map(document.getElementById("map"), {
             center: [-115.257, 36.194],
-            zoom: 16,
+            zoom: 13,
             basemap: 'streets'
         });
         {

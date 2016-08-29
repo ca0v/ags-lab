@@ -581,7 +581,7 @@ export function run() {
         document.getElementById("map"),
         {
             center: [-115.257, 36.194],
-            zoom: 16,
+            zoom: 13,
             basemap: 'streets'
         });
 

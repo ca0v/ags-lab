@@ -4,42 +4,24 @@ const center = {
 };
 
 let route = {
-    "data": [{
-        "employeeId": "10313",
-        "employeeFullName": "Phil S",
-        "routeDate": "2016-04-05T08:57:42",
-        "startLocation": {
-            "x": 0,
-            "y": 0
-        },
-        "endLocation": {
-            "x": 0,
-            "y": 0
-        },
-        "routeItems": [{
-            "ordinalIndex": 2,
-            "activity": {
-                "moniker": "Inspection",
-                "primaryKey": 1013
-            },
-            "location": {
+    "data": [
+        {
+            "employeeId": "10313",
+            "employeeFullName": "Phil S",
+            "routeDate": "2016-04-05T08:57:42",
+            "startLocation": {
                 "x": 0,
                 "y": 0
             },
-            "activityParentType": "DEMO",
-            "scheduledDate": "2016-03-21T00:00:00",
-            "activityType": "M-Insp",
-            "isActivityCompleted": false,
-            "lastModifiedBy": "HANSEN8",
-            "lastModifiedDateTime": "2016-04-05T09:42:56.777",
-            "id": 1539,
-            "href": "/generic/Hansen.Routing.RouteItem?query={select:[AddedBy,AddedDateTime,LastModifiedBy,LastModifiedDateTime,OrdinalIndex,RouteItemKey],distinct:False,filter:[{property:RouteItemKey,operator:Equal,value:1539}]}"
-        },
-            {
-                "ordinalIndex": 3,
+            "endLocation": {
+                "x": 0,
+                "y": 0
+            },
+            "routeItems": [{
+                "ordinalIndex": 2,
                 "activity": {
                     "moniker": "Inspection",
-                    "primaryKey": 1014
+                    "primaryKey": 1013
                 },
                 "location": {
                     "x": 0,
@@ -51,33 +33,52 @@ let route = {
                 "isActivityCompleted": false,
                 "lastModifiedBy": "HANSEN8",
                 "lastModifiedDateTime": "2016-04-05T09:42:56.777",
-                "id": 1540,
-                "href": "/generic/Hansen.Routing.RouteItem?query={select:[AddedBy,AddedDateTime,LastModifiedBy,LastModifiedDateTime,OrdinalIndex,RouteItemKey],distinct:False,filter:[{property:RouteItemKey,operator:Equal,value:1540}]}"
+                "id": 1539,
+                "href": "/generic/Hansen.Routing.RouteItem?query={select:[AddedBy,AddedDateTime,LastModifiedBy,LastModifiedDateTime,OrdinalIndex,RouteItemKey],distinct:False,filter:[{property:RouteItemKey,operator:Equal,value:1539}]}"
             },
-            {
-                "ordinalIndex": 1,
-                "activity": {
-                    "moniker": "Inspection",
-                    "primaryKey": 1021
+                {
+                    "ordinalIndex": 3,
+                    "activity": {
+                        "moniker": "Inspection",
+                        "primaryKey": 1014
+                    },
+                    "location": {
+                        "x": 0,
+                        "y": 0
+                    },
+                    "activityParentType": "DEMO",
+                    "scheduledDate": "2016-03-21T00:00:00",
+                    "activityType": "M-Insp",
+                    "isActivityCompleted": false,
+                    "lastModifiedBy": "HANSEN8",
+                    "lastModifiedDateTime": "2016-04-05T09:42:56.777",
+                    "id": 1540,
+                    "href": "/generic/Hansen.Routing.RouteItem?query={select:[AddedBy,AddedDateTime,LastModifiedBy,LastModifiedDateTime,OrdinalIndex,RouteItemKey],distinct:False,filter:[{property:RouteItemKey,operator:Equal,value:1540}]}"
                 },
-                "location": {
-                    "x": -115.252869380492,
-                    "y": 36.1904151260815
-                },
-                "activityParentType": "UseDeposit",
-                "scheduledDate": "2016-04-05T08:57:42",
-                "activityType": "Insp 1",
-                "isActivityCompleted": true,
-                "lastModifiedBy": "HANSEN8",
-                "lastModifiedDateTime": "2016-04-05T09:42:56.777",
-                "id": 1553,
-                "href": "/generic/Hansen.Routing.RouteItem?query={select:[AddedBy,AddedDateTime,LastModifiedBy,LastModifiedDateTime,OrdinalIndex,RouteItemKey],distinct:False,filter:[{property:RouteItemKey,operator:Equal,value:1553}]}"
-            }],
-        "lastModifiedBy": "",
-        "lastModifiedDateTime": "0001-01-01T00:00:00",
-        "id": 1170,
-        "href": "/generic/Hansen.Routing.Route?query={select:[ActivityDate,AddedBy,AddedDateTime,EndGpsXCoordinate,EndGpsYCoordinate,EndGpsZCoordinate,LastModifiedBy,LastModifiedDateTime,RouteKey,StartGpsXCoordinate,StartGpsYCoordinate,StartGpsZCoordinate],distinct:False,filter:[{property:RouteKey,operator:Equal,value:1170}]}"
-    },
+                {
+                    "ordinalIndex": 1,
+                    "activity": {
+                        "moniker": "Inspection",
+                        "primaryKey": 1021
+                    },
+                    "location": {
+                        "x": -115.252869380492,
+                        "y": 36.1904151260815
+                    },
+                    "activityParentType": "UseDeposit",
+                    "scheduledDate": "2016-04-05T08:57:42",
+                    "activityType": "Insp 1",
+                    "isActivityCompleted": true,
+                    "lastModifiedBy": "HANSEN8",
+                    "lastModifiedDateTime": "2016-04-05T09:42:56.777",
+                    "id": 1553,
+                    "href": "/generic/Hansen.Routing.RouteItem?query={select:[AddedBy,AddedDateTime,LastModifiedBy,LastModifiedDateTime,OrdinalIndex,RouteItemKey],distinct:False,filter:[{property:RouteItemKey,operator:Equal,value:1553}]}"
+                }],
+            "lastModifiedBy": "",
+            "lastModifiedDateTime": "0001-01-01T00:00:00",
+            "id": 1170,
+            "href": "/generic/Hansen.Routing.Route?query={select:[ActivityDate,AddedBy,AddedDateTime,EndGpsXCoordinate,EndGpsYCoordinate,EndGpsZCoordinate,LastModifiedBy,LastModifiedDateTime,RouteKey,StartGpsXCoordinate,StartGpsYCoordinate,StartGpsZCoordinate],distinct:False,filter:[{property:RouteKey,operator:Equal,value:1170}]}"
+        },
         {
             "employeeId": "1003",
             "employeeFullName": "Rob Roberts",
@@ -233,14 +234,35 @@ let route = {
     }
 };
 
+route.data.push({
+    startLocation: { x: 0, y: 0 },
+    endLocation: { x: 0, y: 0 },
+    routeItems: [
+        { location: { x: 0, y: 0 } },
+        { location: { x: 0, y: 0 } },
+        { location: { x: 0, y: 0 } },
+        { location: { x: 0, y: 0 } },
+        { location: { x: 0, y: 0 } }
+    ]
+});
+
+route.data.forEach(data => {
+    for (let i = 0; i < 10; i++) data.routeItems.push({ location: { x: 0, y: 0 } });
+});
+
+let offset = 0.01;
 route.data.forEach((data, j) => {
-    data.startLocation = data.endLocation = {
-        x: center.x + 0.001 * (1 - Math.random()),
-        y: center.y + 0.001 * (1 - Math.random())
+    data.startLocation = {
+        x: center.x + offset * (1 - Math.random()),
+        y: center.y + offset * (1 - Math.random())
+    };
+    data.endLocation = {
+        x: center.x + offset * (1 - Math.random()),
+        y: center.y + offset * (1 - Math.random())
     };
     data.routeItems.forEach((item, i) => {
-        item.location.x = center.x + 0.001 * (1 + i * Math.random() + j);
-        item.location.y = center.y + 0.001 * (1 + i + j * Math.random());
+        item.location.x = center.x + offset * ((1 + i + 5 * j) - Math.random());
+        item.location.y = center.y + 5 * offset * (1 - Math.random());
     })
 })
 export = route;
