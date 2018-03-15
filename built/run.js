@@ -1,14 +1,19 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 /**
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
  */
 define("labs/ajax", ["require", "exports"], function (require, exports) {
     "use strict";
-    var Ajax = (function () {
+    var Ajax = /** @class */ (function () {
         function Ajax(url) {
             this.url = url;
             this.options = {
@@ -21,7 +26,7 @@ define("labs/ajax", ["require", "exports"], function (require, exports) {
             if (url === void 0) { url = this.url; }
             return new Promise(function (resolve, reject) {
                 args["callback"] = "define";
-                var uri = url + "?" + Object.keys(args).map(function (k) { return (k + "=" + args[k]); }).join('&');
+                var uri = url + "?" + Object.keys(args).map(function (k) { return k + "=" + args[k]; }).join('&');
                 require([uri], function (data) { return resolve(data); });
             });
         };
@@ -103,7 +108,8 @@ define("labs/ajax", ["require", "exports"], function (require, exports) {
  */
 define("labs/ags-feature-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
-    var FeatureServer = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var FeatureServer = /** @class */ (function () {
         function FeatureServer(url) {
             this.ajax = new Ajax(url);
         }
@@ -122,7 +128,6 @@ define("labs/ags-feature-proxy", ["require", "exports", "dojo/_base/lang", "labs
         };
         return FeatureServer;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = FeatureServer;
     function run() {
         var service = new FeatureServer("//sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer");
@@ -143,7 +148,8 @@ define("labs/ags-feature-proxy", ["require", "exports", "dojo/_base/lang", "labs
  */
 define("labs/ags-catalog-proxy", ["require", "exports", "dojo/_base/lang", "labs/ags-feature-proxy", "labs/ajax"], function (require, exports, lang, ags_feature_proxy_1, Ajax) {
     "use strict";
-    var Catalog = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Catalog = /** @class */ (function () {
         function Catalog(url) {
             this.ajax = new Ajax(url);
         }
@@ -162,7 +168,6 @@ define("labs/ags-catalog-proxy", ["require", "exports", "dojo/_base/lang", "labs
         };
         return Catalog;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Catalog;
     function run() {
         var url = "//sampleserver6.arcgisonline.com/arcgis/rest/services";
@@ -190,8 +195,9 @@ define("app", ["require", "exports", "labs/ags-catalog-proxy"], function (requir
 });
 define("ips/services", ["require", "exports", "labs/ajax", "dojo/_base/lang", "dojo/Deferred"], function (require, exports, Ajax, lang, Deferred) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var __DEV__ = 0;
-    var test = (function () {
+    var test = /** @class */ (function () {
         function test() {
         }
         test.ips_route_response = {
@@ -425,7 +431,7 @@ define("ips/services", ["require", "exports", "labs/ajax", "dojo/_base/lang", "d
         };
         return test;
     }());
-    var Routing = (function () {
+    var Routing = /** @class */ (function () {
         function Routing(api) {
             this.api = api;
         }
@@ -535,7 +541,8 @@ define("ips/services", ["require", "exports", "labs/ajax", "dojo/_base/lang", "d
  */
 define("labs/ags-feature-query-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
-    var Query = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Query = /** @class */ (function () {
         function Query(url) {
             this.ajax = new Ajax(url);
         }
@@ -559,7 +566,6 @@ define("labs/ags-feature-query-proxy", ["require", "exports", "dojo/_base/lang",
         };
         return Query;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Query;
     function run() {
         new Query("https://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer/3/query")
@@ -578,7 +584,8 @@ define("labs/ags-feature-query-proxy", ["require", "exports", "dojo/_base/lang",
  */
 define("labs/ags-find-address-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
-    var FindAddress = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var FindAddress = /** @class */ (function () {
         function FindAddress(url) {
             this.ajax = new Ajax(url);
         }
@@ -595,7 +602,6 @@ define("labs/ags-find-address-proxy", ["require", "exports", "dojo/_base/lang", 
         };
         return FindAddress;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = FindAddress;
     function run() {
         new FindAddress("https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates")
@@ -616,7 +622,8 @@ define("labs/ags-find-address-proxy", ["require", "exports", "dojo/_base/lang", 
  */
 define("labs/ags-find-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
-    var Find = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Find = /** @class */ (function () {
         function Find(url) {
             this.ajax = new Ajax(url);
         }
@@ -633,7 +640,6 @@ define("labs/ags-find-proxy", ["require", "exports", "dojo/_base/lang", "labs/aj
         };
         return Find;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Find;
     function run() {
         new Find("//geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/find")
@@ -655,13 +661,14 @@ define("labs/ags-find-proxy", ["require", "exports", "dojo/_base/lang", "labs/aj
  */
 define("labs/ags-geometry-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     // see http://resources.esri.com/help/9.3/ArcGISDesktop/ArcObjects/esriGeometry/esriSRUnitType.htm
     var esriSRUnitType;
     (function (esriSRUnitType) {
         esriSRUnitType[esriSRUnitType["Meter"] = 9001] = "Meter";
         esriSRUnitType[esriSRUnitType["Kilometer"] = 9036] = "Kilometer";
     })(esriSRUnitType || (esriSRUnitType = {}));
-    var Geometry = (function () {
+    var Geometry = /** @class */ (function () {
         function Geometry(url) {
             this.ajax = new Ajax(url);
         }
@@ -693,7 +700,6 @@ define("labs/ags-geometry-proxy", ["require", "exports", "dojo/_base/lang", "lab
         };
         return Geometry;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Geometry;
     function run() {
         new Geometry("//sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer/lengths")
@@ -723,7 +729,8 @@ define("labs/ags-geometry-proxy", ["require", "exports", "dojo/_base/lang", "lab
  */
 define("labs/ags-lrs-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
-    var Lrs = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Lrs = /** @class */ (function () {
         function Lrs(url) {
             this.ajax = new Ajax(url);
             this.ajax.options.use_jsonp = true;
@@ -751,7 +758,7 @@ define("labs/ags-lrs-proxy", ["require", "exports", "dojo/_base/lang", "labs/aja
                 f: "pjson"
             }, data);
             req.locations = JSON.stringify(req.locations);
-            req.targetNetworkLayerIds = ("[" + req.targetNetworkLayerIds + "]");
+            req.targetNetworkLayerIds = "[" + req.targetNetworkLayerIds + "]";
             return this.ajax.get(req);
         };
         Lrs.prototype.queryAttributeSet = function (data) {
@@ -783,7 +790,6 @@ define("labs/ags-lrs-proxy", ["require", "exports", "dojo/_base/lang", "labs/aja
         };
         return Lrs;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Lrs;
     function run() {
         // geometryToMeasure
@@ -848,10 +854,11 @@ define("labs/ags-lrs-proxy", ["require", "exports", "dojo/_base/lang", "labs/aja
  */
 define("labs/ags-map-export-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     /**
      * mapserver export
      */
-    var Export = (function () {
+    var Export = /** @class */ (function () {
         function Export(url) {
             this.ajax = new Ajax(url);
             this.ajax.options.use_jsonp = true;
@@ -872,7 +879,6 @@ define("labs/ags-map-export-proxy", ["require", "exports", "dojo/_base/lang", "l
         };
         return Export;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Export;
     function run() {
         new Export("//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/export")
@@ -890,10 +896,11 @@ define("labs/ags-map-export-proxy", ["require", "exports", "dojo/_base/lang", "l
  */
 define("labs/ags-map-find-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     /**
      * mapserver find
      */
-    var Find = (function () {
+    var Find = /** @class */ (function () {
         function Find(url) {
             this.ajax = new Ajax(url);
             this.ajax.options.use_jsonp = true;
@@ -908,7 +915,6 @@ define("labs/ags-map-find-proxy", ["require", "exports", "dojo/_base/lang", "lab
         };
         return Find;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Find;
     function run() {
         new Find("//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/find")
@@ -927,10 +933,11 @@ define("labs/ags-map-find-proxy", ["require", "exports", "dojo/_base/lang", "lab
  */
 define("labs/ags-map-identify-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     /**
      * mapserver identify
      */
-    var Identify = (function () {
+    var Identify = /** @class */ (function () {
         function Identify(url) {
             this.ajax = new Ajax(url);
             this.ajax.options.use_jsonp = true;
@@ -942,12 +949,11 @@ define("labs/ags-map-identify-proxy", ["require", "exports", "dojo/_base/lang", 
                 f: "pjson"
             }, data);
             req.mapExtent = req.mapExtent.join(",");
-            req.imageDisplay = (req.imageDisplay.width + "," + req.imageDisplay.height + "," + req.imageDisplay.dpi);
+            req.imageDisplay = req.imageDisplay.width + "," + req.imageDisplay.height + "," + req.imageDisplay.dpi;
             return this.ajax.get(req);
         };
         return Identify;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Identify;
     function run() {
         new Identify("//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StateCityHighway_USA/MapServer/identify")
@@ -973,10 +979,11 @@ define("labs/ags-map-identify-proxy", ["require", "exports", "dojo/_base/lang", 
  */
 define("labs/ags-map-query-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     /**
      * mapserver query
      */
-    var Query = (function () {
+    var Query = /** @class */ (function () {
         function Query(url) {
             this.ajax = new Ajax(url);
             this.ajax.options.use_jsonp = true;
@@ -993,7 +1000,6 @@ define("labs/ags-map-query-proxy", ["require", "exports", "dojo/_base/lang", "la
         };
         return Query;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Query;
     function run() {
         new Query("//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StateCityHighway_USA/MapServer/1/query")
@@ -1009,7 +1015,8 @@ define("labs/ags-map-query-proxy", ["require", "exports", "dojo/_base/lang", "la
  */
 define("labs/ags-reverse-geocode-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
-    var ReverseGeocode = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var ReverseGeocode = /** @class */ (function () {
         function ReverseGeocode(url) {
             this.ajax = new Ajax(url);
             this.ajax.options.use_jsonp = true;
@@ -1027,7 +1034,6 @@ define("labs/ags-reverse-geocode-proxy", ["require", "exports", "dojo/_base/lang
         };
         return ReverseGeocode;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = ReverseGeocode;
     function run() {
         new ReverseGeocode("//geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode")
@@ -1272,7 +1278,8 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                 "lastModifiedDateTime": "0001-01-01T00:00:00",
                 "id": 1174,
                 "href": "/generic/Hansen.Routing.Route?query={select:[ActivityDate,AddedBy,AddedDateTime,EndGpsXCoordinate,EndGpsYCoordinate,EndGpsZCoordinate,LastModifiedBy,LastModifiedDateTime,RouteKey,StartGpsXCoordinate,StartGpsYCoordinate,StartGpsZCoordinate],distinct:False,filter:[{property:RouteKey,operator:Equal,value:1174}]}"
-            }],
+            }
+        ],
         "responseStatus": {
             "severity": "Success"
         }
@@ -1311,6 +1318,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
 });
 define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esri/map", "esri/layers/GraphicsLayer", "esri/graphic", "esri/geometry/Point", "esri/geometry/Polyline", "esri/SpatialReference", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/TextSymbol", "esri/Color", "esri/InfoTemplate", "dojo/_base/event", "esri/symbols/Font", "esri/toolbars/edit", "esri/geometry/Extent", "dojo/Evented"], function (require, exports, route, Map, GraphicsLayer, Graphic, Point, Polyline, SpatialReference, SimpleMarkerSymbol, SimpleLineSymbol, TextSymbol, Color, InfoTemplate, event, Font, Edit, Extent, Evented) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var epsg4326 = new SpatialReference("4326");
     var epsg3857 = new SpatialReference("102100");
     var delta = 24;
@@ -1431,7 +1439,7 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
     (function (RouteViewer) {
         ;
         ;
-        var RouteView = (function () {
+        var RouteView = /** @class */ (function () {
             function RouteView(options) {
                 var _this = this;
                 this.options = options;
@@ -1540,7 +1548,7 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
                         var circleSymbol = new SimpleMarkerSymbol(stopStyle(routeInfo, item));
                         var textSymbol = new TextSymbol(textStyle(routeInfo, item));
                         var attributes = {};
-                        var template = new InfoTemplate(function () { return (args.route.employeeFullName + " " + item.activity.moniker + " " + item.activity.primaryKey); }, function () { return ("" + JSON.stringify(item)); });
+                        var template = new InfoTemplate(function () { return args.route.employeeFullName + " " + item.activity.moniker + " " + item.activity.primaryKey; }, function () { return "" + JSON.stringify(item); });
                         var stop = new Graphic(geometry, circleSymbol, attributes, template);
                         var label = new Graphic(geometry, textSymbol);
                         return {
@@ -1792,7 +1800,8 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
 });
 define("labs/ags-solve-proxy", ["require", "exports", "labs/ajax"], function (require, exports, Ajax) {
     "use strict";
-    var BaseSolve = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var BaseSolve = /** @class */ (function () {
         function BaseSolve(url) {
             this.ajax = new Ajax(url);
         }
@@ -1802,7 +1811,6 @@ define("labs/ags-solve-proxy", ["require", "exports", "labs/ajax"], function (re
         ;
         return BaseSolve;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = BaseSolve;
     function run() {
         console.log("this is an abstract class for route, closest facility and service area");
@@ -1811,13 +1819,14 @@ define("labs/ags-solve-proxy", ["require", "exports", "labs/ajax"], function (re
 });
 define("labs/ags-route-solve-proxy", ["require", "exports", "labs/ags-solve-proxy", "dojo/_base/lang"], function (require, exports, ags_solve_proxy_1, lang) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     /**
      * http://sampleserver6.arcgisonline.com/arcgis/sdk/rest/index.html#/Network_Layer/02ss0000009p000000/
      */
-    var RouteSolve = (function (_super) {
+    var RouteSolve = /** @class */ (function (_super) {
         __extends(RouteSolve, _super);
         function RouteSolve() {
-            _super.apply(this, arguments);
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         /**
          * http://sampleserver6.arcgisonline.com/arcgis/sdk/rest/index.html#/Solve_Route/02ss0000001t000000/
@@ -1834,12 +1843,11 @@ define("labs/ags-route-solve-proxy", ["require", "exports", "labs/ags-solve-prox
                 directionsLengthUnits: "esriNAUMiles",
                 f: "pjson"
             }, data);
-            req.stops = data.stops.map(function (p) { return (p.x + "," + p.y); }).join(';');
+            req.stops = data.stops.map(function (p) { return p.x + "," + p.y; }).join(';');
             return this.ajax.get(req);
         };
         return RouteSolve;
     }(ags_solve_proxy_1.default));
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = RouteSolve;
     function run() {
         new RouteSolve("//sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/Route/solve")
@@ -1859,10 +1867,11 @@ define("labs/ags-route-solve-proxy", ["require", "exports", "labs/ags-solve-prox
 });
 define("labs/ags-servicearea-solve-proxy", ["require", "exports", "labs/ags-solve-proxy", "dojo/_base/lang"], function (require, exports, ags_solve_proxy_2, lang) {
     "use strict";
-    var ServiceAreaSolve = (function (_super) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var ServiceAreaSolve = /** @class */ (function (_super) {
         __extends(ServiceAreaSolve, _super);
         function ServiceAreaSolve() {
-            _super.apply(this, arguments);
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         ServiceAreaSolve.prototype.solve = function (data) {
             /**
@@ -1916,7 +1925,6 @@ define("labs/ags-servicearea-solve-proxy", ["require", "exports", "labs/ags-solv
         };
         return ServiceAreaSolve;
     }(ags_solve_proxy_2.default));
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = ServiceAreaSolve;
     function run() {
         new ServiceAreaSolve("//sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/ServiceArea/solveServiceArea")
@@ -1940,7 +1948,8 @@ define("labs/ags-servicearea-solve-proxy", ["require", "exports", "labs/ags-solv
 });
 define("labs/ags-suggest-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
-    var Suggest = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Suggest = /** @class */ (function () {
         function Suggest(url) {
             this.ajax = new Ajax(url);
         }
@@ -1954,7 +1963,6 @@ define("labs/ags-suggest-proxy", ["require", "exports", "dojo/_base/lang", "labs
         };
         return Suggest;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Suggest;
     function run() {
         new Suggest("https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest")
@@ -1969,6 +1977,7 @@ define("labs/ags-suggest-proxy", ["require", "exports", "dojo/_base/lang", "labs
 });
 define("labs/ags-webmap", ["require", "exports", "esri/arcgis/utils", "esri/arcgis/OAuthInfo", "esri/IdentityManager"], function (require, exports, utils, OAuthInfo, IdentityManager) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     //https://www.arcgis.com/sharing/oauth2/approve?oauth_state=GD6ps1QHrIq-evMlDEj9BkwQqP8qtCMm-r1-zNkUobLFtk4E04D7TJ4Cn0pkeZ56svApgSHK9iRY7HasLI4YrUYIP5wunF_syiATUiY4hyenri_P2OazODUVl28SwOONAOZKzbRVIHamNdtpSo_sBtl_ahDqHArMbiV3dxkDMgr5eLWYpaJxFpGIdMpj0bjaSz_OcgrHej3jmUT-RBRlQrKhgFdHmFmf0k8zhfKIYx8GnlzS6BqZqNo8Hz0ZIpQuTAfza-qg4ZyhMS8DhEI377hLlrb5PMcTeDl7-NpMlfyDjWHecmI0OmOLEOaMSy58LYaFJtZIH46c7fKvE5ESZg..
     // https://www.arcgis.com/sharing/oauth2/authorize?client_id=313b7327133f4802affee46893b4bec7&response_type=token&state=%7B%22portalUrl%22%3A%22https%3A%2F%2Fwww.arcgis.com%22%7D&expiration=20160&redirect_uri=http%3A%2F%2Flocalhost%2Fags-lab%2Foauth-callback.html
     function run(appId) {
@@ -2016,6 +2025,7 @@ define("labs/ags-webmap", ["require", "exports", "esri/arcgis/utils", "esri/arcg
 });
 define("labs/console", ["require", "exports"], function (require, exports) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function run() {
         var content = document.getElementById("console");
         if (!content)
@@ -2024,7 +2034,7 @@ define("labs/console", ["require", "exports"], function (require, exports) {
         console.log = function () {
             var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i - 0] = arguments[_i];
+                args[_i] = arguments[_i];
             }
             log.apply(console, args);
             var div = document.createElement("textarea");
@@ -2036,6 +2046,7 @@ define("labs/console", ["require", "exports"], function (require, exports) {
 });
 define("labs/index", ["require", "exports"], function (require, exports) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function run() {
         var l = window.location;
         var path = "" + l.origin + l.pathname + "?run=labs/";
@@ -2049,7 +2060,7 @@ define("labs/index", ["require", "exports"], function (require, exports) {
             .split(/ /)
             .map(function (v) { return v.trim(); })
             .filter(function (v) { return !!v; })
-            .map(function (lab) { return ("<div class='test'><a href='" + path + lab + "&debug=1'>" + lab + "</a></div>"); })
+            .map(function (lab) { return "<div class='test'><a href='" + path + lab + "&debug=1'>" + lab + "</a></div>"; })
             .join("\n");
         var testDiv = document.createElement("div");
         document.body.appendChild(testDiv);
@@ -2059,7 +2070,8 @@ define("labs/index", ["require", "exports"], function (require, exports) {
 });
 define("labs/pubsub", ["require", "exports"], function (require, exports) {
     "use strict";
-    var PubSub = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var PubSub = /** @class */ (function () {
         function PubSub() {
             this.topics = {};
         }
@@ -2080,7 +2092,6 @@ define("labs/pubsub", ["require", "exports"], function (require, exports) {
         };
         return PubSub;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = PubSub;
     function run() {
         var topic = new PubSub();
@@ -2089,8 +2100,9 @@ define("labs/pubsub", ["require", "exports"], function (require, exports) {
     }
     exports.run = run;
 });
-define("labs/maplet", ["require", "exports", 'dojo/dom-construct', "labs/pubsub", "esri/map", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/SimpleFillSymbol", "esri/geometry/Point", "esri/geometry/Polygon", "esri/graphic", "esri/renderers/HeatmapRenderer", "esri/layers/FeatureLayer", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/ArcGISDynamicMapServiceLayer"], function (require, exports, domConstruct, pubsub_1, Map, MarkerSymbol, LineSymbol, FillSymbol, Point, Polygon, Graphic, HeatmapRenderer, FeatureLayer, ArcGISTiledMapServiceLayer, ArcGISDynamicMapServiceLayer) {
+define("labs/maplet", ["require", "exports", "dojo/dom-construct", "labs/pubsub", "esri/map", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/SimpleFillSymbol", "esri/geometry/Point", "esri/geometry/Polygon", "esri/graphic", "esri/renderers/HeatmapRenderer", "esri/layers/FeatureLayer", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/ArcGISDynamicMapServiceLayer"], function (require, exports, domConstruct, pubsub_1, Map, MarkerSymbol, LineSymbol, FillSymbol, Point, Polygon, Graphic, HeatmapRenderer, FeatureLayer, ArcGISTiledMapServiceLayer, ArcGISDynamicMapServiceLayer) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var topic = new pubsub_1.default();
     var asList = function (nodeList) {
         var result = [];
@@ -2134,7 +2146,7 @@ define("labs/maplet", ["require", "exports", 'dojo/dom-construct', "labs/pubsub"
         var events = asList(document.querySelectorAll("[data-event]"));
         events.forEach(function (e) { return e.addEventListener("click", function () { return topic.publish(e.dataset["event"], e); }); });
     }
-    var Maplet = (function () {
+    var Maplet = /** @class */ (function () {
         function Maplet(element) {
             var map = new Map(element, {
                 center: new Point(-122, 37)
@@ -2184,7 +2196,6 @@ define("labs/maplet", ["require", "exports", 'dojo/dom-construct', "labs/pubsub"
         };
         return Maplet;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Maplet;
     function run() {
         watchers();
@@ -2215,6 +2226,23 @@ define("labs/maplet", ["require", "exports", 'dojo/dom-construct', "labs/pubsub"
     }
     exports.run = run;
 });
+var mappings = {
+    source: {
+        url: "http://usalvwdgis1:6080/arcgis/rest/services/Annotations/H840_Annotations/FeatureServer/3",
+        type: "ags"
+    },
+    target: {
+        url: "http://usalvwdgis1:6080/arcgis/rest/services/Annotations/H840_Annotations/FeatureServer/3",
+        type: "wfs"
+    },
+    mapping: {
+        "GlobalID": "globalid",
+        "H8EXPDATE": "h8expdate",
+        "last_edited_user": "last_edited_user",
+        "last_edited_date": "last_edited_date",
+        "shape": "geom"
+    }
+};
 /**
  * https://developers.google.com/earth-engine/geometries_planar_geodesic?hl=en
  * geodesic: shortest path on the surface of a earth
@@ -2226,6 +2254,7 @@ define("labs/maplet", ["require", "exports", 'dojo/dom-construct', "labs/pubsub"
  */
 define("ux/geodesic-planar-ux", ["require", "exports", "esri/map", "esri/dijit/Scalebar", "esri/dijit/Measurement", "esri/units", "esri/config", "esri/tasks/GeometryService", "esri/tasks/BufferParameters", "esri/tasks/LengthsParameters", "esri/symbols/SimpleFillSymbol", "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/Color", "dojo/Deferred"], function (require, exports, Map, Scalebar, Measurement, Units, Config, GeometryService, BufferParameters, LengthsParameters, SimpleFillSymbol, SimpleLineSymbol, Graphic, Color, Deferred) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var geometryService = Config.defaults.geometryService = new GeometryService("https://sampleserver6.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer");
     /**
      * Giving SystemJS a try to transform coordinates to 4326 before using geodesy to calculate distances
@@ -2314,6 +2343,7 @@ define("ux/geodesic-planar-ux", ["require", "exports", "esri/map", "esri/dijit/S
 //import "esri/IdentityManager";
 define("ux/routing-prototype", ["require", "exports", "dijit/registry", "dojo/on", "dojo/topic", "dojo/dom-construct", "dojo/debounce", "esri/InfoTemplate", "esri/dijit/Directions", "esri/symbols/SimpleLineSymbol", "esri/symbols/SimpleMarkerSymbol", "esri/Color", "esri/graphic", "esri/tasks/RouteParameters", "ips/services"], function (require, exports, registry, on, topic, domConstruct, debounce, InfoTemplate, DirectionsWidget, SimpleLineSymbol, SimpleMarkerSymbol, Color, Graphic, RouteParams, Services) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var config = {
         zones: [{
                 name: "red",
@@ -2358,7 +2388,7 @@ define("ux/routing-prototype", ["require", "exports", "dijit/registry", "dojo/on
     /**
      * container for multiple directions widgets
     */
-    var RouteManager = (function () {
+    var RouteManager = /** @class */ (function () {
         function RouteManager(routesDom, config) {
             this.routesDom = routesDom;
             this.config = config;
@@ -2544,7 +2574,7 @@ define("ux/routing-prototype", ["require", "exports", "dijit/registry", "dojo/on
                 var data = routeItem;
                 var keys = Object.keys(data).filter(function (k) { return typeof data[k] !== "Object"; });
                 keys = "id,isActivityCompleted,scheduledDate,activityType,lastModifiedBy,lastModifiedDateTime".split(',');
-                var body = domConstruct.toDom("" + keys.map(function (k) { return (k + ": " + data[k]); }).join("<br/>"));
+                var body = domConstruct.toDom("" + keys.map(function (k) { return k + ": " + data[k]; }).join("<br/>"));
                 var showInfo = domConstruct.toDom("<a title=\"Show Info\" to=\"\" class=\"command showInfo\"><span>Show Info</span></a>");
                 on(showInfo, "click", function () { return topic.publish("routing/show-info", routeItem.activity); });
                 var commands = domConstruct.toDom("<div class=\"commands\"></div>");

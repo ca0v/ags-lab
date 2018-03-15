@@ -5,6 +5,20 @@
 import lang = require("dojo/_base/lang");
 import Ajax = require("./ajax");
 
+interface QueryResponse {
+    objectIdFieldName: string;
+    globalIdFieldName: string;
+    fields: Array<{
+        name: string;
+        alias: string;
+        type: string;
+        length: number;
+    }>;
+    features: Array<{
+        attributes: any;
+    }>;
+}
+
 export default class Query {
     private ajax: Ajax;
 
@@ -71,19 +85,7 @@ export function run() {
             outFields: ["symbolname"],
             returnDistinctValues: true
         })
-        .then((value: {
-            objectIdFieldName: string;
-            globalIdFieldName: string;
-            fields: Array<{
-                name: string;
-                alias: string;
-                type: string;
-                length: number;
-            }>;
-            features: Array<{
-                attributes: any;
-            }>;
-        }) => {
+        .then((value: QueryResponse) => {
             console.log("query", value);
         });
 } 
