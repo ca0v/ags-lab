@@ -1,17 +1,31 @@
 <html>
-    <head>
-        <style>
-            .frame {
-                width: 480px;
-                height: 480px;
-            }
-        </style>
-    </head>
-    <body>
-            <div>ArcGIS Javascript API 3.x</div>
-            <iframe src="v3/index.html" class="frame"></iframe>
-            
-            <div>ArcGIS Javascript API 4.x</div>
-            <iframe src="v4/index.html" class="frame"></iframe>
-        </body>
+
+<head>
+    <style>
+        label {
+            display: block;
+        }
+
+        .frame {
+            display: inline-block;
+        }
+        iframe {
+            width: 512px;
+            height: 512px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="frame">
+            <label>ArcGIS Javascript API 3.x</label>
+            <iframe src="v3/index.html"></iframe>
+    </div>
+
+    <div class="frame">
+            <label>ArcGIS Javascript API 4.x</label>
+            <iframe src="v4/index.html"></iframe>
+    </div>
+</body>
+
 </html>
