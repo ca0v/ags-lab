@@ -1,4 +1,9 @@
-﻿body {
+﻿.map {
+    width: 1024px;
+    height: 640px;
+}
+
+body {
     font-family: 'Segoe UI', sans-serif;
 }
 

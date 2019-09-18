@@ -1,14 +1,19 @@
-var __extends = (this && this.__extends) || function (d, b) {
-    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
-    function __() { this.constructor = d; }
-    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
-};
+var __extends = (this && this.__extends) || (function () {
+    var extendStatics = Object.setPrototypeOf ||
+        ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+        function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+    return function (d, b) {
+        extendStatics(d, b);
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+})();
 /**
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
  */
 define("labs/ajax", ["require", "exports"], function (require, exports) {
     "use strict";
-    var Ajax = (function () {
+    var Ajax = /** @class */ (function () {
         function Ajax(url) {
             this.url = url;
             this.options = {
@@ -21,7 +26,7 @@ define("labs/ajax", ["require", "exports"], function (require, exports) {
             if (url === void 0) { url = this.url; }
             return new Promise(function (resolve, reject) {
                 args["callback"] = "define";
-                var uri = url + "?" + Object.keys(args).map(function (k) { return (k + "=" + args[k]); }).join('&');
+                var uri = url + "?" + Object.keys(args).map(function (k) { return k + "=" + args[k]; }).join('&');
                 require([uri], function (data) { return resolve(data); });
             });
         };
@@ -103,7 +108,8 @@ define("labs/ajax", ["require", "exports"], function (require, exports) {
  */
 define("labs/ags-feature-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
-    var FeatureServer = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var FeatureServer = /** @class */ (function () {
         function FeatureServer(url) {
             this.ajax = new Ajax(url);
         }
@@ -122,7 +128,6 @@ define("labs/ags-feature-proxy", ["require", "exports", "dojo/_base/lang", "labs
         };
         return FeatureServer;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = FeatureServer;
     function run() {
         var service = new FeatureServer("//sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer");
@@ -143,7 +148,8 @@ define("labs/ags-feature-proxy", ["require", "exports", "dojo/_base/lang", "labs
  */
 define("labs/ags-catalog-proxy", ["require", "exports", "dojo/_base/lang", "labs/ags-feature-proxy", "labs/ajax"], function (require, exports, lang, ags_feature_proxy_1, Ajax) {
     "use strict";
-    var Catalog = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Catalog = /** @class */ (function () {
         function Catalog(url) {
             this.ajax = new Ajax(url);
         }
@@ -162,7 +168,6 @@ define("labs/ags-catalog-proxy", ["require", "exports", "dojo/_base/lang", "labs
         };
         return Catalog;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Catalog;
     function run() {
         var url = "//sampleserver6.arcgisonline.com/arcgis/rest/services";
@@ -190,8 +195,9 @@ define("app", ["require", "exports", "labs/ags-catalog-proxy"], function (requir
 });
 define("ips/services", ["require", "exports", "labs/ajax", "dojo/_base/lang", "dojo/Deferred"], function (require, exports, Ajax, lang, Deferred) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var __DEV__ = 0;
-    var test = (function () {
+    var test = /** @class */ (function () {
         function test() {
         }
         test.ips_route_response = {
@@ -425,7 +431,7 @@ define("ips/services", ["require", "exports", "labs/ajax", "dojo/_base/lang", "d
         };
         return test;
     }());
-    var Routing = (function () {
+    var Routing = /** @class */ (function () {
         function Routing(api) {
             this.api = api;
         }
@@ -535,7 +541,8 @@ define("ips/services", ["require", "exports", "labs/ajax", "dojo/_base/lang", "d
  */
 define("labs/ags-feature-query-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
-    var Query = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Query = /** @class */ (function () {
         function Query(url) {
             this.ajax = new Ajax(url);
         }
@@ -559,7 +566,6 @@ define("labs/ags-feature-query-proxy", ["require", "exports", "dojo/_base/lang",
         };
         return Query;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Query;
     function run() {
         new Query("https://sampleserver6.arcgisonline.com/arcgis/rest/services/Military/FeatureServer/3/query")
@@ -578,7 +584,8 @@ define("labs/ags-feature-query-proxy", ["require", "exports", "dojo/_base/lang",
  */
 define("labs/ags-find-address-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
-    var FindAddress = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var FindAddress = /** @class */ (function () {
         function FindAddress(url) {
             this.ajax = new Ajax(url);
         }
@@ -595,7 +602,6 @@ define("labs/ags-find-address-proxy", ["require", "exports", "dojo/_base/lang", 
         };
         return FindAddress;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = FindAddress;
     function run() {
         new FindAddress("https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates")
@@ -616,7 +622,8 @@ define("labs/ags-find-address-proxy", ["require", "exports", "dojo/_base/lang", 
  */
 define("labs/ags-find-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
-    var Find = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Find = /** @class */ (function () {
         function Find(url) {
             this.ajax = new Ajax(url);
         }
@@ -633,7 +640,6 @@ define("labs/ags-find-proxy", ["require", "exports", "dojo/_base/lang", "labs/aj
         };
         return Find;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Find;
     function run() {
         new Find("//geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/find")
@@ -655,13 +661,14 @@ define("labs/ags-find-proxy", ["require", "exports", "dojo/_base/lang", "labs/aj
  */
 define("labs/ags-geometry-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     // see http://resources.esri.com/help/9.3/ArcGISDesktop/ArcObjects/esriGeometry/esriSRUnitType.htm
     var esriSRUnitType;
     (function (esriSRUnitType) {
         esriSRUnitType[esriSRUnitType["Meter"] = 9001] = "Meter";
         esriSRUnitType[esriSRUnitType["Kilometer"] = 9036] = "Kilometer";
     })(esriSRUnitType || (esriSRUnitType = {}));
-    var Geometry = (function () {
+    var Geometry = /** @class */ (function () {
         function Geometry(url) {
             this.ajax = new Ajax(url);
         }
@@ -693,7 +700,6 @@ define("labs/ags-geometry-proxy", ["require", "exports", "dojo/_base/lang", "lab
         };
         return Geometry;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Geometry;
     function run() {
         new Geometry("//sampleserver6.arcgisonline.com/arcgis/rest/services/Utilities/Geometry/GeometryServer/lengths")
@@ -723,7 +729,8 @@ define("labs/ags-geometry-proxy", ["require", "exports", "dojo/_base/lang", "lab
  */
 define("labs/ags-lrs-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
-    var Lrs = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Lrs = /** @class */ (function () {
         function Lrs(url) {
             this.ajax = new Ajax(url);
             this.ajax.options.use_jsonp = true;
@@ -751,7 +758,7 @@ define("labs/ags-lrs-proxy", ["require", "exports", "dojo/_base/lang", "labs/aja
                 f: "pjson"
             }, data);
             req.locations = JSON.stringify(req.locations);
-            req.targetNetworkLayerIds = ("[" + req.targetNetworkLayerIds + "]");
+            req.targetNetworkLayerIds = "[" + req.targetNetworkLayerIds + "]";
             return this.ajax.get(req);
         };
         Lrs.prototype.queryAttributeSet = function (data) {
@@ -783,7 +790,6 @@ define("labs/ags-lrs-proxy", ["require", "exports", "dojo/_base/lang", "labs/aja
         };
         return Lrs;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Lrs;
     function run() {
         // geometryToMeasure
@@ -848,10 +854,11 @@ define("labs/ags-lrs-proxy", ["require", "exports", "dojo/_base/lang", "labs/aja
  */
 define("labs/ags-map-export-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     /**
      * mapserver export
      */
-    var Export = (function () {
+    var Export = /** @class */ (function () {
         function Export(url) {
             this.ajax = new Ajax(url);
             this.ajax.options.use_jsonp = true;
@@ -872,7 +879,6 @@ define("labs/ags-map-export-proxy", ["require", "exports", "dojo/_base/lang", "l
         };
         return Export;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Export;
     function run() {
         new Export("//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/export")
@@ -890,10 +896,11 @@ define("labs/ags-map-export-proxy", ["require", "exports", "dojo/_base/lang", "l
  */
 define("labs/ags-map-find-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     /**
      * mapserver find
      */
-    var Find = (function () {
+    var Find = /** @class */ (function () {
         function Find(url) {
             this.ajax = new Ajax(url);
             this.ajax.options.use_jsonp = true;
@@ -908,7 +915,6 @@ define("labs/ags-map-find-proxy", ["require", "exports", "dojo/_base/lang", "lab
         };
         return Find;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Find;
     function run() {
         new Find("//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StatesCitiesRivers_USA/MapServer/find")
@@ -927,10 +933,11 @@ define("labs/ags-map-find-proxy", ["require", "exports", "dojo/_base/lang", "lab
  */
 define("labs/ags-map-identify-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     /**
      * mapserver identify
      */
-    var Identify = (function () {
+    var Identify = /** @class */ (function () {
         function Identify(url) {
             this.ajax = new Ajax(url);
             this.ajax.options.use_jsonp = true;
@@ -942,12 +949,11 @@ define("labs/ags-map-identify-proxy", ["require", "exports", "dojo/_base/lang", 
                 f: "pjson"
             }, data);
             req.mapExtent = req.mapExtent.join(",");
-            req.imageDisplay = (req.imageDisplay.width + "," + req.imageDisplay.height + "," + req.imageDisplay.dpi);
+            req.imageDisplay = req.imageDisplay.width + "," + req.imageDisplay.height + "," + req.imageDisplay.dpi;
             return this.ajax.get(req);
         };
         return Identify;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Identify;
     function run() {
         new Identify("//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StateCityHighway_USA/MapServer/identify")
@@ -973,10 +979,11 @@ define("labs/ags-map-identify-proxy", ["require", "exports", "dojo/_base/lang", 
  */
 define("labs/ags-map-query-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     /**
      * mapserver query
      */
-    var Query = (function () {
+    var Query = /** @class */ (function () {
         function Query(url) {
             this.ajax = new Ajax(url);
             this.ajax.options.use_jsonp = true;
@@ -993,7 +1000,6 @@ define("labs/ags-map-query-proxy", ["require", "exports", "dojo/_base/lang", "la
         };
         return Query;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Query;
     function run() {
         new Query("//sampleserver1.arcgisonline.com/ArcGIS/rest/services/Specialty/ESRI_StateCityHighway_USA/MapServer/1/query")
@@ -1009,7 +1015,8 @@ define("labs/ags-map-query-proxy", ["require", "exports", "dojo/_base/lang", "la
  */
 define("labs/ags-reverse-geocode-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
-    var ReverseGeocode = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var ReverseGeocode = /** @class */ (function () {
         function ReverseGeocode(url) {
             this.ajax = new Ajax(url);
             this.ajax.options.use_jsonp = true;
@@ -1027,7 +1034,6 @@ define("labs/ags-reverse-geocode-proxy", ["require", "exports", "dojo/_base/lang
         };
         return ReverseGeocode;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = ReverseGeocode;
     function run() {
         new ReverseGeocode("//geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/reverseGeocode")
@@ -1048,7 +1054,8 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
         "y": 36.194162517804
     };
     var route = {
-        "data": [{
+        "data": [
+            {
                 "employeeId": "10313",
                 "employeeFullName": "Phil S",
                 "routeDate": "2016-04-05T08:57:42",
@@ -1063,7 +1070,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                 "routeItems": [{
                         "ordinalIndex": 2,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1013
                         },
                         "location": {
@@ -1082,7 +1089,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                     {
                         "ordinalIndex": 3,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1014
                         },
                         "location": {
@@ -1101,7 +1108,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                     {
                         "ordinalIndex": 1,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1021
                         },
                         "location": {
@@ -1137,7 +1144,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                 "routeItems": [{
                         "ordinalIndex": 1,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1015
                         },
                         "location": {
@@ -1156,7 +1163,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                     {
                         "ordinalIndex": 2,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1016
                         },
                         "location": {
@@ -1175,7 +1182,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                     {
                         "ordinalIndex": 3,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1017
                         },
                         "location": {
@@ -1194,7 +1201,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                     {
                         "ordinalIndex": 4,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1018
                         },
                         "location": {
@@ -1213,7 +1220,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                     {
                         "ordinalIndex": 5,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1019
                         },
                         "location": {
@@ -1232,7 +1239,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                     {
                         "ordinalIndex": 6,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1020
                         },
                         "location": {
@@ -1251,7 +1258,7 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                     {
                         "ordinalIndex": 7,
                         "activity": {
-                            "moniker": "Hansen.CDR.Building.Inspection",
+                            "moniker": "Inspection",
                             "primaryKey": 1022
                         },
                         "location": {
@@ -1271,159 +1278,482 @@ define("labs/data/route01", ["require", "exports"], function (require, exports) 
                 "lastModifiedDateTime": "0001-01-01T00:00:00",
                 "id": 1174,
                 "href": "/generic/Hansen.Routing.Route?query={select:[ActivityDate,AddedBy,AddedDateTime,EndGpsXCoordinate,EndGpsYCoordinate,EndGpsZCoordinate,LastModifiedBy,LastModifiedDateTime,RouteKey,StartGpsXCoordinate,StartGpsYCoordinate,StartGpsZCoordinate],distinct:False,filter:[{property:RouteKey,operator:Equal,value:1174}]}"
-            }],
+            }
+        ],
         "responseStatus": {
             "severity": "Success"
         }
     };
+    route.data.push({
+        startLocation: { x: 0, y: 0 },
+        endLocation: { x: 0, y: 0 },
+        routeItems: [
+            { location: { x: 0, y: 0 } },
+            { location: { x: 0, y: 0 } },
+            { location: { x: 0, y: 0 } },
+            { location: { x: 0, y: 0 } },
+            { location: { x: 0, y: 0 } }
+        ]
+    });
+    route.data.forEach(function (data) {
+        for (var i = 0; i < 10; i++)
+            data.routeItems.push({ location: { x: 0, y: 0 } });
+    });
+    var offset = 0.01;
     route.data.forEach(function (data, j) {
-        data.startLocation = data.endLocation = center;
+        data.startLocation = {
+            x: center.x + offset * (1 - Math.random()),
+            y: center.y + offset * (1 - Math.random())
+        };
+        data.endLocation = {
+            x: center.x + offset * (1 - Math.random()),
+            y: center.y + offset * (1 - Math.random())
+        };
         data.routeItems.forEach(function (item, i) {
-            item.location.x = center.x + 0.001 * (1 + i * Math.random() + j);
-            item.location.y = center.y + 0.001 * (1 + i + j * Math.random());
+            item.location.x = center.x + offset * ((1 + i + 5 * j) - Math.random());
+            item.location.y = center.y + 5 * offset * (1 - Math.random());
         });
     });
     return route;
 });
-define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esri/map", "esri/layers/GraphicsLayer", "esri/graphic", "esri/geometry/Point", "esri/geometry/Polyline", "esri/SpatialReference", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/TextSymbol", "esri/Color", "esri/InfoTemplate", "dojo/_base/event", "esri/symbols/Font", "esri/toolbars/edit", "esri/geometry/Extent"], function (require, exports, route, Map, GraphicsLayer, Graphic, Point, Polyline, SpatialReference, SimpleMarkerSymbol, SimpleLineSymbol, TextSymbol, Color, InfoTemplate, event, Font, Edit, Extent) {
+define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esri/map", "esri/layers/GraphicsLayer", "esri/graphic", "esri/geometry/Point", "esri/geometry/Polyline", "esri/SpatialReference", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/TextSymbol", "esri/Color", "esri/InfoTemplate", "dojo/_base/event", "esri/symbols/Font", "esri/toolbars/edit", "esri/geometry/Extent", "dojo/Evented"], function (require, exports, route, Map, GraphicsLayer, Graphic, Point, Polyline, SpatialReference, SimpleMarkerSymbol, SimpleLineSymbol, TextSymbol, Color, InfoTemplate, event, Font, Edit, Extent, Evented) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var epsg4326 = new SpatialReference("4326");
     var epsg3857 = new SpatialReference("102100");
-    var delta = 32;
-    var colors = [new Color("#ffa800"), new Color("#1D5F8A"), new Color("yellow")];
-    var white = new Color("white");
+    var delta = 24;
+    var routeColors = [new Color("#ffa800"), new Color("#1D5F8A"), new Color("yellow")];
+    var underlayColor = new Color("white");
+    var orphanColor = new Color("red");
+    var hiliteColor = new Color("#00FF00");
+    var routeLineStyle = function (routeInfo) { return ({
+        color: routeInfo.color,
+        width: 2,
+        type: "esriSLS",
+        style: "esriSLSShortDot"
+    }); };
+    var routeUnderlayStyle = function (routeInfo) { return ({
+        color: underlayColor,
+        width: 4,
+        type: "esriSLS",
+        style: "esriSLSSolid"
+    }); };
+    var editorLineStyle = {
+        color: hiliteColor,
+        width: 3,
+        type: "esriSLS",
+        style: "esriSLSDot"
+    };
+    var editorVertexStyle = {
+        color: [0, 0, 0, 0],
+        size: delta,
+        type: "esriSMS",
+        style: "esriSMSCircle",
+        outline: {
+            color: hiliteColor,
+            width: delta / 8,
+            type: "esriSLS",
+            style: "esriSLSSolid"
+        }
+    };
+    var editorMinorVertexStyle = function (routeInfo) { return ({
+        color: routeInfo.color,
+        size: delta / 2,
+        type: "esriSMS",
+        style: "esriSMSCircle",
+        outline: {
+            color: hiliteColor,
+            width: delta / 8,
+            type: "esriSLS",
+            style: "esriSLSSolid"
+        }
+    }); };
+    var textStyle = function (routeInfo, routeItem) { return ({
+        text: (1 + routeItem.ordinalIndex + ""),
+        font: new Font(delta / 2),
+        color: underlayColor,
+        yoffset: -delta / 6,
+        haloColor: routeInfo.color,
+        haloSize: 1
+    }); };
+    var stopStyle = function (routeInfo, routeItem) { return ({
+        type: "esriSMS",
+        style: "esriSMSCircle",
+        size: delta,
+        color: routeInfo.color,
+        outline: {
+            type: "esriSLS",
+            style: "esriSLSSolid",
+            color: underlayColor,
+            width: delta / 8
+        }
+    }); };
+    var terminalStyle = function (routeInfo) { return ({
+        type: "esriSMS",
+        style: "esriSMSX",
+        size: delta / 2,
+        color: routeInfo.color,
+        outline: {
+            type: "esriSLS",
+            style: "esriSLSSolid",
+            color: routeInfo.color,
+            width: delta / 8
+        }
+    }); };
+    var activeVertexStyle = function (routeInfo) { return ({
+        "color": routeInfo.color,
+        "size": delta / 2,
+        "angle": 0,
+        "xoffset": 0,
+        "yoffset": 0,
+        "type": "esriSMS",
+        "style": "esriSMSCircle",
+        "outline": {
+            "color": underlayColor,
+            "width": delta / 8,
+            "type": "esriSLS",
+            "style": "esriSLSSolid"
+        }
+    }); };
+    var cursorStyle = function (routeInfo, text) { return ({
+        text: text,
+        font: new Font(delta / 2),
+        color: routeInfo.color,
+        xoffset: delta,
+        yoffset: -delta / 6,
+        haloColor: underlayColor,
+        haloSize: 1
+    }); };
+    function first(arr, filter) {
+        var result;
+        return arr.some(function (v) { result = v; return filter(v); }) ? result : undefined;
+    }
+    function indexOf(arr, filter) {
+        var result;
+        return arr.some(function (v, i) { result = i; return filter(v); }) ? result : undefined;
+    }
+    function asGeom(location) {
+        return new Point(location.x, location.y);
+    }
     var RouteViewer;
     (function (RouteViewer) {
-        var RouteView = (function () {
+        ;
+        ;
+        var RouteView = /** @class */ (function () {
             function RouteView(options) {
                 var _this = this;
                 this.options = options;
+                this.events = new Evented();
+                this.destroyables = [];
                 var map = options.map;
                 var layer = this.layer = new GraphicsLayer();
-                /*
-                layer.on("click", args => {
-                    // need to manually query to register multiple features
-                    map.infoWindow.setFeatures([args.target]);
-                    map.infoWindow.show(args.mapPoint);
-                })
-                */
                 options.map.addLayer(layer);
                 this.routes = [];
+                this.orphans = [];
                 route.data.map(function (data, colorIndex) { return _this.add({
                     route: data,
-                    color: colors[colorIndex % colors.length]
-                }); });
+                    color: routeColors[colorIndex % routeColors.length]
+                }); }).forEach(function (route) { return _this.redraw(route); });
             }
-            RouteView.prototype.add = function (args) {
-                var _this = this;
-                if (args.route) {
-                    var routeInfo = {
-                        routeLine: null,
-                        stops: null
-                    };
-                    this.routes.push(routeInfo);
-                    {
-                        var getGeom = function () {
-                            var path = args.route.routeItems.map(function (item) { return [item.location.x, item.location.y]; });
-                            var geometry = new Polyline(path);
-                            console.log("line", geometry);
-                            return geometry;
-                        };
-                        var attributes = {};
-                        var template = new InfoTemplate(function () { return ("" + args.route.employeeFullName); }, function () { return ("DATE: " + args.route.routeDate); });
-                        routeInfo.routeLine = new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SHORTDOT, args.color, delta / 8), attributes, template);
-                        this.layer.add(new Graphic(getGeom(), new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8)));
-                        this.layer.add(routeInfo.routeLine);
-                    }
-                    routeInfo.stops = args.route.routeItems.map(function (item, itemIndex) {
-                        //let [x, y] = webMercatorUtils.lngLatToXY(route.location.x, route.location.y);
-                        var geometry = new Point(item.location.x, item.location.y);
-                        console.log("point", geometry);
-                        var lineSymbol = new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, white, delta / 8);
-                        var circleSymbol = new SimpleMarkerSymbol(SimpleMarkerSymbol.STYLE_CIRCLE, delta, lineSymbol, args.color);
-                        var textSymbol = new TextSymbol({
-                            text: (1 + itemIndex + ""),
-                            font: new Font(delta / 2),
-                            color: white,
-                            yoffset: -delta / 6,
-                            haloColor: args.color,
-                            haloSize: 1
-                        });
-                        var attributes = {};
-                        var template = new InfoTemplate(function () { return (args.route.employeeFullName + " " + item.activity.moniker + " " + item.activity.primaryKey); }, function () { return ("" + JSON.stringify(item)); });
-                        var stop = new Graphic(geometry, circleSymbol, attributes, template);
-                        _this.layer.add(stop);
-                        _this.layer.add(new Graphic(geometry, textSymbol));
-                        return stop;
-                    });
+            RouteView.prototype.destroy = function () {
+                this.destroyables.reverse().forEach(function (d) { return d(); });
+                this.destroyables = [];
+            };
+            RouteView.prototype.on = function (name, cb) {
+                var handle = this.events.on(name, cb);
+                this.destroyables.push(function () { return handle.remove(); });
+            };
+            RouteView.prototype.trigger = function (name, args) {
+                // just trigger was invoking the callback many times even with prevent/stop set everywhere
+                this.events.emit(name, args);
+            };
+            RouteView.prototype.removeRoute = function (route) {
+                var routeIndex = (typeof route === "number") ? route : this.routes.indexOf(route);
+                return this.routes.splice(routeIndex, 1)[0];
+            };
+            RouteView.prototype.removeOrphan = function (stop) {
+                var index = this.orphans.indexOf(stop);
+                stop = this.orphans.splice(index, 1)[0];
+                this.trigger("remove-orphan", { stop: stop });
+            };
+            RouteView.prototype.addOrphan = function (stop) {
+                this.orphans.push(stop);
+                this.trigger("add-orphan", { stop: stop });
+            };
+            RouteView.prototype.removeStop = function (route, stop) {
+                var routeIndex = (typeof route === "number") ? route : this.routes.indexOf(route);
+                var stopIndex = (typeof stop === "number") ? stop : this.routes[routeIndex].stops.indexOf(stop);
+                var routeInfo = this.routes[routeIndex];
+                var stopInfo = routeInfo.stops.splice(stopIndex, 1)[0];
+                this.trigger("remove-stop", { route: routeInfo, stop: stopInfo });
+            };
+            RouteView.prototype.addStop = function (route, stop, stopIndex) {
+                var routeIndex = (typeof route === "number") ? route : this.routes.indexOf(route);
+                var routeInfo = this.routes[routeIndex];
+                routeInfo.stops.splice(stopIndex, 0, stop);
+                var stopInfo = routeInfo.stops[stopIndex];
+                this.trigger("add-stop", { route: routeInfo, stop: stopInfo });
+            };
+            RouteView.prototype.moveStop = function (stop, location) {
+                stop.stop.setGeometry(location);
+                stop.label.setGeometry(location);
+                var routeInfo = first(this.routes, function (r) { return 0 <= r.stops.indexOf(stop); });
+                var stopInfo = routeInfo && stop;
+                this.trigger("move-stop", { route: routeInfo, stop: stopInfo, location: location });
+            };
+            RouteView.prototype.reassignStop = function (activeRoute, targetRoute, targetStop, activeIndex) {
+                var isOrphan = !targetRoute && targetStop;
+                targetRoute && this.removeStop(targetRoute, targetStop);
+                isOrphan && this.removeOrphan(targetStop);
+                this.addStop(activeRoute, targetStop, activeIndex);
+                this.trigger("reassign-stop", {
+                    source: targetRoute,
+                    target: activeRoute,
+                    stop: targetStop,
+                    index: activeIndex
+                });
+            };
+            RouteView.prototype.unassignStop = function (route, stop) {
+                this.removeStop(route, stop);
+                this.addOrphan(stop);
+                this.trigger("unassign-stop", {
+                    route: route,
+                    stop: stop
+                });
+            };
+            RouteView.prototype.addToLayer = function (info) {
+                var isStop = function (object) { return 'stop' in object; };
+                if (isStop(info)) {
+                    this.layer.add(info.stop);
+                    this.layer.add(info.label);
+                }
+                else {
+                    this.layer.add(info.underlay);
+                    this.layer.add(info.routeLine);
                 }
             };
-            RouteView.prototype.edit = function (editor, graphic) {
+            RouteView.prototype.add = function (args) {
                 var _this = this;
+                var routeInfo = {
+                    color: args.color,
+                    routeLine: null,
+                    stops: null,
+                    startLocation: null,
+                    endLocation: null
+                };
+                this.routes.push(routeInfo);
+                if (1) {
+                    routeInfo.stops = args.route.routeItems.map(function (item, itemIndex) {
+                        var geometry = asGeom(item.location);
+                        var circleSymbol = new SimpleMarkerSymbol(stopStyle(routeInfo, item));
+                        var textSymbol = new TextSymbol(textStyle(routeInfo, item));
+                        var attributes = {};
+                        var template = new InfoTemplate(function () { return args.route.employeeFullName + " " + item.activity.moniker + " " + item.activity.primaryKey; }, function () { return "" + JSON.stringify(item); });
+                        var stop = new Graphic(geometry, circleSymbol, attributes, template);
+                        var label = new Graphic(geometry, textSymbol);
+                        return {
+                            stop: stop,
+                            label: label
+                        };
+                    });
+                    routeInfo.stops.forEach(function (stop) { return _this.addToLayer(stop); });
+                }
+                if (1) {
+                    var circleSymbol = new SimpleMarkerSymbol(terminalStyle(routeInfo));
+                    if (args.route.startLocation) {
+                        var geom = asGeom(args.route.startLocation);
+                        routeInfo.startLocation = {
+                            stop: new Graphic(geom, circleSymbol),
+                            label: new Graphic()
+                        };
+                        this.addToLayer(routeInfo.startLocation);
+                    }
+                    if (args.route.endLocation) {
+                        var geom = asGeom(args.route.endLocation);
+                        routeInfo.endLocation = {
+                            stop: new Graphic(geom, circleSymbol),
+                            label: new Graphic()
+                        };
+                        this.addToLayer(routeInfo.endLocation);
+                    }
+                }
+                return routeInfo;
+            };
+            RouteView.prototype.redraw = function (route) {
+                var _this = this;
+                {
+                    var getGeom = function () {
+                        var stops = [].concat(route.stops);
+                        route.startLocation && stops.unshift(route.startLocation);
+                        route.endLocation && stops.push(route.endLocation);
+                        var path = stops.map(function (stop) { return stop.stop.geometry; }).map(function (p) { return [p.getLongitude(), p.getLatitude()]; });
+                        return new Polyline(path);
+                    };
+                    var geom = getGeom();
+                    if (!route.routeLine) {
+                        route.routeLine = {
+                            routeLine: new Graphic(geom, new SimpleLineSymbol(routeLineStyle(route))),
+                            underlay: new Graphic(geom, new SimpleLineSymbol(routeUnderlayStyle(route)))
+                        };
+                        this.addToLayer(route.routeLine);
+                    }
+                    else {
+                        route.routeLine.underlay.setGeometry(geom);
+                        route.routeLine.routeLine.setGeometry(geom);
+                    }
+                }
+                this.orphans.forEach(function (stop, itemIndex) {
+                    stop.label.symbol.text = (1 + itemIndex + "");
+                    stop.stop.symbol.color = orphanColor;
+                });
+                route.stops.forEach(function (stop, itemIndex) {
+                    stop.stop.symbol.color = route.color;
+                    stop.label.symbol.text = (1 + itemIndex + "");
+                });
+                setTimeout(function () { return _this.moveToFront(route); }, 200);
+            };
+            RouteView.prototype.moveToFront = function (route) {
+                [route.routeLine.routeLine, route.routeLine.underlay].forEach(function (g) {
+                    g.draw();
+                    g.getShapes().forEach(function (s) { return s.moveToBack(); });
+                });
+                route.stops.forEach(function (stop) {
+                    [stop.stop, stop.label].forEach(function (g) {
+                        g.draw();
+                        g.getShapes().forEach(function (s) { return s.moveToFront(); });
+                    });
+                });
+                this.orphans.forEach(function (stop) {
+                    [stop.stop, stop.label].forEach(function (g) {
+                        g.draw();
+                        g.getShapes().forEach(function (s) { return s.moveToFront(); });
+                    });
+                });
+            };
+            RouteView.prototype.edit = function (editor, graphic, options) {
+                var _this = this;
+                // ensures callbacks are unregistered
                 editor.deactivate();
-                var routeIndex = -1;
-                if (this.routes.some(function (route, index) {
-                    routeIndex = index;
-                    if (graphic === route.routeLine)
+                var activeRoute = first(this.routes, function (route) {
+                    if (graphic === route.routeLine.routeLine)
+                        return true;
+                    if (graphic === route.routeLine.underlay)
                         return true;
                     if (graphic.geometry.type === "point") {
-                        if (0 <= route.stops.indexOf(graphic))
-                            return true;
+                        return !!first(route.stops, function (stop) { return stop.stop === graphic || stop.label === graphic; });
                     }
-                })) {
-                    editor.activate(Edit.EDIT_VERTICES, this.routes[routeIndex].routeLine);
+                });
+                if (activeRoute) {
+                    this.moveToFront(activeRoute);
+                    editor.activate(Edit.EDIT_VERTICES, activeRoute.routeLine.routeLine, {
+                        ghostVertexSymbol: new SimpleMarkerSymbol(editorMinorVertexStyle(activeRoute))
+                    });
                 }
-                ;
-                editor.on("deactivate", function (evt) {
-                    if (evt.info.isModified) {
-                        console.log("change", evt);
+                else {
+                    console.log("cannot determine route");
+                    return;
+                }
+                var isActiveVertexMinor;
+                var activeVertexIndex;
+                var targetRoute = null && activeRoute;
+                var activeStop = null && activeRoute.stops[0];
+                var targetStop = null && activeRoute.stops[0];
+                var activeLocation;
+                var cursor;
+                var doit = function () {
+                    var isSameStop = activeStop === targetStop;
+                    var isSameRoute = targetRoute === activeRoute;
+                    var isRemoveActiveStop = activeStop && !isActiveVertexMinor && !options.moveStop && !isSameStop;
+                    var isMoveActiveStop = activeStop && !isActiveVertexMinor && options.moveStop && (!targetStop || isSameStop);
+                    var isAddTargetStop = !!targetStop && !isSameStop;
+                    if (isSameStop) {
+                        console.log("dnd onto same stop does nothing");
                     }
-                });
-                editor.on("vertex-move-start", function (args) {
-                    console.log("vertex-move-start");
-                });
-                editor.on("vertex-move-stop", function (args) {
-                    // does it intersect with another stop?
-                    console.log("vertext-move-stop");
-                    var routeLine = _this.routes[routeIndex].routeLine;
-                    var pointIndex = args.vertexinfo.pointIndex;
-                    var segmentIndex = args.vertexinfo.segmentIndex;
-                    var location = routeLine.geometry.getPoint(segmentIndex, pointIndex);
-                    // convert to pixel and find an intersecting stop
-                    var map = _this.options.map;
-                    var extent = map.extent;
-                    var _a = [map.width, map.height], width = _a[0], height = _a[1];
-                    var pixel = map.toScreen(location);
-                    pixel.x -= delta / 2;
-                    pixel.y -= delta / 2;
-                    var topLeft = map.toMap(pixel);
-                    pixel.x += delta;
-                    pixel.y += delta;
-                    var bottomRight = map.toMap(pixel);
-                    extent = new Extent(topLeft.x, bottomRight.y, bottomRight.x, topLeft.y, map.spatialReference);
-                    // search for a stop
-                    var targetStop;
-                    var targetRoute;
-                    if (_this.routes.some(function (route, i) {
-                        targetRoute = i;
-                        return route.stops.some(function (stop, i) {
-                            if (extent.contains(stop.geometry)) {
-                                targetStop = i;
-                                return true;
-                            }
+                    if (isRemoveActiveStop) {
+                        _this.unassignStop(activeRoute, activeStop);
+                    }
+                    if (isAddTargetStop) {
+                        var activeIndex = activeVertexIndex;
+                        if (activeIndex > 0)
+                            activeIndex -= (!!activeRoute.startLocation ? 1 : 0);
+                        _this.reassignStop(activeRoute, targetRoute, targetStop, activeIndex);
+                    }
+                    if (isMoveActiveStop) {
+                        _this.moveStop(activeStop, activeLocation);
+                    }
+                    !isSameRoute && targetRoute && _this.redraw(targetRoute);
+                    _this.redraw(activeRoute);
+                    _this.edit(editor, activeRoute.routeLine.routeLine, options);
+                };
+                var handles = [
+                    editor.on("vertex-move-start", function (args) {
+                        // were on the move!
+                        isActiveVertexMinor = args.vertexinfo.isGhost;
+                        activeVertexIndex = args.vertexinfo.pointIndex;
+                        activeStop = !isActiveVertexMinor && activeRoute.stops[activeVertexIndex - (activeRoute.startLocation ? 1 : 0)];
+                        var g = args.vertexinfo.graphic;
+                        g.setSymbol(new SimpleMarkerSymbol(activeVertexStyle(activeRoute)));
+                        g.draw();
+                    }),
+                    editor.on("vertex-move-stop", function (args) {
+                        if (cursor) {
+                            _this.layer.remove(cursor);
+                            cursor = null;
+                        }
+                        if (args.vertexinfo.pointIndex !== activeVertexIndex)
+                            return;
+                        // does it intersect with another stop?
+                        var routeLine = activeRoute.routeLine;
+                        var pointIndex = args.vertexinfo.pointIndex;
+                        var segmentIndex = args.vertexinfo.segmentIndex;
+                        activeLocation = routeLine.routeLine.geometry.getPoint(segmentIndex, pointIndex);
+                        // convert to pixel and find an intersecting stop
+                        var map = _this.options.map;
+                        var extent = map.extent;
+                        var _a = [map.width, map.height], width = _a[0], height = _a[1];
+                        var pixel = map.toScreen(activeLocation);
+                        pixel.x -= delta / 2;
+                        pixel.y -= delta / 2;
+                        var topLeft = map.toMap(pixel);
+                        pixel.x += delta;
+                        pixel.y += delta;
+                        var bottomRight = map.toMap(pixel);
+                        extent = new Extent(topLeft.x, bottomRight.y, bottomRight.x, topLeft.y, map.spatialReference);
+                        targetRoute = first(_this.routes, function (route) {
+                            targetStop = first(route.stops, function (stop) { return extent.contains(stop.stop.geometry); });
+                            return !!targetStop;
                         });
-                    })) {
-                        console.log("reassign stop " + (targetStop + 1) + " from route " + (targetRoute + 1) + " to route " + (routeIndex + 1));
-                    }
-                    ;
-                });
-                editor.on("vertex-move", function (args) {
-                    // does it intersect with another stop?
-                });
-                editor.on("vertex-add", function (args) {
-                    // does it intersect with another stop?
-                    console.log("vertext-add");
-                });
+                        if (!targetRoute) {
+                            targetStop = first(_this.orphans, function (stop) { return extent.contains(stop.stop.geometry); });
+                        }
+                        doit();
+                    }),
+                    editor.on("vertex-move", function (args) {
+                        // does it intersect with another stop?                    
+                        var map = _this.options.map;
+                        var g = args.vertexinfo.graphic;
+                        var startPoint = g.geometry;
+                        var tx = args.transform;
+                        var endPoint = map.toMap(map.toScreen(startPoint).offset(tx.dx, tx.dy));
+                        // draw a 'cursor' as a hack to render text over the active vertex
+                        if (!cursor) {
+                            cursor = new Graphic(endPoint, new TextSymbol(cursorStyle(activeRoute, (1 + activeVertexIndex - (activeRoute.startLocation ? 1 : 0) + ""))));
+                            _this.layer.add(cursor);
+                        }
+                        else {
+                            cursor.setGeometry(endPoint);
+                            cursor.draw();
+                            cursor.getShape().moveToFront();
+                        }
+                    }),
+                    editor.on("vertex-add", function (args) {
+                        // does it intersect with another stop?
+                    }),
+                    editor.on("deactivate", function (evt) {
+                        // stop listening for editor events
+                        handles.forEach(function (h) { return h.remove(); });
+                    }),
+                ];
             };
             return RouteView;
         }());
@@ -1432,50 +1762,37 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
     function run() {
         var map = new Map(document.getElementById("map"), {
             center: [-115.257, 36.194],
-            zoom: 16,
+            zoom: 13,
             basemap: 'streets'
         });
         {
             var editor_1 = new Edit(map, {
                 allowAddVertices: true,
                 allowDeleteVertices: false,
-                ghostLineSymbol: new SimpleLineSymbol({
-                    color: [0, 255, 0],
-                    width: 3,
-                    type: "esriSLS"
-                }),
-                vertexSymbol: new SimpleMarkerSymbol({
-                    color: [0, 255, 0, 20],
-                    size: delta,
-                    type: "esriSMS",
-                    style: "esrSMSCross",
-                    outline: {
-                        color: [0, 255, 0, 128],
-                        width: 3,
-                        type: "esriSLS",
-                        style: "esriSLSSolid"
-                    }
-                }),
-                ghostVertexSymbol: new SimpleMarkerSymbol({
-                    color: [0, 255, 0, 20],
-                    size: delta,
-                    type: "esriSMS",
-                    style: "esrSMSCross",
-                    outline: {
-                        color: [0, 255, 0],
-                        width: 3,
-                        type: "esriSLS",
-                        style: "esriSLSSolid"
-                    }
-                })
+                ghostLineSymbol: new SimpleLineSymbol(editorLineStyle),
+                vertexSymbol: new SimpleMarkerSymbol(editorVertexStyle)
             });
             var routeView_1 = new RouteViewer.RouteView({
                 map: map,
                 route: route
             });
+            // primary events
+            routeView_1.on("unassign-stop", function (args) { return console.log("unassign-stop"); });
+            routeView_1.on("reassign-stop", function (args) { return console.log("reassign-stop"); });
+            // low-level events
+            routeView_1.on("remove-orphan", function (args) { return console.log("remove-orphan"); });
+            routeView_1.on("add-orphan", function (args) { return console.log("add-orphan"); });
+            routeView_1.on("remove-stop", function (args) { return console.log("remove-stop"); });
+            routeView_1.on("add-stop", function (args) { return console.log("add-stop"); });
+            routeView_1.on("move-stop", function (args) { return console.log("move-stop"); });
+            map.on("click", function () {
+                editor_1.deactivate();
+            });
             routeView_1.layer.on("click", function (args) {
                 event.stop(args);
-                routeView_1.edit(editor_1, args.graphic);
+                routeView_1.edit(editor_1, args.graphic, {
+                    moveStop: args.shiftKey
+                });
             });
         }
     }
@@ -1483,7 +1800,8 @@ define("labs/ags-route-editor", ["require", "exports", "labs/data/route01", "esr
 });
 define("labs/ags-solve-proxy", ["require", "exports", "labs/ajax"], function (require, exports, Ajax) {
     "use strict";
-    var BaseSolve = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var BaseSolve = /** @class */ (function () {
         function BaseSolve(url) {
             this.ajax = new Ajax(url);
         }
@@ -1493,7 +1811,6 @@ define("labs/ags-solve-proxy", ["require", "exports", "labs/ajax"], function (re
         ;
         return BaseSolve;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = BaseSolve;
     function run() {
         console.log("this is an abstract class for route, closest facility and service area");
@@ -1502,13 +1819,14 @@ define("labs/ags-solve-proxy", ["require", "exports", "labs/ajax"], function (re
 });
 define("labs/ags-route-solve-proxy", ["require", "exports", "labs/ags-solve-proxy", "dojo/_base/lang"], function (require, exports, ags_solve_proxy_1, lang) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     /**
      * http://sampleserver6.arcgisonline.com/arcgis/sdk/rest/index.html#/Network_Layer/02ss0000009p000000/
      */
-    var RouteSolve = (function (_super) {
+    var RouteSolve = /** @class */ (function (_super) {
         __extends(RouteSolve, _super);
         function RouteSolve() {
-            _super.apply(this, arguments);
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         /**
          * http://sampleserver6.arcgisonline.com/arcgis/sdk/rest/index.html#/Solve_Route/02ss0000001t000000/
@@ -1525,12 +1843,11 @@ define("labs/ags-route-solve-proxy", ["require", "exports", "labs/ags-solve-prox
                 directionsLengthUnits: "esriNAUMiles",
                 f: "pjson"
             }, data);
-            req.stops = data.stops.map(function (p) { return (p.x + "," + p.y); }).join(';');
+            req.stops = data.stops.map(function (p) { return p.x + "," + p.y; }).join(';');
             return this.ajax.get(req);
         };
         return RouteSolve;
     }(ags_solve_proxy_1.default));
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = RouteSolve;
     function run() {
         new RouteSolve("//sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/Route/solve")
@@ -1550,10 +1867,11 @@ define("labs/ags-route-solve-proxy", ["require", "exports", "labs/ags-solve-prox
 });
 define("labs/ags-servicearea-solve-proxy", ["require", "exports", "labs/ags-solve-proxy", "dojo/_base/lang"], function (require, exports, ags_solve_proxy_2, lang) {
     "use strict";
-    var ServiceAreaSolve = (function (_super) {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var ServiceAreaSolve = /** @class */ (function (_super) {
         __extends(ServiceAreaSolve, _super);
         function ServiceAreaSolve() {
-            _super.apply(this, arguments);
+            return _super !== null && _super.apply(this, arguments) || this;
         }
         ServiceAreaSolve.prototype.solve = function (data) {
             /**
@@ -1607,7 +1925,6 @@ define("labs/ags-servicearea-solve-proxy", ["require", "exports", "labs/ags-solv
         };
         return ServiceAreaSolve;
     }(ags_solve_proxy_2.default));
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = ServiceAreaSolve;
     function run() {
         new ServiceAreaSolve("//sampleserver6.arcgisonline.com/arcgis/rest/services/NetworkAnalysis/SanDiego/NAServer/ServiceArea/solveServiceArea")
@@ -1631,7 +1948,8 @@ define("labs/ags-servicearea-solve-proxy", ["require", "exports", "labs/ags-solv
 });
 define("labs/ags-suggest-proxy", ["require", "exports", "dojo/_base/lang", "labs/ajax"], function (require, exports, lang, Ajax) {
     "use strict";
-    var Suggest = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var Suggest = /** @class */ (function () {
         function Suggest(url) {
             this.ajax = new Ajax(url);
         }
@@ -1645,7 +1963,6 @@ define("labs/ags-suggest-proxy", ["require", "exports", "dojo/_base/lang", "labs
         };
         return Suggest;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Suggest;
     function run() {
         new Suggest("https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest")
@@ -1660,6 +1977,7 @@ define("labs/ags-suggest-proxy", ["require", "exports", "dojo/_base/lang", "labs
 });
 define("labs/ags-webmap", ["require", "exports", "esri/arcgis/utils", "esri/arcgis/OAuthInfo", "esri/IdentityManager"], function (require, exports, utils, OAuthInfo, IdentityManager) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     //https://www.arcgis.com/sharing/oauth2/approve?oauth_state=GD6ps1QHrIq-evMlDEj9BkwQqP8qtCMm-r1-zNkUobLFtk4E04D7TJ4Cn0pkeZ56svApgSHK9iRY7HasLI4YrUYIP5wunF_syiATUiY4hyenri_P2OazODUVl28SwOONAOZKzbRVIHamNdtpSo_sBtl_ahDqHArMbiV3dxkDMgr5eLWYpaJxFpGIdMpj0bjaSz_OcgrHej3jmUT-RBRlQrKhgFdHmFmf0k8zhfKIYx8GnlzS6BqZqNo8Hz0ZIpQuTAfza-qg4ZyhMS8DhEI377hLlrb5PMcTeDl7-NpMlfyDjWHecmI0OmOLEOaMSy58LYaFJtZIH46c7fKvE5ESZg..
     // https://www.arcgis.com/sharing/oauth2/authorize?client_id=313b7327133f4802affee46893b4bec7&response_type=token&state=%7B%22portalUrl%22%3A%22https%3A%2F%2Fwww.arcgis.com%22%7D&expiration=20160&redirect_uri=http%3A%2F%2Flocalhost%2Fags-lab%2Foauth-callback.html
     function run(appId) {
@@ -1707,6 +2025,7 @@ define("labs/ags-webmap", ["require", "exports", "esri/arcgis/utils", "esri/arcg
 });
 define("labs/console", ["require", "exports"], function (require, exports) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function run() {
         var content = document.getElementById("console");
         if (!content)
@@ -1715,7 +2034,7 @@ define("labs/console", ["require", "exports"], function (require, exports) {
         console.log = function () {
             var args = [];
             for (var _i = 0; _i < arguments.length; _i++) {
-                args[_i - 0] = arguments[_i];
+                args[_i] = arguments[_i];
             }
             log.apply(console, args);
             var div = document.createElement("textarea");
@@ -1727,6 +2046,7 @@ define("labs/console", ["require", "exports"], function (require, exports) {
 });
 define("labs/index", ["require", "exports"], function (require, exports) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function run() {
         var l = window.location;
         var path = "" + l.origin + l.pathname + "?run=labs/";
@@ -1740,7 +2060,7 @@ define("labs/index", ["require", "exports"], function (require, exports) {
             .split(/ /)
             .map(function (v) { return v.trim(); })
             .filter(function (v) { return !!v; })
-            .map(function (lab) { return ("<div class='test'><a href='" + path + lab + "&debug=1'>" + lab + "</a></div>"); })
+            .map(function (lab) { return "<div class='test'><a href='" + path + lab + "&debug=1'>" + lab + "</a></div>"; })
             .join("\n");
         var testDiv = document.createElement("div");
         document.body.appendChild(testDiv);
@@ -1750,7 +2070,8 @@ define("labs/index", ["require", "exports"], function (require, exports) {
 });
 define("labs/pubsub", ["require", "exports"], function (require, exports) {
     "use strict";
-    var PubSub = (function () {
+    Object.defineProperty(exports, "__esModule", { value: true });
+    var PubSub = /** @class */ (function () {
         function PubSub() {
             this.topics = {};
         }
@@ -1771,7 +2092,6 @@ define("labs/pubsub", ["require", "exports"], function (require, exports) {
         };
         return PubSub;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = PubSub;
     function run() {
         var topic = new PubSub();
@@ -1780,8 +2100,9 @@ define("labs/pubsub", ["require", "exports"], function (require, exports) {
     }
     exports.run = run;
 });
-define("labs/maplet", ["require", "exports", 'dojo/dom-construct', "labs/pubsub", "esri/map", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/SimpleFillSymbol", "esri/geometry/Point", "esri/geometry/Polygon", "esri/graphic", "esri/renderers/HeatmapRenderer", "esri/layers/FeatureLayer", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/ArcGISDynamicMapServiceLayer"], function (require, exports, domConstruct, pubsub_1, Map, MarkerSymbol, LineSymbol, FillSymbol, Point, Polygon, Graphic, HeatmapRenderer, FeatureLayer, ArcGISTiledMapServiceLayer, ArcGISDynamicMapServiceLayer) {
+define("labs/maplet", ["require", "exports", "dojo/dom-construct", "labs/pubsub", "esri/map", "esri/symbols/SimpleMarkerSymbol", "esri/symbols/SimpleLineSymbol", "esri/symbols/SimpleFillSymbol", "esri/geometry/Point", "esri/geometry/Polygon", "esri/graphic", "esri/renderers/HeatmapRenderer", "esri/layers/FeatureLayer", "esri/layers/ArcGISTiledMapServiceLayer", "esri/layers/ArcGISDynamicMapServiceLayer"], function (require, exports, domConstruct, pubsub_1, Map, MarkerSymbol, LineSymbol, FillSymbol, Point, Polygon, Graphic, HeatmapRenderer, FeatureLayer, ArcGISTiledMapServiceLayer, ArcGISDynamicMapServiceLayer) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var topic = new pubsub_1.default();
     var asList = function (nodeList) {
         var result = [];
@@ -1825,7 +2146,7 @@ define("labs/maplet", ["require", "exports", 'dojo/dom-construct', "labs/pubsub"
         var events = asList(document.querySelectorAll("[data-event]"));
         events.forEach(function (e) { return e.addEventListener("click", function () { return topic.publish(e.dataset["event"], e); }); });
     }
-    var Maplet = (function () {
+    var Maplet = /** @class */ (function () {
         function Maplet(element) {
             var map = new Map(element, {
                 center: new Point(-122, 37)
@@ -1875,7 +2196,6 @@ define("labs/maplet", ["require", "exports", 'dojo/dom-construct', "labs/pubsub"
         };
         return Maplet;
     }());
-    Object.defineProperty(exports, "__esModule", { value: true });
     exports.default = Maplet;
     function run() {
         watchers();
@@ -1906,6 +2226,23 @@ define("labs/maplet", ["require", "exports", 'dojo/dom-construct', "labs/pubsub"
     }
     exports.run = run;
 });
+var mappings = {
+    source: {
+        url: "http://usalvwdgis1:6080/arcgis/rest/services/Annotations/H840_Annotations/FeatureServer/3",
+        type: "ags"
+    },
+    target: {
+        url: "http://usalvwdgis1:6080/arcgis/rest/services/Annotations/H840_Annotations/FeatureServer/3",
+        type: "wfs"
+    },
+    mapping: {
+        "GlobalID": "globalid",
+        "H8EXPDATE": "h8expdate",
+        "last_edited_user": "last_edited_user",
+        "last_edited_date": "last_edited_date",
+        "shape": "geom"
+    }
+};
 /**
  * https://developers.google.com/earth-engine/geometries_planar_geodesic?hl=en
  * geodesic: shortest path on the surface of a earth
@@ -1917,6 +2254,7 @@ define("labs/maplet", ["require", "exports", 'dojo/dom-construct', "labs/pubsub"
  */
 define("ux/geodesic-planar-ux", ["require", "exports", "esri/map", "esri/dijit/Scalebar", "esri/dijit/Measurement", "esri/units", "esri/config", "esri/tasks/GeometryService", "esri/tasks/BufferParameters", "esri/tasks/LengthsParameters", "esri/symbols/SimpleFillSymbol", "esri/symbols/SimpleLineSymbol", "esri/graphic", "esri/Color", "dojo/Deferred"], function (require, exports, Map, Scalebar, Measurement, Units, Config, GeometryService, BufferParameters, LengthsParameters, SimpleFillSymbol, SimpleLineSymbol, Graphic, Color, Deferred) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var geometryService = Config.defaults.geometryService = new GeometryService("https://sampleserver6.arcgisonline.com/arcgis/rest/services/Geometry/GeometryServer");
     /**
      * Giving SystemJS a try to transform coordinates to 4326 before using geodesy to calculate distances
@@ -2005,6 +2343,7 @@ define("ux/geodesic-planar-ux", ["require", "exports", "esri/map", "esri/dijit/S
 //import "esri/IdentityManager";
 define("ux/routing-prototype", ["require", "exports", "dijit/registry", "dojo/on", "dojo/topic", "dojo/dom-construct", "dojo/debounce", "esri/InfoTemplate", "esri/dijit/Directions", "esri/symbols/SimpleLineSymbol", "esri/symbols/SimpleMarkerSymbol", "esri/Color", "esri/graphic", "esri/tasks/RouteParameters", "ips/services"], function (require, exports, registry, on, topic, domConstruct, debounce, InfoTemplate, DirectionsWidget, SimpleLineSymbol, SimpleMarkerSymbol, Color, Graphic, RouteParams, Services) {
     "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     var config = {
         zones: [{
                 name: "red",
@@ -2049,7 +2388,7 @@ define("ux/routing-prototype", ["require", "exports", "dijit/registry", "dojo/on
     /**
      * container for multiple directions widgets
     */
-    var RouteManager = (function () {
+    var RouteManager = /** @class */ (function () {
         function RouteManager(routesDom, config) {
             this.routesDom = routesDom;
             this.config = config;
@@ -2235,7 +2574,7 @@ define("ux/routing-prototype", ["require", "exports", "dijit/registry", "dojo/on
                 var data = routeItem;
                 var keys = Object.keys(data).filter(function (k) { return typeof data[k] !== "Object"; });
                 keys = "id,isActivityCompleted,scheduledDate,activityType,lastModifiedBy,lastModifiedDateTime".split(',');
-                var body = domConstruct.toDom("" + keys.map(function (k) { return (k + ": " + data[k]); }).join("<br/>"));
+                var body = domConstruct.toDom("" + keys.map(function (k) { return k + ": " + data[k]; }).join("<br/>"));
                 var showInfo = domConstruct.toDom("<a title=\"Show Info\" to=\"\" class=\"command showInfo\"><span>Show Info</span></a>");
                 on(showInfo, "click", function () { return topic.publish("routing/show-info", routeItem.activity); });
                 var commands = domConstruct.toDom("<div class=\"commands\"></div>");

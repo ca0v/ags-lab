@@ -20,14 +20,14 @@
     "tests"
   ],
   "dependencies": {
-    "arcgis-js-api": "3.17"
+    "esri": "arcgis-js-api#~3.23.0"
   },
   "resolutions": {
-    "dojo": "v1.11.1/esri-3.17.0",
-    "dijit": "v1.11.1/esri-3.17.0",
-    "dojox": "v1.11.1/esri-3.17.0",
+    "dojo": "v1.11.1/esri-3.23.0",
+    "dijit": "v1.11.1/esri-3.23.0",
+    "dojox": "v1.11.1/esri-3.23.0",
     "xstyle": "v0.3.2",
     "dstore": "v1.1.1",
-    "util": "v1.11.1/esri-3.17.0"
+    "util": "v1.11.1/esri-3.23.0"
   }
 }
