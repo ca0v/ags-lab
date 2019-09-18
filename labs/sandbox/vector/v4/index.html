@@ -24,10 +24,11 @@
         require([
             "esri/Map",
             "esri/views/MapView",
-            "esri/layers/FeatureLayer"
-        ], function (Map, MapView, FeatureLayer) {
+            "esri/layers/FeatureLayer",
+            "esri/layers/VectorTileLayer"
+        ], function (Map, MapView, FeatureLayer, VectorTileLayer) {
             var map = new Map({
-                basemap: "hybrid"
+                //basemap: "hybrid"
             });
 
             var view = new MapView({
@@ -54,7 +55,19 @@
                     "https://services.arcgis.com/V6ZHFr6zdgNZuVG0/arcgis/rest/services/Landscape_Trees/FeatureServer/0"
             });
 
+            /********************************************************************
+             * Add a vector tile layer to the map
+             *
+             * The url must point to the style or the vector tile service
+             *********************************************************************/
+            var tileLayer = new VectorTileLayer({
+                url:
+                    "https://jsapi.maps.arcgis.com/sharing/rest/content/items/75f4dfdff19e445395653121a95a85db/resources/styles/root.json"
+            });
+
+            map.add(tileLayer);
             map.add(featureLayer);
+
         });
     </script>
 </head>
