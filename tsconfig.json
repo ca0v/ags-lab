@@ -4,15 +4,13 @@
         "module": "amd",
         "target": "es5",
         "noImplicitAny": false,
+        "types": ["./node_modules/dojo-typings/index"],
         "sourceMap": false,
         "outFile": "./built/run.js",
         "moduleResolution": "node"
     },
     "exclude": [
         "node_modules",
-        "bower_components",
-        "typings/main",
-        "typings/main.d.ts",
         "built"
     ]
 }
