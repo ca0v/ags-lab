@@ -2305,17 +2305,67 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
      */
     let styles = document.createElement("style");
     styles.innerText = `
+  :root {
+    --border-color: rgba(255,255,200,1);
+  }
+
     .mock-auto-complete {
-        font-size: 1em;
+      display: inline-block;
+      padding: 1em;
+      background-color: #777777;
     }
 
-    .mock-auto-complete .search {
-        background: white;
-        border: none;
+    .mock-auto-complete .search-area {
+      border: 1px solid silver;
+      padding: 1em;
+      display: grid;
+      grid-template-columns: 16em 1.5em 2em;
+      grid-template-areas:
+        "search cancel run"
+        "results results results";
+    }
+
+    .mock-auto-complete .search-area .search {
+      grid-area: search;
+    }
+
+    .mock-auto-complete .search-area .run {
+      grid-area: run;
+    }
+
+    .mock-auto-complete .search-area .cancel {
+      grid-area: cancel;
+    }
+
+    .mock-auto-complete .result-area {
+      grid-area: results;
+    }
+
+    .mock-auto-complete .result-area .result-list {
+      display: grid;
+    }
+
+    .mock-auto-complete .result-area .result-list .provider {
+      border-bottom: 1px solid white;
     }
 
     .mock-auto-complete .result-list .result-item {
-        max-width: 20em;
+      cursor: pointer;
+      padding-top: 0.5em;
+      padding-bottom: 0.5em;
+      text-overflow: ellipsis;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .mock-auto-complete .result-list .result-item:hover {
+      animation: hightlight 100ms forwards;
+    }
+
+    @keyframes hightlight {
+      100% {
+        border-color: var(--border-color);
+      }
     }
 `;
     document.head.appendChild(styles);
@@ -2325,51 +2375,95 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
         return div.firstChild;
     }
     function run() {
-        const autoCompleteInput = `
+        return __awaiter(this, void 0, void 0, function* () {
+            const autoCompleteInput = `
 <div class="mock-auto-complete">
-    <input class="search" placeholder="find address"></input>
-    <ul class="result-list"></ul>
+    <div class="search-area">
+      <input class="search" placeholder="find address"></input>
+      <input class="cancel" type="button" value="X"></input>
+      <input class="run" type="button" value="🔍"></input>
+      <div class="result-area">
+        <div class="result-list">
+        </div>
+      </div>
+    </div>
 </div>
 `;
-        let widget = asDom(autoCompleteInput);
-        let input = widget.querySelector(".search");
-        let resultItems = widget.querySelector(".result-list");
-        function search(singleLineInput) {
-            return __awaiter(this, void 0, void 0, function* () {
-                console.log(`searching for "${singleLineInput}"`);
-                return new Promise((good, bad) => {
-                    try {
-                        good(mockSuggestResponse.suggestions);
-                    }
-                    catch (ex) {
-                        bad(ex);
-                    }
+            let widget = asDom(autoCompleteInput);
+            let input = widget.querySelector(".search");
+            let cancel = widget.querySelector(".cancel");
+            let run = widget.querySelector(".run");
+            let resultItems = widget.querySelector(".result-list");
+            function search(singleLineInput) {
+                return __awaiter(this, void 0, void 0, function* () {
+                    console.log(`searching for "${singleLineInput}"`);
+                    return new Promise((good, bad) => {
+                        let response = mockSuggestResponse.suggestions.map(v => ({
+                            text: `${v.text}`,
+                            magicKey: `${Math.random()}`
+                        }));
+                        try {
+                            setTimeout(() => good(response), 100 + Math.random() * 5000);
+                        }
+                        catch (ex) {
+                            bad(ex);
+                        }
+                    });
                 });
-            });
-        }
-        let resultData = {};
-        function merge(suggestion) {
-            resultData[suggestion.magicKey] = suggestion;
-            resultItems.innerHTML = "";
-            Object.keys(resultData).map(key => {
-                let li = document.createElement("li");
-                li.classList.add("result-item");
-                li.innerText = resultData[key].text;
-                resultItems.appendChild(li);
-            });
-        }
-        let slowSearch = debounce(() => __awaiter(this, void 0, void 0, function* () {
-            let results = yield search(input.value);
-            results.forEach(merge);
-        }), 500);
-        input.addEventListener("keyup", (event) => {
-            if (input.value.length >= MIN_SEARCH_LENGTH) {
-                slowSearch();
             }
+            let resultData = {};
+            function merge(suggestion, before) {
+                resultData[suggestion.magicKey] = suggestion;
+                let li = document.createElement("div");
+                li.tabIndex = 0;
+                li.classList.add("result-item");
+                li.title = suggestion.text;
+                li.innerText = suggestion.text;
+                if (!!before) {
+                    before.insertAdjacentElement("afterend", li);
+                }
+                else {
+                    resultItems.appendChild(li);
+                }
+                return li;
+            }
+            let priorSearchValue = "";
+            const searchAllProviders = () => {
+                let searchValue = input.value;
+                if (priorSearchValue === searchValue)
+                    return;
+                priorSearchValue = searchValue;
+                resultItems.innerText = "";
+                if (input.value.length < MIN_SEARCH_LENGTH) {
+                    return; // will not perform search
+                }
+                return Promise.all(["Addresses", "Parcel Layer", "Address Layer"].map((providerName) => __awaiter(this, void 0, void 0, function* () {
+                    let results = search(input.value);
+                    let progress = merge({
+                        text: `${providerName}`,
+                        magicKey: Math.random() + ""
+                    });
+                    progress.classList.add("provider");
+                    progress.tabIndex = -1;
+                    results.then(suggestions => {
+                        suggestions.forEach(suggestion => merge(suggestion, progress));
+                        if (!suggestions.length)
+                            progress.remove();
+                    });
+                    return results;
+                })));
+            };
+            const slowSearch = debounce(() => __awaiter(this, void 0, void 0, function* () {
+                searchAllProviders();
+            }), 500);
+            input.addEventListener("keyup", event => {
+                slowSearch();
+            });
+            document.body.insertBefore(widget, document.body.firstChild);
+            input.value = "12345";
+            yield searchAllProviders();
+            console.log("done");
         });
-        document.body.appendChild(widget);
-        input.value = "123456";
-        slowSearch();
     }
     exports.run = run;
 });
