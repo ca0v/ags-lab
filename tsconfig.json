@@ -1,8 +1,9 @@
 {
     "compilerOptions": {
+        "lib":["ES2015","DOM"],   
         "declaration": false,
         "module": "amd",
-        "target": "es5",
+        "target": "es2015",
         "noImplicitAny": false,
         "types": ["./node_modules/dojo-typings/index"],
         "sourceMap": false,
