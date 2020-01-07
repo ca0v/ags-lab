@@ -44,7 +44,6 @@ styles.innerText = `
 
     .mock-auto-complete .search-area .run {
       grid-area: run;
-      height: 2em;
     }
 
     .mock-auto-complete .search-area .cancel {
@@ -124,20 +123,28 @@ export async function run() {
   <svg style="display:none" viewBox="-10 -10 20 20">
   <defs>
     <g id="progress-spinner">
-      <circle class="track" cx="0" cy="0" r="5" fill="none" stroke="white" stroke-width="3" />
-      <circle class="ball" cx="0" cy="-5" r="1" fill="black" stroke-width="0" />
+      <circle class="track" cx="0" cy="0" r="5" fill="none" stroke="#888888" stroke-width="1" />
+      <circle class="ball" cx="0" cy="-5" r="1" fill="#000000" stroke-width="0" />
+      <circle class="ball" cx="0" cy="5" r="1" fill="#ffffff" stroke-width="0" />
     </g>
     <g id="icon-search" viewBox="0 0 18 18">
       <path d="M17.707 16.293l-5.108-5.109A6.954 6.954 0 0014 7c0-3.86-3.141-7-7-7S0 3.14 0 7s3.141 7 7 7a6.958 6.958 0 004.185-1.402l5.108 5.109a.997.997 0 001.414 0 .999.999 0 000-1.414zM7 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"
       fill="currentColor" fill-rule="nonzero" stroke="none"></path>
     </g>
+    <g id="icon-close" viewBox="0 0 18 18">
+      <path
+        d="M10.414 9l5.293-5.293a.999.999 0 10-1.414-1.414L9 7.586 3.707 2.293a.999.999 0 10-1.414 1.414L7.586 9l-5.293 5.293a.999.999 0 101.414 1.414L9 10.414l5.293 5.293a.997.997 0 001.414 0 .999.999 0 000-1.414L10.414 9"
+        fill="currentColor" fill-rule="evenodd" stroke="none"></path>
+    </g>
   </defs>
   </svg>
   <div class="search-area">
     <input class="search" placeholder="find address"></input>
-    <input class="cancel" type="button" value="X"></input>
-    <button class="run" type="button" value="🔍">
-      <svg transform="translate(0,3)"><use transform="scale(0.8)" href="#icon-search"></use></svg>
+    <button class="cancel" type="button">
+    <svg viewBox="0 0 18 18"><use href="#icon-close"></use></svg>
+    </input>
+    <button class="run" type="button">
+      <svg viewBox="0 0 18 18"><use href="#icon-search"></use></svg>
     </button>
     <div class="result-area">
       <div class="result-list">
