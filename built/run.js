@@ -2305,9 +2305,9 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
      */
     let styles = document.createElement("style");
     styles.innerText = `
-  :root {
-    --border-color: rgba(255,255,200,1);
-  }
+    :root {
+      --border-color: rgba(255,255,200,1);
+    }
 
     .mock-auto-complete {
       display: inline-block;
@@ -2346,26 +2346,54 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
     }
 
     .mock-auto-complete .result-area .result-list .provider {
-      border-bottom: 1px solid white;
     }
 
     .mock-auto-complete .result-list .result-item {
       cursor: pointer;
-      padding-top: 0.5em;
-      padding-bottom: 0.5em;
+      padding: 0.5em;
       text-overflow: ellipsis;
       overflow: hidden;
       white-space: nowrap;
+      border-left: 1px solid transparent;
+      height: 0;
+      animation: grow 250ms forwards linear;
     }
 
     .mock-auto-complete .result-list .result-item:hover {
-      animation: hightlight 100ms forwards;
+      transition: all 200ms ease-in;
+      border-left-color: var(--border-color);
+    }
+
+    .mock-auto-complete .result-list .provider .spin {
+      width: 2em;
+      height: 2em;
+      animation: spin 1000ms infinite linear;
+      transform: scale(0);
+    }
+    
+    .mock-auto-complete .result-list .provider .spin.fade-out {
+      animation: fadeout 200ms forwards linear;
     }
 
     @keyframes hightlight {
       100% {
-        border-color: var(--border-color);
+        border-left-color: var(--border-color);
       }
+    }
+
+    @keyframes grow {
+      from {height:0;}
+      to {height:auto;}
+    }
+
+    @keyframes spin {
+      from {transform:translate(0, 10px) rotate(0deg);}
+      to {transform:translate(0, 10px) rotate(360deg);}
+    }
+
+    @keyframes fadeout {
+      from {transform:scale(1);}
+      to {transform:scale(0);}
     }
 `;
     document.head.appendChild(styles);
@@ -2378,15 +2406,23 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
         return __awaiter(this, void 0, void 0, function* () {
             const autoCompleteInput = `
 <div class="mock-auto-complete">
-    <div class="search-area">
-      <input class="search" placeholder="find address"></input>
-      <input class="cancel" type="button" value="X"></input>
-      <input class="run" type="button" value="🔍"></input>
-      <div class="result-area">
-        <div class="result-list">
-        </div>
+  <svg style="display:none" viewBox="-10 -10 20 20">
+  <defs>
+    <g id="progress-spinner">
+      <circle class="track" cx="0" cy="0" r="5" fill="none" stroke="white" stroke-width="3" />
+      <circle class="ball" cx="0" cy="-5" r="1" fill="black" stroke-width="0" />
+    </g>
+  </defs>
+  </svg>    
+  <div class="search-area">
+    <input class="search" placeholder="find address"></input>
+    <input class="cancel" type="button" value="X"></input>
+    <input class="run" type="button" value="🔍"></input>
+    <div class="result-area">
+      <div class="result-list">        
       </div>
     </div>
+  </div>
 </div>
 `;
             let widget = asDom(autoCompleteInput);
@@ -2394,6 +2430,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
             let cancel = widget.querySelector(".cancel");
             let run = widget.querySelector(".run");
             let resultItems = widget.querySelector(".result-list");
+            const createSpinner = (className) => `<svg class="${className}" viewBox="-10 -10 20 20"><use href="#progress-spinner"></use></svg>`;
             function search(singleLineInput) {
                 return __awaiter(this, void 0, void 0, function* () {
                     console.log(`searching for "${singleLineInput}"`);
@@ -2439,16 +2476,16 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                 }
                 return Promise.all(["Addresses", "Parcel Layer", "Address Layer"].map((providerName) => __awaiter(this, void 0, void 0, function* () {
                     let results = search(input.value);
-                    let progress = merge({
-                        text: `${providerName}`,
-                        magicKey: Math.random() + ""
-                    });
-                    progress.classList.add("provider");
-                    progress.tabIndex = -1;
+                    let progress = asDom(`<div class="provider"><label>${providerName}</label>${createSpinner("spin")}</div>`);
+                    resultItems.appendChild(progress);
                     results.then(suggestions => {
                         suggestions.forEach(suggestion => merge(suggestion, progress));
-                        if (!suggestions.length)
+                        if (!suggestions.length) {
                             progress.remove();
+                        }
+                        else {
+                            progress.querySelector(".spin").classList.add("fade-out");
+                        }
                     });
                     return results;
                 })));
