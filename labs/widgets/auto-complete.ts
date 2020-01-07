@@ -56,6 +56,7 @@ styles.innerText = `
 
     .mock-auto-complete .result-area .result-list {
       display: grid;
+      grid-template-columns: auto;
     }
 
     .mock-auto-complete .result-area .result-list .provider {
@@ -77,6 +78,10 @@ styles.innerText = `
       border-left-color: var(--border-color);
     }
 
+    .mock-auto-complete .result-list .provider label {
+      padding-left: 0.5em;
+    }
+
     .mock-auto-complete .result-list .provider .spin {
       width: 2em;
       height: 2em;
@@ -84,8 +89,28 @@ styles.innerText = `
       transform: scale(0);
     }
 
+    .mock-auto-complete .result-list .provider .marker {
+      width: 2em;
+      height: 2em;
+      stroke: white;
+      stroke-width: 2;
+      transform: rotate(45deg) scale(1, 2);
+    }
+
+    .mock-auto-complete .result-list .provider .marker.Addresses {
+        fill: red;
+    }
+
+    .mock-auto-complete .result-list .provider .marker.ParcelLayer {
+      fill: green;
+    }
+
+    .mock-auto-complete .result-list .provider .marker.AddressLayer {
+      fill: blue;
+    }
+
     .mock-auto-complete .result-list .provider .spin.fade-out {
-      animation: fadeout 200ms forwards linear;
+      animation: fadeout 0ms forwards linear;
     }
 
     @keyframes hightlight {
@@ -105,8 +130,8 @@ styles.innerText = `
     }
 
     @keyframes fadeout {
-      from {transform:scale(1);}
-      to {transform:scale(0);}
+      0% {transform:scale(1);}
+      100% {transform:scale(0); width: 0;}
     }
 `;
 document.head.appendChild(styles);
@@ -117,11 +142,23 @@ function asDom(html: string) {
   return div.firstChild as HTMLElement;
 }
 
+function asId(value: string) {
+  return value.replace(/ /gi, "");
+}
+
 export async function run() {
   const autoCompleteInput = `
 <div class="mock-auto-complete">
   <svg style="display:none" viewBox="-10 -10 20 20">
   <defs>
+    <g id="marker-icon">
+      <circle cx="0" cy="0" r="5" />
+    </g>
+    <g id="progress-spinner">
+      <circle class="track" cx="0" cy="0" r="5" fill="none" stroke="#888888" stroke-width="1" />
+      <circle class="ball" cx="0" cy="-5" r="1" fill="#000000" stroke-width="0" />
+      <circle class="ball" cx="0" cy="5" r="1" fill="#ffffff" stroke-width="0" />
+    </g>
     <g id="progress-spinner">
       <circle class="track" cx="0" cy="0" r="5" fill="none" stroke="#888888" stroke-width="1" />
       <circle class="ball" cx="0" cy="-5" r="1" fill="#000000" stroke-width="0" />
@@ -158,6 +195,10 @@ export async function run() {
   let cancel = widget.querySelector(".cancel") as HTMLInputElement;
   let run = widget.querySelector(".run") as HTMLInputElement;
   let resultItems = widget.querySelector(".result-list") as HTMLDivElement;
+
+  const createMarker = (className: string) => {
+    return `<svg class="marker ${className}" style="width:1em;height:1em" viewBox="-10 -10 20 20"><use href="#marker-icon"></use></svg>`;
+  };
 
   const createSpinner = (className: string) =>
     `<svg class="${className}" viewBox="-10 -10 20 20"><use href="#progress-spinner"></use></svg>`;
@@ -207,10 +248,9 @@ export async function run() {
     return Promise.all(
       ["Addresses", "Parcel Layer", "Address Layer"].map(async providerName => {
         let results = search(input.value);
+        let spinner = createSpinner("spin");
         let progress = asDom(
-          `<div class="provider"><label>${providerName}</label>${createSpinner(
-            "spin"
-          )}</div>`
+          `<div class="provider">${spinner}<label>${providerName}</label></div>`
         );
         resultItems.appendChild(progress);
         results.then(suggestions => {
@@ -218,7 +258,10 @@ export async function run() {
           if (!suggestions.length) {
             progress.remove();
           } else {
-            progress.querySelector(".spin").classList.add("fade-out");
+            let spinner = progress.querySelector(".spin");
+            spinner.classList.add("fade-out");
+            let marker = asDom(createMarker(asId(providerName)));
+            progress.insertBefore(marker, progress.firstChild);
           }
         });
         return results;

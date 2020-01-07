@@ -2343,6 +2343,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
 
     .mock-auto-complete .result-area .result-list {
       display: grid;
+      grid-template-columns: auto;
     }
 
     .mock-auto-complete .result-area .result-list .provider {
@@ -2364,6 +2365,10 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
       border-left-color: var(--border-color);
     }
 
+    .mock-auto-complete .result-list .provider label {
+      padding-left: 0.5em;
+    }
+
     .mock-auto-complete .result-list .provider .spin {
       width: 2em;
       height: 2em;
@@ -2371,8 +2376,28 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
       transform: scale(0);
     }
 
+    .mock-auto-complete .result-list .provider .marker {
+      width: 2em;
+      height: 2em;
+      stroke: white;
+      stroke-width: 2;
+      transform: rotate(-45deg) scale(1, 2);
+    }
+
+    .mock-auto-complete .result-list .provider .marker.Addresses {
+        fill: red;
+    }
+
+    .mock-auto-complete .result-list .provider .marker.ParcelLayer {
+      fill: green;
+    }
+
+    .mock-auto-complete .result-list .provider .marker.AddressLayer {
+      fill: blue;
+    }
+
     .mock-auto-complete .result-list .provider .spin.fade-out {
-      animation: fadeout 200ms forwards linear;
+      animation: fadeout 0ms forwards linear;
     }
 
     @keyframes hightlight {
@@ -2392,8 +2417,8 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
     }
 
     @keyframes fadeout {
-      from {transform:scale(1);}
-      to {transform:scale(0);}
+      0% {transform:scale(1);}
+      100% {transform:scale(0); width: 0;}
     }
 `;
     document.head.appendChild(styles);
@@ -2402,12 +2427,23 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
         div.innerHTML = html.trim();
         return div.firstChild;
     }
+    function asId(value) {
+        return value.replace(/ /gi, "");
+    }
     function run() {
         return __awaiter(this, void 0, void 0, function* () {
             const autoCompleteInput = `
 <div class="mock-auto-complete">
   <svg style="display:none" viewBox="-10 -10 20 20">
   <defs>
+    <g id="marker-icon">
+      <circle cx="0" cy="0" r="5" />
+    </g>
+    <g id="progress-spinner">
+      <circle class="track" cx="0" cy="0" r="5" fill="none" stroke="#888888" stroke-width="1" />
+      <circle class="ball" cx="0" cy="-5" r="1" fill="#000000" stroke-width="0" />
+      <circle class="ball" cx="0" cy="5" r="1" fill="#ffffff" stroke-width="0" />
+    </g>
     <g id="progress-spinner">
       <circle class="track" cx="0" cy="0" r="5" fill="none" stroke="#888888" stroke-width="1" />
       <circle class="ball" cx="0" cy="-5" r="1" fill="#000000" stroke-width="0" />
@@ -2444,6 +2480,9 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
             let cancel = widget.querySelector(".cancel");
             let run = widget.querySelector(".run");
             let resultItems = widget.querySelector(".result-list");
+            const createMarker = (className) => {
+                return `<svg class="marker ${className}" style="width:1em;height:1em" viewBox="-10 -10 20 20"><use href="#marker-icon"></use></svg>`;
+            };
             const createSpinner = (className) => `<svg class="${className}" viewBox="-10 -10 20 20"><use href="#progress-spinner"></use></svg>`;
             function search(singleLineInput) {
                 return __awaiter(this, void 0, void 0, function* () {
@@ -2490,7 +2529,8 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                 }
                 return Promise.all(["Addresses", "Parcel Layer", "Address Layer"].map((providerName) => __awaiter(this, void 0, void 0, function* () {
                     let results = search(input.value);
-                    let progress = asDom(`<div class="provider"><label>${providerName}</label>${createSpinner("spin")}</div>`);
+                    let spinner = createSpinner("spin");
+                    let progress = asDom(`<div class="provider">${spinner}<label>${providerName}</label></div>`);
                     resultItems.appendChild(progress);
                     results.then(suggestions => {
                         suggestions.forEach(suggestion => merge(suggestion, progress));
@@ -2498,7 +2538,10 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                             progress.remove();
                         }
                         else {
-                            progress.querySelector(".spin").classList.add("fade-out");
+                            let spinner = progress.querySelector(".spin");
+                            spinner.classList.add("fade-out");
+                            let marker = asDom(createMarker(asId(providerName)));
+                            progress.insertBefore(marker, progress.firstChild);
                         }
                     });
                     return results;
