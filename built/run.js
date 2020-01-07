@@ -2331,6 +2331,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
 
     .mock-auto-complete .search-area .run {
       grid-area: run;
+      height: 2em;
     }
 
     .mock-auto-complete .search-area .cancel {
@@ -2370,7 +2371,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
       animation: spin 1000ms infinite linear;
       transform: scale(0);
     }
-    
+
     .mock-auto-complete .result-list .provider .spin.fade-out {
       animation: fadeout 200ms forwards linear;
     }
@@ -2412,14 +2413,20 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
       <circle class="track" cx="0" cy="0" r="5" fill="none" stroke="white" stroke-width="3" />
       <circle class="ball" cx="0" cy="-5" r="1" fill="black" stroke-width="0" />
     </g>
+    <g id="icon-search" viewBox="0 0 18 18">
+      <path d="M17.707 16.293l-5.108-5.109A6.954 6.954 0 0014 7c0-3.86-3.141-7-7-7S0 3.14 0 7s3.141 7 7 7a6.958 6.958 0 004.185-1.402l5.108 5.109a.997.997 0 001.414 0 .999.999 0 000-1.414zM7 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"
+      fill="currentColor" fill-rule="nonzero" stroke="none"></path>
+    </g>
   </defs>
-  </svg>    
+  </svg>
   <div class="search-area">
     <input class="search" placeholder="find address"></input>
     <input class="cancel" type="button" value="X"></input>
-    <input class="run" type="button" value="🔍"></input>
+    <button class="run" type="button" value="🔍">
+      <svg transform="translate(0,3)"><use transform="scale(0.8)" href="#icon-search"></use></svg>
+    </button>
     <div class="result-area">
-      <div class="result-list">        
+      <div class="result-list">
       </div>
     </div>
   </div>
