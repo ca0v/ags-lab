@@ -1,7 +1,7 @@
 import debounce = require("dojo/debounce");
 import mockSuggestResponse = require("../data/suggest_response");
 
-const MIN_SEARCH_LENGTH = 5;
+const MIN_SEARCH_LENGTH = 1;
 
 interface Dictionary<T> {
   [n: string]: T;
@@ -19,20 +19,19 @@ type Suggestion = { text: string; magicKey: string };
 let styles = document.createElement("style");
 styles.innerText = `
     :root {
-      --border-color: rgba(255,255,200,1);
+      --border-color: rgba(200,200,200,1);
     }
 
     .mock-auto-complete {
       display: inline-block;
-      padding: 1em;
-      background-color: #777777;
+      border: 1px solid;
+      border-color: var(--border-color);
+      padding: 0.25em;
     }
 
     .mock-auto-complete .search-area {
-      border: 1px solid silver;
-      padding: 1em;
       display: grid;
-      grid-template-columns: 16em 2em 2em;
+      grid-template-columns: min(32em,max(16em,25vw)) 2em 2em;
       grid-template-areas:
         "search cancel run"
         "results results results";
@@ -57,6 +56,8 @@ styles.innerText = `
     .mock-auto-complete .result-area .result-list {
       display: grid;
       grid-template-columns: auto;
+      max-height: 40vh;
+      overflow: hidden;
     }
 
     .mock-auto-complete .result-area .result-list .provider {
@@ -89,23 +90,23 @@ styles.innerText = `
       transform: scale(0);
     }
 
-    .mock-auto-complete .result-list .provider .marker {
+    .mock-auto-complete .result-list .marker {
       width: 2em;
       height: 2em;
-      stroke: white;
+      stroke: var(--border-color);
       stroke-width: 2;
-      transform: rotate(45deg) scale(1, 2);
+      transform: translate(-8px, 0) rotate(45deg) scale(1, 2);
     }
 
-    .mock-auto-complete .result-list .provider .marker.Addresses {
+    .mock-auto-complete .result-list .result-item .marker.Addresses {
         fill: red;
     }
 
-    .mock-auto-complete .result-list .provider .marker.ParcelLayer {
+    .mock-auto-complete .result-list .result-item .marker.ParcelLayer {
       fill: green;
     }
 
-    .mock-auto-complete .result-list .provider .marker.AddressLayer {
+    .mock-auto-complete .result-list .result-item .marker.AddressLayer {
       fill: blue;
     }
 
@@ -207,8 +208,8 @@ export async function run() {
     console.log(`searching for "${singleLineInput}"`);
     return new Promise<Suggestion[]>((good, bad) => {
       let response = mockSuggestResponse.suggestions.map(v => ({
-        text: `${v.text}`,
-        magicKey: `${Math.random()}`
+        text: v.text,
+        magicKey: v.magicKey
       }));
       try {
         setTimeout(() => good(response), 100 + Math.random() * 5000);
@@ -218,10 +219,7 @@ export async function run() {
     });
   }
 
-  let resultData = <Dictionary<Suggestion>>{};
-
   function merge(suggestion: Suggestion, before?: HTMLElement) {
-    resultData[suggestion.magicKey] = suggestion;
     let li = document.createElement("div");
     li.tabIndex = 0;
     li.classList.add("result-item");
@@ -254,14 +252,24 @@ export async function run() {
         );
         resultItems.appendChild(progress);
         results.then(suggestions => {
-          suggestions.forEach(suggestion => merge(suggestion, progress));
+          suggestions.forEach(suggestion => {
+            let marker = asDom(createMarker(asId(providerName)));
+            let result = merge(suggestion, progress);
+            result.insertAdjacentElement("afterbegin", marker);
+            result.addEventListener("click", () => {
+              console.log("selected result", { suggestion });
+              input.value = "";
+              resultItems.innerText = "";
+            });
+          });
           if (!suggestions.length) {
             progress.remove();
           } else {
-            let spinner = progress.querySelector(".spin");
-            spinner.classList.add("fade-out");
-            let marker = asDom(createMarker(asId(providerName)));
-            progress.insertBefore(marker, progress.firstChild);
+            progress.remove();
+            // let spinner = progress.querySelector(".spin");
+            // spinner.classList.add("fade-out");
+            // let marker = asDom(createMarker(asId(providerName)));
+            // progress.insertBefore(marker, progress.firstChild);
           }
         });
         return results;
@@ -275,6 +283,11 @@ export async function run() {
 
   input.addEventListener("keyup", event => {
     slowSearch();
+  });
+
+  cancel.addEventListener("click", () => {
+    input.value = "";
+    searchAllProviders();
   });
 
   document.body.insertBefore(widget, document.body.firstChild);
