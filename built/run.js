@@ -2314,11 +2314,13 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
       border: 1px solid;
       border-color: var(--border-color);
       padding: 0.25em;
+      min-width: max(16em,25vw);
+      max-width: min(32em,50vw);
     }
 
     .mock-auto-complete .search-area {
       display: grid;
-      grid-template-columns: min(32em,max(16em,25vw)) 2em 2em;
+      grid-template-columns: auto 2em 2em;
       grid-template-areas:
         "search cancel run"
         "results results results";
