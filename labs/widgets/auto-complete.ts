@@ -32,7 +32,7 @@ styles.innerText = `
       border: 1px solid silver;
       padding: 1em;
       display: grid;
-      grid-template-columns: 16em 1.5em 2em;
+      grid-template-columns: 16em 2em 2em;
       grid-template-areas:
         "search cancel run"
         "results results results";
