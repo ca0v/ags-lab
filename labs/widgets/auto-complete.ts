@@ -9,6 +9,24 @@ interface Dictionary<T> {
 
 type Suggestion = { text: string; magicKey: string };
 
+function focus(element: Element & { focus?: Function }, options?: { direction: "up" | "down" }) {
+  if (!element) return false;
+  if (!element.focus) return false;
+  element.focus();
+  if (document.activeElement === element) return true;
+  if (!options?.direction) return false;
+  switch (options.direction) {
+    case "down":
+      return focus(element.firstElementChild, options) || focus(element.nextElementSibling, options);
+    default:
+      return focus(element.previousElementSibling, options);
+  }
+}
+
+function click(element: Element & { click?: Function }) {
+  if (element?.click) element.click();
+}
+
 /**
  * As user types a message invoke multiple "suggest" requests...as response comes
  * in add it to a auto-complete list
@@ -20,6 +38,11 @@ let styles = document.createElement("style");
 styles.innerText = `
     :root {
       --border-color: rgba(200,200,200,1);
+      --reveal-time: 200ms;
+      --spin-rate: 2500ms;
+      --address-layer-color: red;
+      --parcel-layer-color: green;
+      --geolocator-color: blue;
     }
 
     .mock-auto-complete {
@@ -63,6 +86,7 @@ styles.innerText = `
     }
 
     .mock-auto-complete .result-area .result-list .provider {
+      height: 5vh;
     }
 
     .mock-auto-complete .result-list .result-item {
@@ -70,72 +94,122 @@ styles.innerText = `
       padding: 0.5em;
       text-overflow: ellipsis;
       overflow: hidden;
-      white-space: nowrap;
+      white-space: wrap;
       border-left: 1px solid transparent;
-      height: 0;
-      animation: grow 250ms forwards linear;
-    }
-
-    .mock-auto-complete .result-list .result-item:hover {
-      transition: all 200ms ease-in;
-      border-left-color: var(--border-color);
+      animation: reveal var(--reveal-time) forwards linear;
     }
 
     .mock-auto-complete .result-list .provider label {
       padding-left: 0.5em;
     }
 
-    .mock-auto-complete .result-list .provider .spin {
+    .mock-auto-complete .result-list .provider .spinner {
       width: 2em;
       height: 2em;
-      animation: spin 1000ms infinite linear;
-      transform: scale(0);
+      display: inline-block;
+      transform: translate(-4px, 8px);
     }
 
-    .mock-auto-complete .result-list .marker {
+    .mock-auto-complete .result-list .provider .spinner .spin {
+      animation: spin var(--spin-rate) 200ms infinite linear;
+    }
+
+    .mock-auto-complete .result-list .provider .spinner .marker {
+      animation: as-indicator var(--reveal-time) 0ms forwards linear;
+    }
+
+    .mock-auto-complete .result-list .provider .spinner .marker use circle.ball {
+      fill: none;
+    }
+
+    .mock-auto-complete .result-list .result-item .marker {
       width: 2em;
       height: 2em;
       stroke: var(--border-color);
       stroke-width: 2;
-      transform: translate(-8px, 0) rotate(45deg) scale(1, 2);
+      transform: translate(-8px, 0);
+      opacity: 0.8;
+    }
+
+    .mock-auto-complete .result-list .result-item:focus .marker,
+    .mock-auto-complete .result-list .result-item:hover .marker {
+      stroke: white;
+      transition: stroke,opacity 100ms ease-in;
+      opacity: 1;
+    }
+
+    .mock-auto-complete .result-list .provider.Addresses .spinner use {
+      stroke: var(--geolocator-color);
     }
 
     .mock-auto-complete .result-list .result-item .marker.Addresses {
-        fill: red;
+        fill: var(--geolocator-color);
+    }
+
+    .mock-auto-complete .result-list .provider.ParcelLayer .spinner use {
+      stroke: var(--parcel-layer-color);
     }
 
     .mock-auto-complete .result-list .result-item .marker.ParcelLayer {
-      fill: green;
+      fill: var(--parcel-layer-color);
+    }
+
+    .mock-auto-complete .result-list .provider.AddressLayer .spinner use {
+      stroke: var(--address-layer-color);
     }
 
     .mock-auto-complete .result-list .result-item .marker.AddressLayer {
-      fill: blue;
+      fill: var(--address-layer-color);
     }
 
-    .mock-auto-complete .result-list .provider .spin.fade-out {
-      animation: fadeout 0ms forwards linear;
+    .mock-auto-complete .result-list .provider .spinner.fade-out {
+      animation: unreveal var(--reveal-time) forwards linear;
     }
 
-    @keyframes hightlight {
-      100% {
-        border-left-color: var(--border-color);
+    .workarea {
+      position:absolute;
+      width: 0;
+      height: 0;
+      transform: translate(50vh, 3em) scale(5);
+    }
+
+    .workarea .spin {
+      width: 2em;
+      height: 2em;
+      animation: workarea-spin var(--spin-rate) infinite linear;
+    }
+
+    .workarea .spin use {
+      fill: black;
+      stroke: white;
+    }
+
+    @keyframes workarea-spin {
+      0% {transform:rotate(0deg)}
+      100% {transform:rotate(360deg)}
+    }
+
+    @keyframes reveal {
+      from {opacity:0;}
+      to {opacity:auto;}
+    }
+
+    @keyframes unreveal {
+      from {opacity:auto;}
+      to {opacity:0;}
+    }
+
+    @keyframes as-indicator {
+      to {
+        transform: translate(-4px, 8px) scale(0);
       }
     }
 
-    @keyframes grow {
-      from {height:0;}
-      to {height:auto;}
-    }
-
     @keyframes spin {
-      from {transform:translate(0, 10px) rotate(0deg);}
-      to {transform:translate(0, 10px) rotate(360deg);}
+      from {transform:rotate(0deg);}
+      to {transform:rotate(360deg);}
     }
 
-    @keyframes fadeout {
-      0% {transform:scale(1);}
-      100% {transform:scale(0); width: 0;}
-    }
 `;
 document.head.appendChild(styles);
 
@@ -158,14 +232,9 @@ export async function run() {
       <circle cx="0" cy="0" r="5" />
     </g>
     <g id="progress-spinner">
-      <circle class="track" cx="0" cy="0" r="5" fill="none" stroke="#888888" stroke-width="1" />
-      <circle class="ball" cx="0" cy="-5" r="1" fill="#000000" stroke-width="0" />
-      <circle class="ball" cx="0" cy="5" r="1" fill="#ffffff" stroke-width="0" />
-    </g>
-    <g id="progress-spinner">
-      <circle class="track" cx="0" cy="0" r="5" fill="none" stroke="#888888" stroke-width="1" />
-      <circle class="ball" cx="0" cy="-5" r="1" fill="#000000" stroke-width="0" />
-      <circle class="ball" cx="0" cy="5" r="1" fill="#ffffff" stroke-width="0" />
+      <circle class="track" cx="0" cy="0" r="5" stroke-width="1" />
+      <circle class="ball" cx="0" cy="-5" r="1" fill="#000000" stroke="#ffffff" stroke-width="0.1" />
+      <circle class="ball" cx="0" cy="5" r="1" fill="#ffffff" stroke="#000000" stroke-width="0.1" />
     </g>
     <g id="icon-search" viewBox="0 0 18 18">
       <path d="M17.707 16.293l-5.108-5.109A6.954 6.954 0 0014 7c0-3.86-3.141-7-7-7S0 3.14 0 7s3.141 7 7 7a6.958 6.958 0 004.185-1.402l5.108 5.109a.997.997 0 001.414 0 .999.999 0 000-1.414zM7 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"
@@ -249,13 +318,17 @@ export async function run() {
       ["Addresses", "Parcel Layer", "Address Layer"].map(async providerName => {
         let results = search(input.value);
         let spinner = createSpinner("spin");
+        let providerId = asId(providerName);
         let progress = asDom(
-          `<div class="provider">${spinner}<label>${providerName}</label></div>`
+          `<div class="provider ${providerId}">
+          <label>${providerName}</label>
+          <div class="spinner">${spinner}</div>
+          </div>`
         );
         resultItems.appendChild(progress);
         results.then(suggestions => {
           suggestions.forEach(suggestion => {
-            let marker = asDom(createMarker(asId(providerName)));
+            let marker = asDom(createMarker(providerId));
             let result = merge(suggestion, progress);
             result.insertAdjacentElement("afterbegin", marker);
             result.addEventListener("click", () => {
@@ -268,10 +341,6 @@ export async function run() {
             progress.remove();
           } else {
             progress.remove();
-            // let spinner = progress.querySelector(".spin");
-            // spinner.classList.add("fade-out");
-            // let marker = asDom(createMarker(asId(providerName)));
-            // progress.insertBefore(marker, progress.firstChild);
           }
         });
         return results;
@@ -283,7 +352,46 @@ export async function run() {
     searchAllProviders();
   }, 500);
 
+  const inputKeyups = {
+    "ArrowDown": () => (focus(resultItems.firstElementChild, { direction: "down" })),
+    "Enter": () => run.click(),
+  }
+
+  const resultItemsKeyups = {
+    "Space": () => {
+      let { activeElement } = document;
+      click(activeElement);
+    },
+    "Enter": () => {
+      let { activeElement } = document;
+      click(activeElement);
+    },
+    "ArrowUp": () => {
+      let { activeElement } = document;
+      focus(activeElement.previousElementSibling, { direction: "up" }) || focus(input);
+    },
+    "ArrowDown": () => {
+      let { activeElement } = document;
+      focus(activeElement.nextElementSibling, { direction: "down" });
+    },
+  }
+
+  resultItems.addEventListener("keyup", event => {
+    if (resultItemsKeyups[event.code]) {
+      resultItemsKeyups[event.code](event);
+      return;
+    }
+  });
+
+  run.addEventListener("click", () => {
+    console.log("execute query");
+  });
+
   input.addEventListener("keyup", event => {
+    if (inputKeyups[event.code]) {
+      inputKeyups[event.code](event);
+      return;
+    }
     slowSearch();
   });
 
@@ -294,7 +402,14 @@ export async function run() {
 
   document.body.insertBefore(widget, document.body.firstChild);
 
+  let spinner = createSpinner("spin");
+  let progress = asDom(
+    `<div class="workarea">${spinner}<label>SpinnerTest</label></div>`
+  );
+  document.body.insertBefore(progress, widget);
+
   input.value = "12345";
   await searchAllProviders();
   console.log("done");
+
 }
