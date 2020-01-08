@@ -80,89 +80,67 @@ styles.innerText = `
 
     .mock-auto-complete .result-area .result-list {
       display: grid;
-      grid-template-columns: auto;
+      grid-template-columns: 2em auto;
+      grid-template-areas:
+        "marker data"
       max-height: 40vh;
       overflow: hidden;
     }
 
-    .mock-auto-complete .result-area .result-list .provider {
-      height: 5vh;
-    }
-
     .mock-auto-complete .result-list .result-item {
       cursor: pointer;
-      padding: 0.5em;
       text-overflow: ellipsis;
       overflow: hidden;
       white-space: wrap;
-      border-left: 1px solid transparent;
       animation: reveal var(--reveal-time) forwards linear;
     }
 
-    .mock-auto-complete .result-list .provider label {
-      padding-left: 0.5em;
+    .mock-auto-complete .result-list .provider {
+      transform: translate(0, 6px);
     }
 
-    .mock-auto-complete .result-list .provider .spinner {
-      width: 2em;
-      height: 2em;
-      display: inline-block;
-      transform: translate(-4px, 8px);
-    }
-
-    .mock-auto-complete .result-list .provider .spinner .spin {
+    .mock-auto-complete .result-list .spinner.spin {
       animation: spin var(--spin-rate) 200ms infinite linear;
     }
 
-    .mock-auto-complete .result-list .provider .spinner .marker {
-      animation: as-indicator var(--reveal-time) 0ms forwards linear;
-    }
-
-    .mock-auto-complete .result-list .provider .spinner .marker use circle.ball {
-      fill: none;
-    }
-
-    .mock-auto-complete .result-list .result-item .marker {
-      width: 2em;
-      height: 2em;
+    .mock-auto-complete .result-list .marker {
       stroke: var(--border-color);
       stroke-width: 2;
-      transform: translate(-8px, 0);
+      transform: translate(25%, 25%) scale(1);
       opacity: 0.8;
     }
 
-    .mock-auto-complete .result-list .result-item:focus .marker,
-    .mock-auto-complete .result-list .result-item:hover .marker {
+    .mock-auto-complete .result-list .marker.hilite {
       stroke: white;
       transition: stroke,opacity 100ms ease-in;
       opacity: 1;
     }
 
-    .mock-auto-complete .result-list .provider.Addresses .spinner use {
+    .mock-auto-complete .result-list .Addresses.spinner use {
       stroke: var(--geolocator-color);
     }
 
-    .mock-auto-complete .result-list .result-item .marker.Addresses {
+    .mock-auto-complete .result-list .marker.Addresses {
         fill: var(--geolocator-color);
     }
 
-    .mock-auto-complete .result-list .provider.ParcelLayer .spinner use {
+    .mock-auto-complete .result-list .ParcelLayer.spinner use {
       stroke: var(--parcel-layer-color);
     }
 
-    .mock-auto-complete .result-list .result-item .marker.ParcelLayer {
+    .mock-auto-complete .result-list .marker.ParcelLayer {
       fill: var(--parcel-layer-color);
     }
 
-    .mock-auto-complete .result-list .provider.AddressLayer .spinner use {
+    .mock-auto-complete .result-list .AddressLayer.spinner use {
       stroke: var(--address-layer-color);
     }
 
-    .mock-auto-complete .result-list .result-item .marker.AddressLayer {
+    .mock-auto-complete .result-list .marker.AddressLayer {
       fill: var(--address-layer-color);
     }
 
-    .mock-auto-complete .result-list .provider .spinner.fade-out {
+    .mock-auto-complete .result-list .fade-out.spinner {
       animation: unreveal var(--reveal-time) forwards linear;
     }
 
@@ -273,7 +251,7 @@ export async function run() {
   };
 
   const createSpinner = (className: string) =>
-    `<svg class="${className}" viewBox="-10 -10 20 20"><use href="#progress-spinner"></use></svg>`;
+    `<svg class="spinner ${className}" viewBox="-10 -10 20 20"><use href="#progress-spinner"></use></svg>`;
 
   async function search(singleLineInput: string) {
     console.log(`searching for "${singleLineInput}"`);
@@ -304,43 +282,57 @@ export async function run() {
     return li;
   }
 
+  function select(suggestion: Suggestion) {
+    console.log("selected result", { suggestion });
+  }
+
+  function clearAll() {
+    input.value = "";
+    resultItems.innerText = "";
+  }
+
   let priorSearchValue = "";
   const searchAllProviders = () => {
     let searchValue = input.value;
     if (priorSearchValue === searchValue) return;
     priorSearchValue = searchValue;
-    resultItems.innerText = "";
     if (input.value.length < MIN_SEARCH_LENGTH) {
       return; // will not perform search
     }
 
     return Promise.all(
       ["Addresses", "Parcel Layer", "Address Layer"].map(async providerName => {
-        let results = search(input.value);
-        let spinner = createSpinner("spin");
         let providerId = asId(providerName);
-        let progress = asDom(
-          `<div class="provider ${providerId}">
-          <label>${providerName}</label>
-          <div class="spinner">${spinner}</div>
-          </div>`
-        );
-        resultItems.appendChild(progress);
+        let progressIndicator = widget.querySelector("." + providerId);
+        if (!progressIndicator) {
+          progressIndicator = asDom(createSpinner(providerId));
+          resultItems.appendChild(progressIndicator);
+          let progressLabel = asDom(
+            `<div class="provider ${providerId}">${providerName}</div>`
+          );
+          resultItems.appendChild(progressLabel);
+        }
+        progressIndicator.classList.remove("fade-out");
+        progressIndicator.classList.add("spin");
+
+        let results = search(input.value);
         results.then(suggestions => {
           suggestions.forEach(suggestion => {
             let marker = asDom(createMarker(providerId));
-            let result = merge(suggestion, progress);
-            result.insertAdjacentElement("afterbegin", marker);
+            let result = merge(suggestion, progressIndicator.nextElementSibling as HTMLElement);
+            result.parentElement.insertBefore(marker, result);
             result.addEventListener("click", () => {
-              console.log("selected result", { suggestion });
-              input.value = "";
-              resultItems.innerText = "";
+              select(suggestion);
+              clearAll();
             });
           });
           if (!suggestions.length) {
-            progress.remove();
+            progressIndicator.remove();
+            progressLabel.remove();
           } else {
-            progress.remove();
+            //progress.remove();
+            progressIndicator.classList.remove("spin");
+            progressIndicator.classList.add("fade-out");
           }
         });
         return results;
