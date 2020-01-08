@@ -2314,6 +2314,10 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                 return focus(element.previousElementSibling, options);
         }
     }
+    function fadeOut(element) {
+        element.style.setProperty("animation", "unreveal var(--reveal-time) forwards linear");
+        setTimeout(() => element.remove(), 200);
+    }
     function click(element) {
         if (element === null || element === void 0 ? void 0 : element.click)
             element.click();
@@ -2383,6 +2387,10 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
       overflow: hidden;
       white-space: wrap;
       animation: reveal var(--reveal-time) forwards linear;
+    }
+
+    .mock-auto-complete .result-list *.out-of-date {
+      opacity: 0.8;
     }
 
     .mock-auto-complete .result-list .provider {
@@ -2513,6 +2521,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
     </g>
   </defs>
   </svg>
+  <p>This is a mocked service so try typing "29605" or "55100"</p>
   <div class="search-area">
     <input class="search" placeholder="find address"></input>
     <button class="cancel" type="button">
@@ -2537,16 +2546,22 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                 return `<svg class="marker ${className}" style="width:1em;height:1em" viewBox="-10 -10 20 20"><use href="#marker-icon"></use></svg>`;
             };
             const createSpinner = (className) => `<svg class="spinner ${className}" viewBox="-10 -10 20 20"><use href="#progress-spinner"></use></svg>`;
-            function search(singleLineInput) {
+            let mockData = {};
+            function search(providerId, singleLineInput) {
                 return __awaiter(this, void 0, void 0, function* () {
                     console.log(`searching for "${singleLineInput}"`);
                     return new Promise((good, bad) => {
-                        let response = mockSuggestResponse.suggestions.map(v => ({
-                            text: v.text,
-                            magicKey: v.magicKey
-                        }));
+                        let response = mockData[providerId];
+                        if (!response) {
+                            response = mockSuggestResponse.suggestions.map((v, i) => ({
+                                text: v.text,
+                                magicKey: `${providerId}+${i}`
+                            }));
+                            mockData[providerId] = response;
+                        }
                         try {
-                            setTimeout(() => good(response), 100 + Math.random() * 5000);
+                            let finalResult = response.filter(v => v.text.split(/[ ,\.]/).some(v => !!v && 0 <= singleLineInput.toLocaleLowerCase().indexOf(v.toLocaleLowerCase())));
+                            setTimeout(() => good(finalResult), 100 + Math.random() * 5000);
                         }
                         catch (ex) {
                             bad(ex);
@@ -2554,19 +2569,40 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                     });
                 });
             }
-            function merge(suggestion, before) {
-                let li = document.createElement("div");
-                li.tabIndex = 0;
-                li.classList.add("result-item");
-                li.title = suggestion.text;
-                li.innerText = suggestion.text;
+            function merge(providerId, suggestion, before) {
+                let result;
                 if (!!before) {
-                    before.insertAdjacentElement("afterend", li);
+                    result = document.querySelector(`.result-item[data-key='${suggestion.magicKey}']`);
                 }
-                else {
-                    resultItems.appendChild(li);
+                if (!result) {
+                    result = document.createElement("div");
+                    if (!!before) {
+                        before.insertAdjacentElement("afterend", result);
+                    }
+                    else {
+                        resultItems.appendChild(result);
+                    }
+                    let marker = asDom(createMarker(providerId));
+                    result.parentElement.insertBefore(marker, result);
+                    result.addEventListener("click", () => {
+                        select(suggestion);
+                        clearAll();
+                    });
+                    result.addEventListener("focus", () => {
+                        marker.classList.add("hilite");
+                    });
+                    result.addEventListener("blur", () => {
+                        marker.classList.remove("hilite");
+                    });
                 }
-                return li;
+                let marker = result.previousElementSibling;
+                marker.classList.remove("out-of-date");
+                result.dataset["key"] = suggestion.magicKey;
+                result.tabIndex = 0;
+                result.className = `result-item ${providerId}`;
+                result.title = suggestion.text;
+                result.innerText = suggestion.text;
+                return result;
             }
             function select(suggestion) {
                 console.log("selected result", { suggestion });
@@ -2586,35 +2622,38 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                 }
                 return Promise.all(["Addresses", "Parcel Layer", "Address Layer"].map((providerName) => __awaiter(this, void 0, void 0, function* () {
                     let providerId = asId(providerName);
-                    let progressIndicator = widget.querySelector("." + providerId);
+                    let progressIndicator = widget.querySelector(`.spinner.${providerId}`);
                     if (!progressIndicator) {
                         progressIndicator = asDom(createSpinner(providerId));
                         resultItems.appendChild(progressIndicator);
                         let progressLabel = asDom(`<div class="provider ${providerId}">${providerName}</div>`);
                         resultItems.appendChild(progressLabel);
                     }
+                    else {
+                        // result-item and marker get flagged as out-of-date
+                        ["result-item", "marker"].forEach(selector => {
+                            Array.from(widget.querySelectorAll(`.${selector}.${providerId}`)).forEach(item => item.classList.add("out-of-date"));
+                        });
+                    }
                     progressIndicator.classList.remove("fade-out");
                     progressIndicator.classList.add("spin");
-                    let results = search(input.value);
+                    let results = search(providerId, input.value);
                     results.then(suggestions => {
+                        if (!suggestions.length) {
+                            progressIndicator.nextElementSibling.remove();
+                            progressIndicator.remove();
+                        }
                         suggestions.forEach(suggestion => {
-                            let marker = asDom(createMarker(providerId));
-                            let result = merge(suggestion, progressIndicator.nextElementSibling);
-                            result.parentElement.insertBefore(marker, result);
-                            result.addEventListener("click", () => {
-                                select(suggestion);
-                                clearAll();
+                            merge(providerId, suggestion, progressIndicator.nextElementSibling);
+                        });
+                        progressIndicator.classList.remove("spin");
+                        progressIndicator.classList.add("fade-out");
+                        // result-item and marker get flagged as out-of-date
+                        ["result-item", "marker"].forEach(selector => {
+                            Array.from(widget.querySelectorAll(`.${selector}.${providerId}.out-of-date`)).forEach(item => {
+                                fadeOut(item);
                             });
                         });
-                        if (!suggestions.length) {
-                            progressIndicator.remove();
-                            progressLabel.remove();
-                        }
-                        else {
-                            //progress.remove();
-                            progressIndicator.classList.remove("spin");
-                            progressIndicator.classList.add("fade-out");
-                        }
                     });
                     return results;
                 })));
@@ -2661,16 +2700,9 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                 slowSearch();
             });
             cancel.addEventListener("click", () => {
-                input.value = "";
-                searchAllProviders();
+                clearAll();
             });
             document.body.insertBefore(widget, document.body.firstChild);
-            let spinner = createSpinner("spin");
-            let progress = asDom(`<div class="workarea">${spinner}<label>SpinnerTest</label></div>`);
-            document.body.insertBefore(progress, widget);
-            input.value = "12345";
-            yield searchAllProviders();
-            console.log("done");
         });
     }
     exports.run = run;

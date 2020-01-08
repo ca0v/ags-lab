@@ -23,6 +23,11 @@ function focus(element: Element & { focus?: Function }, options?: { direction: "
   }
 }
 
+function fadeOut(element: HTMLElement) {
+  element.style.setProperty("animation", "unreveal var(--reveal-time) forwards linear");
+  setTimeout(() => element.remove(), 200);
+}
+
 function click(element: Element & { click?: Function }) {
   if (element?.click) element.click();
 }
@@ -93,6 +98,10 @@ styles.innerText = `
       overflow: hidden;
       white-space: wrap;
       animation: reveal var(--reveal-time) forwards linear;
+    }
+
+    .mock-auto-complete .result-list *.out-of-date {
+      opacity: 0.8;
     }
 
     .mock-auto-complete .result-list .provider {
@@ -225,6 +234,7 @@ export async function run() {
     </g>
   </defs>
   </svg>
+  <p>This is a mocked service so try typing "29605" or "55100"</p>
   <div class="search-area">
     <input class="search" placeholder="find address"></input>
     <button class="cancel" type="button">
@@ -253,33 +263,63 @@ export async function run() {
   const createSpinner = (className: string) =>
     `<svg class="spinner ${className}" viewBox="-10 -10 20 20"><use href="#progress-spinner"></use></svg>`;
 
-  async function search(singleLineInput: string) {
+  let mockData = {} as Dictionary<Suggestion[]>;
+
+  async function search(providerId: string, singleLineInput: string) {
     console.log(`searching for "${singleLineInput}"`);
     return new Promise<Suggestion[]>((good, bad) => {
-      let response = mockSuggestResponse.suggestions.map(v => ({
-        text: v.text,
-        magicKey: v.magicKey
-      }));
+      let response = mockData[providerId];
+      if (!response) {
+        response = mockSuggestResponse.suggestions.map((v, i) => ({
+          text: v.text,
+          magicKey: `${providerId}+${i}`
+        }));
+        mockData[providerId] = response;
+      }
       try {
-        setTimeout(() => good(response), 100 + Math.random() * 5000);
+        let finalResult = response.filter(v => v.text.split(/[ ,\.]/).some(v => !!v && 0 <= singleLineInput.toLocaleLowerCase().indexOf(v.toLocaleLowerCase())));
+        setTimeout(() => good(finalResult), 100 + Math.random() * 5000);
       } catch (ex) {
         bad(ex);
       }
     });
   }
 
-  function merge(suggestion: Suggestion, before?: HTMLElement) {
-    let li = document.createElement("div");
-    li.tabIndex = 0;
-    li.classList.add("result-item");
-    li.title = suggestion.text;
-    li.innerText = suggestion.text;
+  function merge(providerId: string, suggestion: Suggestion, before?: HTMLElement) {
+    let result: HTMLDivElement | null;
     if (!!before) {
-      before.insertAdjacentElement("afterend", li);
-    } else {
-      resultItems.appendChild(li);
+      result = document.querySelector(`.result-item[data-key='${suggestion.magicKey}']`);
     }
-    return li;
+    if (!result) {
+      result = document.createElement("div");
+      if (!!before) {
+        before.insertAdjacentElement("afterend", result);
+      } else {
+        resultItems.appendChild(result);
+      }
+      let marker = asDom(createMarker(providerId));
+      result.parentElement.insertBefore(marker, result);
+      result.addEventListener("click", () => {
+        select(suggestion);
+        clearAll();
+      });
+      result.addEventListener("focus", () => {
+        marker.classList.add("hilite");
+      });
+      result.addEventListener("blur", () => {
+        marker.classList.remove("hilite");
+      });
+    }
+
+    let marker = result.previousElementSibling;
+    marker.classList.remove("out-of-date");
+
+    result.dataset["key"] = suggestion.magicKey;
+    result.tabIndex = 0;
+    result.className = `result-item ${providerId}`;
+    result.title = suggestion.text;
+    result.innerText = suggestion.text;
+    return result;
   }
 
   function select(suggestion: Suggestion) {
@@ -303,7 +343,7 @@ export async function run() {
     return Promise.all(
       ["Addresses", "Parcel Layer", "Address Layer"].map(async providerName => {
         let providerId = asId(providerName);
-        let progressIndicator = widget.querySelector("." + providerId);
+        let progressIndicator = widget.querySelector(`.spinner.${providerId}`);
         if (!progressIndicator) {
           progressIndicator = asDom(createSpinner(providerId));
           resultItems.appendChild(progressIndicator);
@@ -311,29 +351,32 @@ export async function run() {
             `<div class="provider ${providerId}">${providerName}</div>`
           );
           resultItems.appendChild(progressLabel);
+        } else {
+          // result-item and marker get flagged as out-of-date
+          ["result-item", "marker"].forEach(selector => {
+            Array.from(widget.querySelectorAll(`.${selector}.${providerId}`)).forEach(item => item.classList.add("out-of-date"));
+          });
         }
         progressIndicator.classList.remove("fade-out");
         progressIndicator.classList.add("spin");
 
-        let results = search(input.value);
+        let results = search(providerId, input.value);
         results.then(suggestions => {
+          if (!suggestions.length) {
+            progressIndicator.nextElementSibling.remove();
+            progressIndicator.remove();
+          }
           suggestions.forEach(suggestion => {
-            let marker = asDom(createMarker(providerId));
-            let result = merge(suggestion, progressIndicator.nextElementSibling as HTMLElement);
-            result.parentElement.insertBefore(marker, result);
-            result.addEventListener("click", () => {
-              select(suggestion);
-              clearAll();
+            merge(providerId, suggestion, progressIndicator.nextElementSibling as HTMLElement);
+          });
+          progressIndicator.classList.remove("spin");
+          progressIndicator.classList.add("fade-out");
+          // result-item and marker get flagged as out-of-date
+          ["result-item", "marker"].forEach(selector => {
+            Array.from(widget.querySelectorAll(`.${selector}.${providerId}.out-of-date`)).forEach(item => {
+              fadeOut(item as HTMLElement);
             });
           });
-          if (!suggestions.length) {
-            progressIndicator.remove();
-            progressLabel.remove();
-          } else {
-            //progress.remove();
-            progressIndicator.classList.remove("spin");
-            progressIndicator.classList.add("fade-out");
-          }
         });
         return results;
       })
@@ -388,20 +431,9 @@ export async function run() {
   });
 
   cancel.addEventListener("click", () => {
-    input.value = "";
-    searchAllProviders();
+    clearAll();
   });
 
   document.body.insertBefore(widget, document.body.firstChild);
-
-  let spinner = createSpinner("spin");
-  let progress = asDom(
-    `<div class="workarea">${spinner}<label>SpinnerTest</label></div>`
-  );
-  document.body.insertBefore(progress, widget);
-
-  input.value = "12345";
-  await searchAllProviders();
-  console.log("done");
 
 }
