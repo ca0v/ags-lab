@@ -2296,6 +2296,39 @@ let mappings = {
 define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "labs/data/suggest_response"], function (require, exports, debounce, mockSuggestResponse) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    const textarea = `
+/**
+ * This is a prototype autocomplete/typeahead control
+ * I've looked at the jquery autocomplete control
+ * the twitter typeahead control 
+ * as well as the esri search input control.
+ * I look at the google maps search input.
+ * They are all excellent and very fast.
+ * 
+ * This control copies some of the keyboard shortcuts (arrow up/down)
+ * from those controls but is built on a "grid" layout.
+ * 
+ * Like the esri control, this will aggregate results from
+ * multiple services and render markers based on the response
+ * data.  It will group the results by the provider
+ * 
+ * Like the google control, it will render small markers to give
+ * meaning to the data (business, home address, parcel, etc.)
+ * 
+ * The google locator is so fast it doesn't need any animations
+ * but some of the providers this control will consume aren't
+ * so lucky so the user needs feedback.  I tried to make it 
+ * less jaring, but there's more to do.
+ * 
+ * Morphing to prevent bouncing?
+ * The progress indicators for the various providers cause bouncing
+ * when the come in/out of view and I'm not sure they're necessary.  
+ * Maybe the "X" can show a progress spinner around it instead?  
+ * Or maybe the search icon can morph into a spinner?
+ * Probably the first results should morph into the provider placeholder
+ * instead of one fading in and the other out.
+ */
+`;
     const MIN_SEARCH_LENGTH = 1;
     function focus(element, options) {
         if (!element)
@@ -2331,6 +2364,8 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
     let styles = document.createElement("style");
     styles.innerText = `
     :root {
+      --text-color: white;
+      --background-color: black;
       --border-color: rgba(200,200,200,1);
       --reveal-time: 200ms;
       --spin-rate: 2500ms;
@@ -2339,13 +2374,22 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
       --geolocator-color: blue;
     }
 
+    body {
+      overflow: hidden;
+    }
+
+    .mock-auto-complete .spinner {display: none;}
+    .mock-auto-complete div.provider {display:none;}
+
     .mock-auto-complete {
       display: inline-block;
       border: 1px solid;
       border-color: var(--border-color);
       padding: 0.25em;
       min-width: max(16em,25vw);
-      max-width: min(32em,50vw);
+      max-width: min(48em,50vw);
+      background: var(--background-color);
+      color: var(--text-color);
     }
 
     .mock-auto-complete .search-area {
@@ -2376,7 +2420,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
       display: grid;
       grid-template-columns: 2em auto;
       grid-template-areas:
-        "marker data"
+        "marker data";
       max-height: 40vh;
       overflow: hidden;
     }
@@ -2390,26 +2434,26 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
     }
 
     .mock-auto-complete .result-list *.out-of-date {
-      opacity: 0.8;
+      animation: out-of-date var(--reveal-time) forwards linear;
     }
 
     .mock-auto-complete .result-list .provider {
       transform: translate(0, 6px);
     }
 
-    .mock-auto-complete .result-list .spinner.spin {
+    .mock-auto-complete .spin {
       animation: spin var(--spin-rate) 200ms infinite linear;
     }
 
     .mock-auto-complete .result-list .marker {
-      stroke: var(--border-color);
+      stroke: none;
       stroke-width: 2;
-      transform: translate(25%, 25%) scale(1);
+      transform: translate(50%, 25%) scale(1);
       opacity: 0.8;
     }
 
     .mock-auto-complete .result-list .marker.hilite {
-      stroke: white;
+      stroke: var(--text-color);
       transition: stroke,opacity 100ms ease-in;
       opacity: 1;
     }
@@ -2438,7 +2482,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
       fill: var(--address-layer-color);
     }
 
-    .mock-auto-complete .result-list .fade-out.spinner {
+    .mock-auto-complete .result-list .fade-out {
       animation: unreveal var(--reveal-time) forwards linear;
     }
 
@@ -2465,6 +2509,10 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
       100% {transform:rotate(360deg)}
     }
 
+    @keyframes out-of-date {
+      to {opacity:0.3;}
+    }
+
     @keyframes reveal {
       from {opacity:0;}
       to {opacity:auto;}
@@ -2472,7 +2520,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
 
     @keyframes unreveal {
       from {opacity:auto;}
-      to {opacity:0;}
+      to {opacity:0; height: 0;}
     }
 
     @keyframes as-indicator {
@@ -2506,18 +2554,18 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
       <circle cx="0" cy="0" r="5" />
     </g>
     <g id="progress-spinner">
-      <circle class="track" cx="0" cy="0" r="5" stroke-width="1" />
+      <circle class="track" cx="0" cy="0" r="5" fill="none" stroke-width="2" />
       <circle class="ball" cx="0" cy="-5" r="1" fill="#000000" stroke="#ffffff" stroke-width="0.1" />
       <circle class="ball" cx="0" cy="5" r="1" fill="#ffffff" stroke="#000000" stroke-width="0.1" />
     </g>
     <g id="icon-search" viewBox="0 0 18 18">
       <path d="M17.707 16.293l-5.108-5.109A6.954 6.954 0 0014 7c0-3.86-3.141-7-7-7S0 3.14 0 7s3.141 7 7 7a6.958 6.958 0 004.185-1.402l5.108 5.109a.997.997 0 001.414 0 .999.999 0 000-1.414zM7 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"
-      fill="currentColor" fill-rule="nonzero" stroke="none"></path>
+      fill-rule="nonzero" stroke="none"></path>
     </g>
     <g id="icon-close" viewBox="0 0 18 18">
       <path
         d="M10.414 9l5.293-5.293a.999.999 0 10-1.414-1.414L9 7.586 3.707 2.293a.999.999 0 10-1.414 1.414L7.586 9l-5.293 5.293a.999.999 0 101.414 1.414L9 10.414l5.293 5.293a.997.997 0 001.414 0 .999.999 0 000-1.414L10.414 9"
-        fill="currentColor" fill-rule="evenodd" stroke="none"></path>
+        fill-rule="evenodd" stroke="none"></path>
     </g>
   </defs>
   </svg>
@@ -2583,7 +2631,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                         resultItems.appendChild(result);
                     }
                     let marker = asDom(createMarker(providerId));
-                    result.parentElement.insertBefore(marker, result);
+                    resultItems.insertBefore(marker, result);
                     result.addEventListener("click", () => {
                         select(suggestion);
                         clearAll();
@@ -2635,19 +2683,22 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                             Array.from(widget.querySelectorAll(`.${selector}.${providerId}`)).forEach(item => item.classList.add("out-of-date"));
                         });
                     }
+                    let progressLabel = progressIndicator.nextElementSibling;
+                    progressLabel.classList.remove("fade-out");
                     progressIndicator.classList.remove("fade-out");
                     progressIndicator.classList.add("spin");
                     let results = search(providerId, input.value);
                     results.then(suggestions => {
                         if (!suggestions.length) {
-                            progressIndicator.nextElementSibling.remove();
+                            progressLabel.remove();
                             progressIndicator.remove();
                         }
                         suggestions.forEach(suggestion => {
-                            merge(providerId, suggestion, progressIndicator.nextElementSibling);
+                            merge(providerId, suggestion, progressLabel);
                         });
                         progressIndicator.classList.remove("spin");
                         progressIndicator.classList.add("fade-out");
+                        progressLabel.classList.add("fade-out");
                         // result-item and marker get flagged as out-of-date
                         ["result-item", "marker"].forEach(selector => {
                             Array.from(widget.querySelectorAll(`.${selector}.${providerId}.out-of-date`)).forEach(item => {
@@ -2659,7 +2710,16 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                 })));
             };
             const slowSearch = debounce(() => __awaiter(this, void 0, void 0, function* () {
-                searchAllProviders();
+                let thing = cancel.querySelector("svg");
+                try {
+                    thing.classList.add("spin");
+                    thing.style.setProperty("fill", "red");
+                    yield searchAllProviders();
+                }
+                finally {
+                    thing.classList.remove("spin");
+                    thing.style.setProperty("fill", "");
+                }
             }), 500);
             const inputKeyups = {
                 "ArrowDown": () => (focus(resultItems.firstElementChild, { direction: "down" })),
@@ -2676,7 +2736,11 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                 },
                 "ArrowUp": () => {
                     let { activeElement } = document;
-                    focus(activeElement.previousElementSibling, { direction: "up" }) || focus(input);
+                    if (!focus(activeElement.previousElementSibling, { direction: "up" })) {
+                        if (focus(input)) {
+                            input.select();
+                        }
+                    }
                 },
                 "ArrowDown": () => {
                     let { activeElement } = document;
@@ -2703,6 +2767,9 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                 clearAll();
             });
             document.body.insertBefore(widget, document.body.firstChild);
+            input.value = "datastream";
+            yield slowSearch();
+            console.log(textarea.replace(/\n/g, ""));
         });
     }
     exports.run = run;
