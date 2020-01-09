@@ -2296,34 +2296,40 @@ let mappings = {
 define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "labs/data/suggest_response"], function (require, exports, debounce, mockSuggestResponse) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    function randomColor() {
+        let [r, g, b] = [255, 255, 255]
+            .map(v => Math.floor(64 + (v - 64) * Math.random()))
+            .map(v => v.toString(16));
+        return [r, g, b].join("");
+    }
     const textarea = `
 /**
  * This is a prototype autocomplete/typeahead control
  * I've looked at the jquery autocomplete control
- * the twitter typeahead control 
+ * the twitter typeahead control
  * as well as the esri search input control.
  * I look at the google maps search input.
  * They are all excellent and very fast.
- * 
+ *
  * This control copies some of the keyboard shortcuts (arrow up/down)
  * from those controls but is built on a "grid" layout.
- * 
+ *
  * Like the esri control, this will aggregate results from
  * multiple services and render markers based on the response
  * data.  It will group the results by the provider
- * 
+ *
  * Like the google control, it will render small markers to give
  * meaning to the data (business, home address, parcel, etc.)
- * 
+ *
  * The google locator is so fast it doesn't need any animations
  * but some of the providers this control will consume aren't
- * so lucky so the user needs feedback.  I tried to make it 
+ * so lucky so the user needs feedback.  I tried to make it
  * less jaring, but there's more to do.
- * 
+ *
  * Morphing to prevent bouncing?
  * The progress indicators for the various providers cause bouncing
- * when the come in/out of view and I'm not sure they're necessary.  
- * Maybe the "X" can show a progress spinner around it instead?  
+ * when the come in/out of view and I'm not sure they're necessary.
+ * Maybe the "X" can show a progress spinner around it instead?
  * Or maybe the search icon can morph into a spinner?
  * Probably the first results should morph into the provider placeholder
  * instead of one fading in and the other out.
@@ -2342,18 +2348,29 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
             return false;
         switch (options.direction) {
             case "down":
-                return focus(element.firstElementChild, options) || focus(element.nextElementSibling, options);
+                return (focus(element.firstElementChild, options) ||
+                    focus(element.nextElementSibling, options));
             default:
                 return focus(element.previousElementSibling, options);
         }
     }
-    function fadeOut(element) {
-        element.style.setProperty("animation", "unreveal var(--reveal-time) forwards linear");
-        setTimeout(() => element.remove(), 200);
+    function fadeOut(element, interval = 200) {
+        return __awaiter(this, void 0, void 0, function* () {
+            element.style.setProperty("animation", `unreveal ${interval}ms forwards linear`);
+            yield sleep(interval);
+            element.remove();
+        });
     }
     function click(element) {
         if (element === null || element === void 0 ? void 0 : element.click)
             element.click();
+    }
+    function sleep(interval = 1000) {
+        return __awaiter(this, void 0, void 0, function* () {
+            return new Promise((good, bad) => {
+                setTimeout(good, interval);
+            });
+        });
     }
     /**
      * As user types a message invoke multiple "suggest" requests...as response comes
@@ -2367,11 +2384,12 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
       --text-color: white;
       --background-color: black;
       --border-color: rgba(200,200,200,1);
-      --reveal-time: 200ms;
-      --spin-rate: 2500ms;
-      --address-layer-color: red;
-      --parcel-layer-color: green;
-      --geolocator-color: blue;
+      --reveal-time: 0ms;
+      --spin-rate: 5000ms;
+      --ghostly: 0.6;
+      --address-layer-color: #${randomColor()};
+      --parcel-layer-color: #${randomColor()};
+      --geolocator-color: #${randomColor()};
     }
 
     body {
@@ -2434,7 +2452,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
     }
 
     .mock-auto-complete .result-list *.out-of-date {
-      animation: out-of-date var(--reveal-time) forwards linear;
+      opacity: var(--ghostly);
     }
 
     .mock-auto-complete .result-list .provider {
@@ -2446,16 +2464,15 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
     }
 
     .mock-auto-complete .result-list .marker {
-      stroke: none;
+      stroke: var(--text-color);
       stroke-width: 2;
+      stroke-opacity: var(--ghostly);
       transform: translate(50%, 25%) scale(1);
-      opacity: 0.8;
     }
 
     .mock-auto-complete .result-list .marker.hilite {
-      stroke: var(--text-color);
-      transition: stroke,opacity 100ms ease-in;
-      opacity: 1;
+      transition: all 100ms ease-in;
+      stroke-opacity: 1;
     }
 
     .mock-auto-complete .result-list .Addresses.spinner use {
@@ -2509,20 +2526,6 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
       100% {transform:rotate(360deg)}
     }
 
-    @keyframes out-of-date {
-      to {opacity:0.3;}
-    }
-
-    @keyframes reveal {
-      from {opacity:0;}
-      to {opacity:auto;}
-    }
-
-    @keyframes unreveal {
-      from {opacity:auto;}
-      to {opacity:0; height: 0;}
-    }
-
     @keyframes as-indicator {
       to {
         transform: translate(-4px, 8px) scale(0);
@@ -2551,7 +2554,8 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
   <svg style="display:none" viewBox="-10 -10 20 20">
   <defs>
     <g id="marker-icon">
-      <circle cx="0" cy="0" r="5" />
+      <path transform="scale(1.2, 0.6) translate(0, 15)" stroke-width="1"
+      d="M 0 0 L -4 -20 L -6 -25 L -1 -30 L 0 -30 L 1 -30 L 6 -25 L 4 -20 Z"></path>
     </g>
     <g id="progress-spinner">
       <circle class="track" cx="0" cy="0" r="5" fill="none" stroke-width="2" />
@@ -2569,7 +2573,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
     </g>
   </defs>
   </svg>
-  <p>This is a mocked service so try typing "29605" or "55100"</p>
+  <p class="mission-impossible">This is a mocked service so try typing "29605" or "55100"</p>
   <div class="search-area">
     <input class="search" placeholder="find address"></input>
     <button class="cancel" type="button">
@@ -2594,6 +2598,14 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                 return `<svg class="marker ${className}" style="width:1em;height:1em" viewBox="-10 -10 20 20"><use href="#marker-icon"></use></svg>`;
             };
             const createSpinner = (className) => `<svg class="spinner ${className}" viewBox="-10 -10 20 20"><use href="#progress-spinner"></use></svg>`;
+            const missionImpossible = () => __awaiter(this, void 0, void 0, function* () {
+                let nodes = Array.from(document.querySelectorAll(".mission-impossible"));
+                if (!nodes.length)
+                    return;
+                nodes.forEach(n => n.classList.remove("mission-impossible"));
+                yield sleep(5000);
+                nodes.forEach(n => fadeOut(n, 2000));
+            });
             let mockData = {};
             function search(providerId, singleLineInput) {
                 return __awaiter(this, void 0, void 0, function* () {
@@ -2608,7 +2620,13 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                             mockData[providerId] = response;
                         }
                         try {
-                            let finalResult = response.filter(v => v.text.split(/[ ,\.]/).some(v => !!v && 0 <= singleLineInput.toLocaleLowerCase().indexOf(v.toLocaleLowerCase())));
+                            let finalResult = response.filter(v => v.text
+                                .split(/[ ,\.]/)
+                                .some(v => !!v &&
+                                0 <=
+                                    singleLineInput
+                                        .toLocaleLowerCase()
+                                        .indexOf(v.toLocaleLowerCase())));
                             setTimeout(() => good(finalResult), 100 + Math.random() * 5000);
                         }
                         catch (ex) {
@@ -2722,19 +2740,19 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                 }
             }), 500);
             const inputKeyups = {
-                "ArrowDown": () => (focus(resultItems.firstElementChild, { direction: "down" })),
-                "Enter": () => run.click(),
+                ArrowDown: () => focus(resultItems.firstElementChild, { direction: "down" }),
+                Enter: () => run.click()
             };
             const resultItemsKeyups = {
-                "Space": () => {
+                Space: () => {
                     let { activeElement } = document;
                     click(activeElement);
                 },
-                "Enter": () => {
+                Enter: () => {
                     let { activeElement } = document;
                     click(activeElement);
                 },
-                "ArrowUp": () => {
+                ArrowUp: () => {
                     let { activeElement } = document;
                     if (!focus(activeElement.previousElementSibling, { direction: "up" })) {
                         if (focus(input)) {
@@ -2742,10 +2760,10 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                         }
                     }
                 },
-                "ArrowDown": () => {
+                ArrowDown: () => {
                     let { activeElement } = document;
                     focus(activeElement.nextElementSibling, { direction: "down" });
-                },
+                }
             };
             resultItems.addEventListener("keyup", event => {
                 if (resultItemsKeyups[event.code]) {
@@ -2770,6 +2788,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
             input.value = "datastream";
             yield slowSearch();
             console.log(textarea.replace(/\n/g, ""));
+            missionImpossible();
         });
     }
     exports.run = run;
