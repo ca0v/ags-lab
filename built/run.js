@@ -2623,7 +2623,9 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                         .some(v => !!v &&
                         0 <=
                             singleLineInput.toLocaleLowerCase().indexOf(v.toLocaleLowerCase())));
-                    yield sleep(100 + Math.random() * 5000);
+                    yield sleep(100 + Math.random() * Math.random() * 5000);
+                    if (0.1 > Math.random())
+                        throw "Error";
                     return finalResult;
                 });
             }

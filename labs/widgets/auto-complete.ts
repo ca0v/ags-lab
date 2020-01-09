@@ -354,7 +354,8 @@ export async function run() {
               singleLineInput.toLocaleLowerCase().indexOf(v.toLocaleLowerCase())
         )
     );
-    await sleep(100 + Math.random() * 5000);
+    await sleep(100 + Math.random() * Math.random() * 5000);
+    if (0.1 > Math.random()) throw "Error";
     return finalResult;
   }
 
