@@ -336,33 +336,26 @@ export async function run() {
 
   async function search(providerId: string, singleLineInput: string) {
     console.log(`searching for "${singleLineInput}"`);
-    return new Promise<Suggestion[]>((good, bad) => {
-      let response = mockData[providerId];
-      if (!response) {
-        response = mockSuggestResponse.suggestions.map((v, i) => ({
-          text: v.text,
-          magicKey: `${providerId}+${i}`
-        }));
-        mockData[providerId] = response;
-      }
-      try {
-        let finalResult = response.filter(v =>
-          v.text
-            .split(/[ ,\.]/)
-            .some(
-              v =>
-                !!v &&
-                0 <=
-                  singleLineInput
-                    .toLocaleLowerCase()
-                    .indexOf(v.toLocaleLowerCase())
-            )
-        );
-        setTimeout(() => good(finalResult), 100 + Math.random() * 5000);
-      } catch (ex) {
-        bad(ex);
-      }
-    });
+    let response = mockData[providerId];
+    if (!response) {
+      response = mockSuggestResponse.suggestions.map((v, i) => ({
+        text: v.text,
+        magicKey: `${providerId}+${i}`
+      }));
+      mockData[providerId] = response;
+    }
+    let finalResult = response.filter(v =>
+      v.text
+        .split(/[ ,\.]/)
+        .some(
+          v =>
+            !!v &&
+            0 <=
+              singleLineInput.toLocaleLowerCase().indexOf(v.toLocaleLowerCase())
+        )
+    );
+    await sleep(100 + Math.random() * 5000);
+    return finalResult;
   }
 
   function merge(

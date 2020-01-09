@@ -2610,29 +2610,21 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
             function search(providerId, singleLineInput) {
                 return __awaiter(this, void 0, void 0, function* () {
                     console.log(`searching for "${singleLineInput}"`);
-                    return new Promise((good, bad) => {
-                        let response = mockData[providerId];
-                        if (!response) {
-                            response = mockSuggestResponse.suggestions.map((v, i) => ({
-                                text: v.text,
-                                magicKey: `${providerId}+${i}`
-                            }));
-                            mockData[providerId] = response;
-                        }
-                        try {
-                            let finalResult = response.filter(v => v.text
-                                .split(/[ ,\.]/)
-                                .some(v => !!v &&
-                                0 <=
-                                    singleLineInput
-                                        .toLocaleLowerCase()
-                                        .indexOf(v.toLocaleLowerCase())));
-                            setTimeout(() => good(finalResult), 100 + Math.random() * 5000);
-                        }
-                        catch (ex) {
-                            bad(ex);
-                        }
-                    });
+                    let response = mockData[providerId];
+                    if (!response) {
+                        response = mockSuggestResponse.suggestions.map((v, i) => ({
+                            text: v.text,
+                            magicKey: `${providerId}+${i}`
+                        }));
+                        mockData[providerId] = response;
+                    }
+                    let finalResult = response.filter(v => v.text
+                        .split(/[ ,\.]/)
+                        .some(v => !!v &&
+                        0 <=
+                            singleLineInput.toLocaleLowerCase().indexOf(v.toLocaleLowerCase())));
+                    yield sleep(100 + Math.random() * 5000);
+                    return finalResult;
                 });
             }
             function merge(providerId, suggestion, before) {
