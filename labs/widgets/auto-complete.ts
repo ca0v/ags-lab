@@ -182,7 +182,7 @@ styles.innerText = `
       border: 1px solid;
       border-color: var(--border-color);
       padding: 0.25em;
-      min-width: max(32em,25vw);
+      min-width: min(32em,100vw);
       max-width: min(48em,50vw);
       background: var(--background-color);
       color: var(--text-color);
@@ -466,7 +466,7 @@ export async function run() {
         )
     );
     await sleep(100 + Math.random() * Math.random() * 5000);
-    if (0.1 > Math.random()) throw "Error";
+    //if (0.05 > Math.random()) throw "Error";
     return finalResult;
   }
 

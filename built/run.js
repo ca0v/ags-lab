@@ -2464,7 +2464,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
       border: 1px solid;
       border-color: var(--border-color);
       padding: 0.25em;
-      min-width: max(32em,25vw);
+      min-width: min(32em,100vw);
       max-width: min(48em,50vw);
       background: var(--background-color);
       color: var(--text-color);
@@ -2735,8 +2735,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                         0 <=
                             singleLineInput.toLocaleLowerCase().indexOf(v.toLocaleLowerCase())));
                     yield sleep(100 + Math.random() * Math.random() * 5000);
-                    if (0.1 > Math.random())
-                        throw "Error";
+                    //if (0.05 > Math.random()) throw "Error";
                     return finalResult;
                 });
             }
