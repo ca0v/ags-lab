@@ -2491,9 +2491,6 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
       stroke: var(--background-color);
     }
 
-    .mock-auto-complete .search-area button:focus svg use {
-      stroke: red;
-    }
     .mock-auto-complete .search-area .search {
       grid-area: search;
     }
@@ -2766,7 +2763,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                         marker.querySelector("svg").classList.remove("hilite");
                     });
                 }
-                let marker = result.previousElementSibling;
+                let marker = result.previousElementSibling.querySelector(".marker");
                 marker.classList.remove("out-of-date");
                 result.dataset["key"] = suggestion.magicKey;
                 result.tabIndex = 0;
@@ -2837,10 +2834,14 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                 let thing = cancel.querySelector("svg");
                 try {
                     thing.classList.add("spin");
+                    thing
+                        .querySelector("use")
+                        .style.setProperty("transform", "translate(2.82px, 2.82px) scale(0.707)");
                     thing.style.setProperty("fill", "red");
                     yield searchAllProviders();
                 }
                 finally {
+                    thing.querySelector("use").style.setProperty("transform", "");
                     thing.classList.remove("spin");
                     thing.style.setProperty("fill", "");
                 }

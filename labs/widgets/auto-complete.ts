@@ -209,9 +209,6 @@ styles.innerText = `
       stroke: var(--background-color);
     }
 
-    .mock-auto-complete .search-area button:focus svg use {
-      stroke: red;
-    }
     .mock-auto-complete .search-area .search {
       grid-area: search;
     }
@@ -503,7 +500,7 @@ export async function run() {
       });
     }
 
-    let marker = result.previousElementSibling;
+    let marker = result.previousElementSibling.querySelector(".marker");
     marker.classList.remove("out-of-date");
 
     result.dataset["key"] = suggestion.magicKey;
@@ -588,9 +585,16 @@ export async function run() {
     let thing = cancel.querySelector("svg") as SVGElement;
     try {
       thing.classList.add("spin");
+      thing
+        .querySelector("use")
+        .style.setProperty(
+          "transform",
+          "translate(2.82px, 2.82px) scale(0.707)"
+        );
       thing.style.setProperty("fill", "red");
       await searchAllProviders();
     } finally {
+      thing.querySelector("use").style.setProperty("transform", "");
       thing.classList.remove("spin");
       thing.style.setProperty("fill", "");
     }
