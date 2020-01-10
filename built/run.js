@@ -2703,7 +2703,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
             let run = widget.querySelector(".run");
             let resultItems = widget.querySelector(".result-list");
             const createMarker = (className) => {
-                return `<svg class="marker ${className}" style="width:1em;height:1em" viewBox="-10 -10 20 20"><use href="#icon-marker"></use></svg>`;
+                return `<div title="foo"><svg class="marker ${className}" style="width:1em;height:1em" viewBox="-10 -10 20 20"><use href="#icon-marker"></use></svg></div>`;
             };
             const createSpinner = (className) => `<svg class="spinner ${className}" viewBox="-10 -10 20 20"><use href="#progress-spinner"></use></svg>`;
             const missionImpossible = () => __awaiter(this, void 0, void 0, function* () {
@@ -2751,16 +2751,17 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
                         resultItems.appendChild(result);
                     }
                     let marker = asDom(createMarker(providerId));
+                    marker.title = providerId;
                     resultItems.insertBefore(marker, result);
                     result.addEventListener("click", () => {
                         select(suggestion);
                         clearAll();
                     });
                     result.addEventListener("focus", () => {
-                        marker.classList.add("hilite");
+                        marker.querySelector("svg").classList.add("hilite");
                     });
                     result.addEventListener("blur", () => {
-                        marker.classList.remove("hilite");
+                        marker.querySelector("svg").classList.remove("hilite");
                     });
                 }
                 let marker = result.previousElementSibling;
