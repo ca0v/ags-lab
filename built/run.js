@@ -1995,8 +1995,8 @@ define("labs/console", ["require", "exports"], function (require, exports) {
         console.log = (...args) => {
             log.apply(console, args);
             let div = document.createElement("textarea");
-            div.innerText = args.map(JSON.stringify).join(" ");
-            content.insertBefore(div, null);
+            div.innerText = args.map(v => JSON.stringify(v)).join(" ");
+            content.insertBefore(div, content.firstChild);
         };
     }
     exports.run = run;
@@ -2305,14 +2305,70 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
     const textarea = `
 /**
  * This is a prototype autocomplete/typeahead control
- * I've looked at the jquery autocomplete control
- * the twitter typeahead control
- * as well as the esri search input control.
- * I look at the google maps search input.
- * They are all excellent and very fast.
+ * I've looked at the following solutions:
+ * > the jquery autocomplete control
+ * > the twitter typeahead control
+ * > the esri search input control
+ * > the google maps search input (and google autocomplete)
  *
- * This control copies some of the keyboard shortcuts (arrow up/down)
- * from those controls but is built on a "grid" layout.
+ * The typeahead examples are very clean, no icons, no buttons,
+ * good keyboard support (arrows, escape, enter).
+ *
+ * The jquery examples have similar keyboard support (arrow, esc, enter)
+ * And has a multi-select example.
+ * We may want to multi-select results in the result area.
+ *
+ * Google autocomplete requires google API and is designed for google integration.
+ * The google maps search area has nice features:
+ * > panning the map has you tab through the results
+ * > integrated slide-out menu
+ * > remembers past searches
+ * > updates search text as you tab through results
+ * > preserves search input as first "autocomplete" item
+ * It's brilliant and so fast you cannot get it to animate!
+ * I disconnected from the network and it still found local results!
+ * It then suggested I "change the way google maps works with your data."
+ * Simply amazing.
+ *
+ * The ESRI examples is pretty much what we want:
+ * > user can select a specific provider
+ * > user can select "current location"
+ * > "✖" clears result from search and from map
+ * > Search results are local first and limited to 6 or so
+ * > map does not move as you tab through results (configurable)
+ * > "↑" and "↓" wrap through results (awkward when body can overflow, disableDefault!)
+ * > takes up very little space (width is 240px)
+ * > results are aggregated below the input (configurable)
+ * > use selects a result and map displays it
+ * > The "✖" only appears when there is input
+ * > The matching part of the result is highlighted (unnecessary)
+ * > When 🔍 the first result is shown and the infoviewer has "show more results" option
+ * > Select a "more results" option and map moves to new location (prevents multiple markers on map)
+ *
+ * This control copies the keyboard shortcuts:
+ * > arrow up/down - scrolls through input <-> results
+ * > escape - dismisses results, if no results, dismisses input, if no input dismisses control
+ * > enter - on input, performs "search", on result, selects result
+ * > space - on result, clears other results, selects current result (pans to a marker placed on the map)
+ * > Shift+click/shift+space - on result, selects current result
+ * > click - on a result, selects result (copies content to search)
+ * > typing - on input, invokes autocomplete, adds search text as top result (clicking only updates "input")
+ *
+ * It will look like the google search control (which looks like the ESRI search control):
+ * > The "✖" will be *after* the "🔍" (maybe)
+ * > The "✖" and will morph into a spinner when searching.
+ * Clicking "✖" will clear all results and the search input and stop any searches
+ *
+ * If an error occurs a result with a "!" icon will report the provider-specific error message
+ * The "🔍" will perform the actual search operation using the current input
+ * Pressing "Enter" in the input will perform this same search.
+ * The "✖" will spin when performing a search.
+ * The "Search" results will display on the map.
+ *
+ * The "↑" and "↓" arrows will scroll vertically from the input through the results
+ * Pressing "Enter" on any result will select that address and clear the search area.
+ *
+ *
  *
  * Like the esri control, this will aggregate results from
  * multiple services and render markers based on the response
@@ -2329,10 +2385,12 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
  * Morphing to prevent bouncing?
  * The progress indicators for the various providers cause bouncing
  * when the come in/out of view and I'm not sure they're necessary.
- * Maybe the "X" can show a progress spinner around it instead?
+ * Maybe the "✖" can show a progress spinner around it instead?
  * Or maybe the search icon can morph into a spinner?
  * Probably the first results should morph into the provider placeholder
  * instead of one fading in and the other out.
+ *
+ * ℂ∅ℼⅇℽ
  */
 `;
     const MIN_SEARCH_LENGTH = 1;
@@ -2414,10 +2472,25 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
       display: grid;
       grid-template-columns: auto 2em 2em;
       grid-template-areas:
-        "search cancel run"
+        "search run cancel"
         "results results results";
     }
 
+    .mock-auto-complete .search-area input,
+    .mock-auto-complete .search-area button {
+      padding: none;
+      margin: none;
+      padding-left: 6px;
+      margin-left: 1px;
+      background: var(--text-color);
+      border: solid;
+      fill: var(--background-color);
+      stroke: var(--background-color);
+    }
+
+    .mock-auto-complete .search-area button:focus svg use {
+      stroke: red;
+    }
     .mock-auto-complete .search-area .search {
       grid-area: search;
     }
@@ -2503,29 +2576,6 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
       animation: unreveal var(--reveal-time) forwards linear;
     }
 
-    .workarea {
-      position:absolute;
-      width: 0;
-      height: 0;
-      transform: translate(50vh, 3em) scale(5);
-    }
-
-    .workarea .spin {
-      width: 2em;
-      height: 2em;
-      animation: workarea-spin var(--spin-rate) infinite linear;
-    }
-
-    .workarea .spin use {
-      fill: black;
-      stroke: white;
-    }
-
-    @keyframes workarea-spin {
-      0% {transform:rotate(0deg)}
-      100% {transform:rotate(360deg)}
-    }
-
     @keyframes as-indicator {
       to {
         transform: translate(-4px, 8px) scale(0);
@@ -2535,6 +2585,31 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
     @keyframes spin {
       from {transform:rotate(0deg);}
       to {transform:rotate(360deg);}
+    }
+
+    .workarea .playground {
+      display: none;
+      fill: white;
+      stroke: white;
+    }
+
+    .workarea .playground button:focus use,
+    .workarea .playground button:hover use {
+      fill: green;
+      stroke-width: 2;
+      stroke: white;
+    }
+
+    .workarea .playground use[href="#icon-marker"] {
+      fill: blue;
+    }
+
+    .workarea .playground use[href="#icon-search"] {
+      fill: blue;
+    }
+
+    .workarea .playground use[href="#icon-close"] {
+      fill: blue;
     }
 
 `;
@@ -2550,42 +2625,75 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
     function run() {
         return __awaiter(this, void 0, void 0, function* () {
             const autoCompleteInput = `
-<div class="mock-auto-complete">
-  <svg style="display:none" viewBox="-10 -10 20 20">
-  <defs>
-    <g id="marker-icon">
-      <path transform="scale(1.2, 0.6) translate(0, 15)" stroke-width="1"
-      d="M 0 0 L -4 -20 L -6 -25 L -1 -30 L 0 -30 L 1 -30 L 6 -25 L 4 -20 Z"></path>
-    </g>
-    <g id="progress-spinner">
-      <circle class="track" cx="0" cy="0" r="5" fill="none" stroke-width="2" />
-      <circle class="ball" cx="0" cy="-5" r="1" fill="#000000" stroke="#ffffff" stroke-width="0.1" />
-      <circle class="ball" cx="0" cy="5" r="1" fill="#ffffff" stroke="#000000" stroke-width="0.1" />
-    </g>
-    <g id="icon-search" viewBox="0 0 18 18">
-      <path d="M17.707 16.293l-5.108-5.109A6.954 6.954 0 0014 7c0-3.86-3.141-7-7-7S0 3.14 0 7s3.141 7 7 7a6.958 6.958 0 004.185-1.402l5.108 5.109a.997.997 0 001.414 0 .999.999 0 000-1.414zM7 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"
-      fill-rule="nonzero" stroke="none"></path>
-    </g>
-    <g id="icon-close" viewBox="0 0 18 18">
-      <path
-        d="M10.414 9l5.293-5.293a.999.999 0 10-1.414-1.414L9 7.586 3.707 2.293a.999.999 0 10-1.414 1.414L7.586 9l-5.293 5.293a.999.999 0 101.414 1.414L9 10.414l5.293 5.293a.997.997 0 001.414 0 .999.999 0 000-1.414L10.414 9"
-        fill-rule="evenodd" stroke="none"></path>
-    </g>
-  </defs>
-  </svg>
-  <p class="mission-impossible">This is a mocked service so try typing "29605" or "55100"</p>
-  <div class="search-area">
-    <input class="search" placeholder="find address"></input>
-    <button class="cancel" type="button">
-    <svg viewBox="0 0 18 18"><use href="#icon-close"></use></svg>
-    </input>
-    <button class="run" type="button">
-      <svg viewBox="0 0 18 18"><use href="#icon-search"></use></svg>
-    </button>
-    <div class="result-area">
-      <div class="result-list">
+<div class="workarea">
+  <div class="mock-auto-complete">
+    <svg style="display:none" viewBox="-10 -10 20 20">
+      <defs>
+        <g id="icon-marker">
+          <path transform="scale(1) translate(-6, -10)"
+          d=" M 6.3 0
+              C 6.3 0
+                0 0.1
+                0 7.5
+              c 0 3.8
+                6.3 12.6
+                6.3 12.6
+              s 6.3 -8.8
+                6.3 -12.7
+              C 12.6 0.1
+                6.3 0
+                6.3 0
+              z"></path>
+        </g>
+        <g id="progress-spinner">
+          <circle class="track" cx="0" cy="0" r="5" fill="none" stroke-width="2" />
+          <circle class="ball" cx="0" cy="-5" r="1" fill="#000000" stroke="#ffffff" stroke-width="0.1" />
+          <circle class="ball" cx="0" cy="5" r="1" fill="#ffffff" stroke="#000000" stroke-width="0.1" />
+        </g>
+        <g id="icon-search" viewBox="0 0 18 18" transform="scale(0.95) translate(0,2)">
+          <path d="M17.707 16.293l-5.108-5.109A6.954 6.954 0 0014 7c0-3.86-3.141-7-7-7S0 3.14 0 7s3.141 7 7 7a6.958 6.958 0 004.185-1.402l5.108 5.109a.997.997 0 001.414 0 .999.999 0 000-1.414zM7 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"
+          fill-rule="nonzero" stroke="none"></path>
+        </g>
+        <g id="icon-close" viewBox="0 0 18 18">
+          <path
+            d="M10.414 9l5.293-5.293a.999.999 0 10-1.414-1.414L9 7.586 3.707 2.293a.999.999 0 10-1.414 1.414L7.586 9l-5.293 5.293a.999.999 0 101.414 1.414L9 10.414l5.293 5.293a.997.997 0 001.414 0 .999.999 0 000-1.414L10.414 9"
+            fill-rule="evenodd" stroke="none"></path>
+        </g>
+      </defs>
+    </svg>
+    <p class="mission-impossible">This is a mocked service so try typing "29605" or "55100"</p>
+    <div class="search-area">
+      <input class="search" placeholder="find address"></input>
+      <button class="run" type="button">
+        <svg viewBox="0 0 18 18"><use href="#icon-search"></use></svg>
+      </button>
+      <button class="cancel" type="button">
+        <svg viewBox="0 0 18 18"><use href="#icon-close"></use></svg>
+      </button>
+      <div class="result-area">
+        <div class="result-list">
+        </div>
       </div>
     </div>
+  </div>
+  <div class="playground">
+    <svg style="position:absolute;top:0;right:0;width:82px;height:18px;transform:scale(2) translate(-42px,9px)" viewBox="0 0 82 22">
+      <use transform="translate(8,11)" href="#icon-marker"></use>
+      <use transform="translate(32,0)" href="#icon-search"></use>
+      <use transform="translate(64,0)" href="#icon-close"></use>
+    </svg>
+    <button style="background:transparent;border:solid;padding:0;">
+      <svg width="2em" height="2em" viewBox="0 0 16 22">
+        <use style="transform:translate(8px,11px)" href="#icon-marker"></use>
+      </svg>
+    </button>
+  </div>
+  <div>
+    <label>Notes</label>
+    <p style="height:40vh;overflow:auto">${textarea
+                .trim()
+                .replace(/\n/g, "<br/>")
+                .replace(/(\* \> )/g, "&nbsp;&nbsp;&nbsp;&nbsp;")}</p>
   </div>
 </div>
 `;
@@ -2595,7 +2703,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
             let run = widget.querySelector(".run");
             let resultItems = widget.querySelector(".result-list");
             const createMarker = (className) => {
-                return `<svg class="marker ${className}" style="width:1em;height:1em" viewBox="-10 -10 20 20"><use href="#marker-icon"></use></svg>`;
+                return `<svg class="marker ${className}" style="width:1em;height:1em" viewBox="-10 -10 20 20"><use href="#icon-marker"></use></svg>`;
             };
             const createSpinner = (className) => `<svg class="spinner ${className}" viewBox="-10 -10 20 20"><use href="#progress-spinner"></use></svg>`;
             const missionImpossible = () => __awaiter(this, void 0, void 0, function* () {
@@ -2670,6 +2778,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
             function clearAll() {
                 input.value = "";
                 resultItems.innerText = "";
+                input.focus();
             }
             let priorSearchValue = "";
             const searchAllProviders = () => {
@@ -2762,6 +2871,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
             resultItems.addEventListener("keyup", event => {
                 if (resultItemsKeyups[event.code]) {
                     resultItemsKeyups[event.code](event);
+                    event.preventDefault();
                     return;
                 }
             });
@@ -2771,18 +2881,33 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
             input.addEventListener("keyup", event => {
                 if (inputKeyups[event.code]) {
                     inputKeyups[event.code](event);
+                    event.preventDefault();
                     return;
                 }
                 slowSearch();
             });
             cancel.addEventListener("click", () => {
-                clearAll();
+                setTimeout(clearAll);
             });
             document.body.insertBefore(widget, document.body.firstChild);
             input.value = "datastream";
             yield slowSearch();
-            console.log(textarea.replace(/\n/g, ""));
             missionImpossible();
+            const globalKeyups = {
+                Escape: () => {
+                    clearAll();
+                }
+            };
+            widget.addEventListener("keyup", event => {
+                if (globalKeyups[event.code]) {
+                    globalKeyups[event.code](event);
+                    event.preventDefault();
+                    return;
+                }
+                else {
+                    console.log(event.code);
+                }
+            });
         });
     }
     exports.run = run;
