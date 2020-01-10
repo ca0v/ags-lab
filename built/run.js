@@ -2439,6 +2439,7 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
     let styles = document.createElement("style");
     styles.innerText = `
     :root {
+      --font-size: max(1em, 2vh);
       --text-color: white;
       --background-color: black;
       --border-color: rgba(200,200,200,1);
@@ -2458,11 +2459,12 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
     .mock-auto-complete div.provider {display:none;}
 
     .mock-auto-complete {
+      font-size: var(--font-size);
       display: inline-block;
       border: 1px solid;
       border-color: var(--border-color);
       padding: 0.25em;
-      min-width: max(16em,25vw);
+      min-width: max(32em,25vw);
       max-width: min(48em,50vw);
       background: var(--background-color);
       color: var(--text-color);
@@ -2478,8 +2480,9 @@ define("labs/widgets/auto-complete", ["require", "exports", "dojo/debounce", "la
 
     .mock-auto-complete .search-area input,
     .mock-auto-complete .search-area button {
-      padding: none;
-      margin: none;
+      font-size: var(--font-size);
+      padding: 0;
+      margin: 0;
       padding-left: 6px;
       margin-left: 1px;
       background: var(--text-color);
