@@ -424,7 +424,7 @@ export async function run() {
   let resultItems = widget.querySelector(".result-list") as HTMLDivElement;
 
   const createMarker = (className: string) => {
-    return `<div title="foo"><svg class="marker ${className}" style="width:1em;height:1em" viewBox="-10 -10 20 20"><use href="#icon-marker"></use></svg></div>`;
+    return `<div style="padding:0"><svg class="marker ${className}" style="width:1em;height:1em" viewBox="-10 -12 20 24"><use href="#icon-marker"></use></svg></div>`;
   };
 
   const createSpinner = (className: string) =>
