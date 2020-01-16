@@ -1,9 +1,9 @@
 import {
   createAutoCompleteWidget,
-  ProviderContract,
-  SearchResult,
-  SearchResultItem
+  ProviderContract
 } from "./widgets/auto-complete/index";
+import { SearchResult } from "./widgets/auto-complete/SearchResult";
+import { SearchResultItem } from "./widgets/auto-complete/SearchResultItem";
 
 class MockProvider implements ProviderContract {
   name: string;

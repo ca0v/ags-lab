@@ -1984,12 +1984,49 @@ define("labs/ags-webmap", ["require", "exports", "esri/arcgis/utils", "esri/arcg
     exports.run = run;
     ;
 });
-define("labs/widgets/auto-complete/index", ["require", "exports"], function (require, exports) {
+define("labs/widgets/auto-complete/Geometry", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+});
+define("labs/widgets/auto-complete/SearchResultItem", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+});
+define("labs/widgets/auto-complete/SearchResult", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+});
+define("labs/widgets/auto-complete/AutoCompleteProviderContract", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+});
+define("labs/widgets/auto-complete/RemoveEventHandler", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+});
+define("labs/widgets/auto-complete/WidgetContract", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+});
+define("labs/widgets/auto-complete/AutoCompleteWidgetContract", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+});
+define("labs/widgets/auto-complete/keys", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function keys(o) {
         return Object.keys(o);
     }
+    exports.keys = keys;
+});
+define("labs/widgets/auto-complete/Dictionary", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+});
+define("labs/widgets/auto-complete/Channel", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     class Channel {
         constructor() {
             this.topics = {};
@@ -2015,6 +2052,11 @@ define("labs/widgets/auto-complete/index", ["require", "exports"], function (req
             this.topics[topic].forEach(listener => listener(...args));
         }
     }
+    exports.Channel = Channel;
+});
+define("labs/widgets/auto-complete/Widget", ["require", "exports", "labs/widgets/auto-complete/Channel"], function (require, exports, Channel_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     class Widget {
         /**
          * Create a default dom container for a generic widget
@@ -2022,7 +2064,7 @@ define("labs/widgets/auto-complete/index", ["require", "exports"], function (req
         constructor() {
             this.dom = document.createElement("div");
             this.dom.className = "widget";
-            this.channel = new Channel();
+            this.channel = new Channel_1.Channel();
         }
         dispose() {
             this.dom.remove();
@@ -2034,12 +2076,21 @@ define("labs/widgets/auto-complete/index", ["require", "exports"], function (req
             return this.channel.publish(topic, ...args);
         }
     }
+    exports.Widget = Widget;
+});
+define("labs/widgets/auto-complete/AutoCompleteEngineContract", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+});
+define("labs/widgets/auto-complete/AutoCompleteEngine", ["require", "exports", "labs/widgets/auto-complete/Channel"], function (require, exports, Channel_2) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     /**
      * Generic auto-complete
      */
     class AutoCompleteEngine {
         constructor() {
-            this.channel = new Channel();
+            this.channel = new Channel_2.Channel();
             this.providers = [];
         }
         dispose() {
@@ -2076,10 +2127,15 @@ define("labs/widgets/auto-complete/index", ["require", "exports"], function (req
             });
         }
     }
-    class AutoCompleteWidget extends Widget {
+    exports.AutoCompleteEngine = AutoCompleteEngine;
+});
+define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "labs/widgets/auto-complete/keys", "labs/widgets/auto-complete/Widget", "labs/widgets/auto-complete/AutoCompleteEngine"], function (require, exports, keys_1, Widget_1, AutoCompleteEngine_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class AutoCompleteWidget extends Widget_1.Widget {
         constructor() {
             super();
-            this.engine = new AutoCompleteEngine();
+            this.engine = new AutoCompleteEngine_1.AutoCompleteEngine();
             let { input, cancel, search, results } = (this.ux = {
                 input: document.createElement("input"),
                 cancel: document.createElement("button"),
@@ -2087,7 +2143,7 @@ define("labs/widgets/auto-complete/index", ["require", "exports"], function (req
                 results: document.createElement("div")
             });
             input.addEventListener("change", () => this.onInputChanged());
-            keys(this.ux).forEach(className => {
+            keys_1.keys(this.ux).forEach(className => {
                 const item = this.ux[className];
                 item.classList.add(className);
                 this.dom.appendChild(item);
@@ -2115,10 +2171,16 @@ define("labs/widgets/auto-complete/index", ["require", "exports"], function (req
         }
         search(value) {
             this.ux.input.value = value;
+            this.onInputChanged();
         }
     }
+    exports.AutoCompleteWidget = AutoCompleteWidget;
+});
+define("labs/widgets/auto-complete/index", ["require", "exports", "labs/widgets/auto-complete/AutoCompleteWidget"], function (require, exports, AutoCompleteWidget_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
     function createAutoCompleteWidget(providers) {
-        let widget = new AutoCompleteWidget();
+        let widget = new AutoCompleteWidget_1.AutoCompleteWidget();
         providers.forEach(provider => widget.use(provider));
         return widget;
     }
