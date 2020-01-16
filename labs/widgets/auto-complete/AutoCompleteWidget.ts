@@ -56,12 +56,13 @@ export class AutoCompleteWidget extends Widget
   implements AutoCompleteWidgetContract {
   dom: HTMLElement;
   private engine: AutoCompleteEngine;
-  private ux: {
+  public ux: {
     input: HTMLInputElement;
     cancel: HTMLButtonElement;
     search: HTMLButtonElement;
     results: HTMLDivElement;
   };
+
   public constructor() {
     super();
     this.dom.classList.add("autocomplete");
@@ -83,7 +84,7 @@ export class AutoCompleteWidget extends Widget
     });
 
     this.engine.on("success", (results: SearchResult) => {
-      let asHtml = results.items
+      const asHtml = results.items
         .map(
           item => `<div data-d='${JSON.stringify(item)}'>${item.address}</div>`
         )
@@ -95,14 +96,6 @@ export class AutoCompleteWidget extends Widget
 
         child.addEventListener("focus", () => {
           this.onResultFocused();
-        });
-
-        child.addEventListener("click", () => {
-          this.onResultSelected();
-        });
-
-        child.addEventListener("keypress", event => {
-          if (event.code === "Enter") this.onResultSelected();
         });
       });
     });
@@ -120,6 +113,13 @@ export class AutoCompleteWidget extends Widget
     this.publish("selectresult", JSON.parse(result.dataset.d));
   }
 
+  /**
+   * widget extension
+   */
+  public selectActiveElement() {
+    this.onResultSelected();
+  }
+
   private onInputChanged() {
     try {
       const searchText = this.ux.input.value;
@@ -128,6 +128,10 @@ export class AutoCompleteWidget extends Widget
     } catch (ex) {
       this.publish("error", ex.message);
     }
+  }
+
+  public ext(extension: { initialize(widget: AutoCompleteWidget) }) {
+    extension.initialize(this);
   }
 
   public use(provider: AutoCompleteProviderContract<SearchResult>): void {

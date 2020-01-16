@@ -31,6 +31,7 @@ function randomAddress() {
 
 const addressDatabase = Array(1000)
   .fill(0)
+  .map((_, k) => k)
   .map(key => ({
     key: `key${key}`,
     location: [randomInt(), randomInt()],

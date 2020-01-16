@@ -2195,7 +2195,7 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
                 this.dom.appendChild(item);
             });
             this.engine.on("success", (results) => {
-                let asHtml = results.items
+                const asHtml = results.items
                     .map(item => `<div data-d='${JSON.stringify(item)}'>${item.address}</div>`)
                     .join("");
                 this.ux.results.innerHTML = asHtml;
@@ -2204,13 +2204,6 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
                     child.tabIndex = 0;
                     child.addEventListener("focus", () => {
                         this.onResultFocused();
-                    });
-                    child.addEventListener("click", () => {
-                        this.onResultSelected();
-                    });
-                    child.addEventListener("keypress", event => {
-                        if (event.code === "Enter")
-                            this.onResultSelected();
                     });
                 });
             });
@@ -2227,6 +2220,12 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
                 return;
             this.publish("selectresult", JSON.parse(result.dataset.d));
         }
+        /**
+         * widget extension
+         */
+        selectActiveElement() {
+            this.onResultSelected();
+        }
         onInputChanged() {
             try {
                 const searchText = this.ux.input.value;
@@ -2236,6 +2235,9 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
             catch (ex) {
                 this.publish("error", ex.message);
             }
+        }
+        ext(extension) {
+            extension.initialize(this);
         }
         use(provider) {
             this.engine.use(provider);
@@ -2247,12 +2249,70 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
     }
     exports.AutoCompleteWidget = AutoCompleteWidget;
 });
-define("labs/widgets/auto-complete/index", ["require", "exports", "labs/widgets/auto-complete/AutoCompleteWidget"], function (require, exports, AutoCompleteWidget_1) {
+define("labs/widgets/auto-complete/KeyboardWidgetExtension", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function focus(element, options) {
+        if (!element)
+            return false;
+        if (!element.focus)
+            return false;
+        element.focus();
+        if (document.activeElement === element)
+            return true;
+        if (!(options === null || options === void 0 ? void 0 : options.direction))
+            return false;
+        switch (options.direction) {
+            case "down":
+                return (focus(element.firstElementChild, options) ||
+                    focus(element.nextElementSibling, options));
+            default:
+                return focus(element.previousElementSibling, options);
+        }
+    }
+    class KeyboardWidgetExtension {
+        initialize(widget) {
+            const resultItemsKeyups = {
+                Space: () => {
+                    widget.selectActiveElement();
+                },
+                Enter: () => {
+                    widget.selectActiveElement();
+                },
+                ArrowUp: () => {
+                    const { activeElement } = document;
+                    if (!focus(activeElement.previousElementSibling, { direction: "up" })) {
+                        if (focus(widget.ux.input)) {
+                            widget.ux.input.select();
+                        }
+                    }
+                },
+                ArrowDown: () => {
+                    let { activeElement } = document;
+                    focus(activeElement.nextElementSibling, { direction: "down" });
+                }
+            };
+            widget.ux.results.addEventListener("keyup", event => {
+                if (resultItemsKeyups[event.code]) {
+                    resultItemsKeyups[event.code](event);
+                    event.preventDefault();
+                    return;
+                }
+            });
+            widget.ux.results.addEventListener("click", () => {
+                widget.selectActiveElement();
+            });
+        }
+    }
+    exports.KeyboardWidgetExtension = KeyboardWidgetExtension;
+});
+define("labs/widgets/auto-complete/index", ["require", "exports", "labs/widgets/auto-complete/AutoCompleteWidget", "labs/widgets/auto-complete/KeyboardWidgetExtension"], function (require, exports, AutoCompleteWidget_1, KeyboardWidgetExtension_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function createAutoCompleteWidget(providers) {
-        let widget = new AutoCompleteWidget_1.AutoCompleteWidget();
+        const widget = new AutoCompleteWidget_1.AutoCompleteWidget();
         providers.forEach(provider => widget.use(provider));
+        widget.ext(new KeyboardWidgetExtension_1.KeyboardWidgetExtension());
         return widget;
     }
     exports.createAutoCompleteWidget = createAutoCompleteWidget;
@@ -2281,6 +2341,7 @@ define("labs/ags-widget-viewer", ["require", "exports", "labs/widgets/auto-compl
     }
     const addressDatabase = Array(1000)
         .fill(0)
+        .map((_, k) => k)
         .map(key => ({
         key: `key${key}`,
         location: [randomInt(), randomInt()],
