@@ -2132,9 +2132,54 @@ define("labs/widgets/auto-complete/AutoCompleteEngine", ["require", "exports", "
 define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "labs/widgets/auto-complete/keys", "labs/widgets/auto-complete/Widget", "labs/widgets/auto-complete/AutoCompleteEngine"], function (require, exports, keys_1, Widget_1, AutoCompleteEngine_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    const css = `
+.widget.autocomplete {
+  display: grid;
+  grid-template-columns: auto 2em 2em;
+  grid-template-areas:
+    "input search cancel"
+    "results results results";
+}
+
+.widget.autocomplete .results .result-list {
+  display: grid;
+  grid-template-columns: 2em auto;
+  grid-template-areas:
+    "marker data";
+  max-height: 40vh;
+  overflow: hidden;
+}
+
+.widget.autocomplete .input {
+  grid-area: input;
+}
+
+.widget.autocomplete .search {
+  grid-area: search;
+}
+
+.widget.autocomplete .cancel {
+  grid-area: cancel;
+}
+
+.widget.autocomplete .results {
+  grid-area: results;
+}
+
+`;
+    function injectCss(namespace, css) {
+        if (document.head.querySelector(`style[id="${namespace}"]`))
+            throw "css already exists";
+        const style = document.createElement("style");
+        style.id = name;
+        style.innerText = css;
+        document.head.appendChild(style);
+    }
+    injectCss("ags-lab", css);
     class AutoCompleteWidget extends Widget_1.Widget {
         constructor() {
             super();
+            this.dom.classList.add("autocomplete");
             this.engine = new AutoCompleteEngine_1.AutoCompleteEngine();
             let { input, cancel, search, results } = (this.ux = {
                 input: document.createElement("input"),
@@ -2145,16 +2190,14 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
             input.addEventListener("change", () => this.onInputChanged());
             keys_1.keys(this.ux).forEach(className => {
                 const item = this.ux[className];
+                item.title = className;
                 item.classList.add(className);
                 this.dom.appendChild(item);
             });
-            this.engine.on("", () => { });
-        }
-        dispose() {
-            super.dispose();
-        }
-        on(topic, cb) {
-            return super.on(topic, cb);
+            this.engine.on("success", (results) => {
+                let asHtml = results.items.map(item => `<div>${item.key}</div>`).join("");
+                this.ux.results.innerHTML = asHtml;
+            });
         }
         onInputChanged() {
             try {
@@ -2196,7 +2239,12 @@ define("labs/ags-widget-viewer", ["require", "exports", "labs/widgets/auto-compl
                 if (0.1 > Math.random())
                     bad("Unlucky");
                 else
-                    good({ items: [] });
+                    good({
+                        items: [1, 2, 3, 4].map(key => ({
+                            key: `key${key}`,
+                            location: [1, 1]
+                        }))
+                    });
             });
         }
     }

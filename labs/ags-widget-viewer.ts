@@ -3,15 +3,21 @@ import {
   ProviderContract
 } from "./widgets/auto-complete/index";
 import { SearchResult } from "./widgets/auto-complete/SearchResult";
-import { SearchResultItem } from "./widgets/auto-complete/SearchResultItem";
 
 class MockProvider implements ProviderContract {
   name: string;
+
   search(searchValue: string): Promise<SearchResult> {
     console.log("searching for: ", searchValue);
     return new Promise((good, bad) => {
       if (0.1 > Math.random()) bad("Unlucky");
-      else good({ items: [] });
+      else
+        good({
+          items: [1, 2, 3, 4].map(key => ({
+            key: `key${key}`,
+            location: [1, 1]
+          }))
+        });
     });
   }
 }

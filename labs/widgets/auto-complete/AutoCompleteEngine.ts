@@ -24,6 +24,7 @@ export class AutoCompleteEngine implements AutoCompleteEngineContract {
   }
   search(value: string): void {
     const results = this.providers.map(provider => provider.search(value));
+
     results.forEach(result => {
       result
         .catch(reason => {
