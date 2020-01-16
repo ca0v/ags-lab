@@ -1,11 +1,9 @@
 import { keys } from "./keys";
-import { RemoveEventHandler } from "./RemoveEventHandler";
 import { SearchResult } from "./SearchResult";
 import { AutoCompleteProviderContract } from "./AutoCompleteProviderContract";
 import { Widget } from "./Widget";
 import { AutoCompleteWidgetContract } from "./AutoCompleteWidgetContract";
 import { AutoCompleteEngine } from "./AutoCompleteEngine";
-import { SearchResultItem } from "./SearchResultItem";
 
 const css = `
 .widget.autocomplete {
@@ -85,9 +83,41 @@ export class AutoCompleteWidget extends Widget
     });
 
     this.engine.on("success", (results: SearchResult) => {
-      let asHtml = results.items.map(item => `<div>${item.key}</div>`).join("");
+      let asHtml = results.items
+        .map(
+          item => `<div data-d='${JSON.stringify(item)}'>${item.address}</div>`
+        )
+        .join("");
       this.ux.results.innerHTML = asHtml;
+      const resultNodes = Array.from(this.ux.results.children) as HTMLElement[];
+      resultNodes.forEach(child => {
+        child.tabIndex = 0;
+
+        child.addEventListener("focus", () => {
+          this.onResultFocused();
+        });
+
+        child.addEventListener("click", () => {
+          this.onResultSelected();
+        });
+
+        child.addEventListener("keypress", event => {
+          if (event.code === "Enter") this.onResultSelected();
+        });
+      });
     });
+  }
+
+  private onResultFocused() {
+    const result = document.activeElement as HTMLElement;
+    if (this.ux.results !== result.parentElement) return;
+    this.publish("focusresult", JSON.parse(result.dataset.d));
+  }
+
+  private onResultSelected() {
+    const result = document.activeElement as HTMLElement;
+    if (this.ux.results !== result.parentElement) return;
+    this.publish("selectresult", JSON.parse(result.dataset.d));
   }
 
   private onInputChanged() {

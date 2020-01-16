@@ -2195,9 +2195,37 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
                 this.dom.appendChild(item);
             });
             this.engine.on("success", (results) => {
-                let asHtml = results.items.map(item => `<div>${item.key}</div>`).join("");
+                let asHtml = results.items
+                    .map(item => `<div data-d='${JSON.stringify(item)}'>${item.address}</div>`)
+                    .join("");
                 this.ux.results.innerHTML = asHtml;
+                const resultNodes = Array.from(this.ux.results.children);
+                resultNodes.forEach(child => {
+                    child.tabIndex = 0;
+                    child.addEventListener("focus", () => {
+                        this.onResultFocused();
+                    });
+                    child.addEventListener("click", () => {
+                        this.onResultSelected();
+                    });
+                    child.addEventListener("keypress", event => {
+                        if (event.code === "Enter")
+                            this.onResultSelected();
+                    });
+                });
             });
+        }
+        onResultFocused() {
+            const result = document.activeElement;
+            if (this.ux.results !== result.parentElement)
+                return;
+            this.publish("focusresult", JSON.parse(result.dataset.d));
+        }
+        onResultSelected() {
+            const result = document.activeElement;
+            if (this.ux.results !== result.parentElement)
+                return;
+            this.publish("selectresult", JSON.parse(result.dataset.d));
         }
         onInputChanged() {
             try {
@@ -2232,19 +2260,44 @@ define("labs/widgets/auto-complete/index", ["require", "exports", "labs/widgets/
 define("labs/ags-widget-viewer", ["require", "exports", "labs/widgets/auto-complete/index"], function (require, exports, index_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    function randomInt(range = 1000) {
+        return Math.floor(range * Math.random());
+    }
+    function randomCompassDir() {
+        const list = "N S W E NW NE SW SE".split(" ");
+        return list[randomInt(list.length)];
+    }
+    function randomStreetName() {
+        const list = "MAIN PLEASANT MOUNTAIN PINNACLE SUMMIT RAMPART".split(" ");
+        return list[randomInt(list.length)];
+    }
+    function randomStreetSuffix() {
+        const list = "ST AVE WAY COURT BLVD".split(" ");
+        return list[randomInt(list.length)];
+    }
+    function randomAddress() {
+        return `${1 +
+            randomInt()} ${randomCompassDir()} ${randomStreetName()} ${randomStreetSuffix()}`;
+    }
+    const addressDatabase = Array(1000)
+        .fill(0)
+        .map(key => ({
+        key: `key${key}`,
+        location: [randomInt(), randomInt()],
+        address: randomAddress()
+    }));
     class MockProvider {
         search(searchValue) {
             console.log("searching for: ", searchValue);
             return new Promise((good, bad) => {
-                if (0.1 > Math.random())
-                    bad("Unlucky");
-                else
-                    good({
-                        items: [1, 2, 3, 4].map(key => ({
-                            key: `key${key}`,
-                            location: [1, 1]
-                        }))
-                    });
+                setTimeout(() => {
+                    if (0.01 > Math.random())
+                        bad("Unlucky");
+                    else
+                        good({
+                            items: addressDatabase.filter(v => 0 <= v.address.indexOf(searchValue))
+                        });
+                }, randomInt(1000));
             });
         }
     }
@@ -2255,9 +2308,15 @@ define("labs/ags-widget-viewer", ["require", "exports", "labs/widgets/auto-compl
             document.body.insertBefore(widget.dom, document.body.firstChild);
             widget.on("error", result => {
                 console.log("error: ", result);
+            });
+            widget.on("focusresult", (item) => {
+                console.log("item focused: ", item);
+            });
+            widget.on("selectresult", (item) => {
+                console.log("item selected: ", item);
                 widget.dispose();
             });
-            widget.search("foo");
+            widget.search("N MAIN");
         }
         catch (ex) {
             console.log(ex.message || ex);
