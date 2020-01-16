@@ -1984,6 +1984,180 @@ define("labs/ags-webmap", ["require", "exports", "esri/arcgis/utils", "esri/arcg
     exports.run = run;
     ;
 });
+define("labs/widgets/auto-complete/index", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function keys(o) {
+        return Object.keys(o);
+    }
+    class Channel {
+        constructor() {
+            this.topics = {};
+        }
+        dispose() {
+            this.topics = {};
+        }
+        on(topic, cb) {
+            const listener = (this.topics[topic] = this.topics[topic] || []);
+            listener.push(cb);
+            return {
+                remove: () => {
+                    const index = listener.indexOf(cb);
+                    if (index < 0)
+                        return;
+                    listener.splice(index, 1);
+                }
+            };
+        }
+        publish(topic, ...args) {
+            if (!this.topics[topic])
+                return false;
+            this.topics[topic].forEach(listener => listener(...args));
+        }
+    }
+    class Widget {
+        /**
+         * Create a default dom container for a generic widget
+         */
+        constructor() {
+            this.dom = document.createElement("div");
+            this.dom.className = "widget";
+            this.channel = new Channel();
+        }
+        dispose() {
+            this.dom.remove();
+        }
+        on(topic, cb) {
+            return this.channel.on(topic, cb);
+        }
+        publish(topic, ...args) {
+            return this.channel.publish(topic, ...args);
+        }
+    }
+    /**
+     * Generic auto-complete
+     */
+    class AutoCompleteEngine {
+        constructor() {
+            this.channel = new Channel();
+            this.providers = [];
+        }
+        dispose() {
+            this.channel.dispose();
+        }
+        on(topic, cb) {
+            return this.channel.on(topic, cb);
+        }
+        onError(message) {
+            console.log("error", message);
+            this.channel.publish("error", message);
+        }
+        onSuccess(result) {
+            console.log("success", result);
+            this.channel.publish("success", result);
+        }
+        search(value) {
+            const results = this.providers.map(provider => provider.search(value));
+            results.forEach(result => {
+                result
+                    .catch(reason => {
+                    this.onError(reason);
+                })
+                    .then(result => {
+                    if (!result)
+                        throw "response expected";
+                    this.onSuccess(result);
+                });
+            });
+        }
+        use(provider) {
+            return __awaiter(this, void 0, void 0, function* () {
+                this.providers.push(provider);
+            });
+        }
+    }
+    class AutoCompleteWidget extends Widget {
+        constructor() {
+            super();
+            this.engine = new AutoCompleteEngine();
+            let { input, cancel, search, results } = (this.ux = {
+                input: document.createElement("input"),
+                cancel: document.createElement("button"),
+                search: document.createElement("button"),
+                results: document.createElement("div")
+            });
+            input.addEventListener("change", () => this.onInputChanged());
+            keys(this.ux).forEach(className => {
+                const item = this.ux[className];
+                item.classList.add(className);
+                this.dom.appendChild(item);
+            });
+            this.engine.on("", () => { });
+        }
+        dispose() {
+            super.dispose();
+        }
+        on(topic, cb) {
+            return super.on(topic, cb);
+        }
+        onInputChanged() {
+            try {
+                const searchText = this.ux.input.value;
+                console.log("searching for: ", searchText);
+                this.engine.search(searchText);
+            }
+            catch (ex) {
+                this.publish("error", ex.message);
+            }
+        }
+        use(provider) {
+            this.engine.use(provider);
+        }
+        search(value) {
+            this.ux.input.value = value;
+        }
+    }
+    function createAutoCompleteWidget(providers) {
+        let widget = new AutoCompleteWidget();
+        providers.forEach(provider => widget.use(provider));
+        return widget;
+    }
+    exports.createAutoCompleteWidget = createAutoCompleteWidget;
+});
+define("labs/ags-widget-viewer", ["require", "exports", "labs/widgets/auto-complete/index"], function (require, exports, index_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class MockProvider {
+        search(searchValue) {
+            console.log("searching for: ", searchValue);
+            return new Promise((good, bad) => {
+                if (0.1 > Math.random())
+                    bad("Unlucky");
+                else
+                    good({ items: [] });
+            });
+        }
+    }
+    function run() {
+        try {
+            const provider = new MockProvider();
+            const widget = index_1.createAutoCompleteWidget([provider]);
+            document.body.insertBefore(widget.dom, document.body.firstChild);
+            widget.on("error", result => {
+                console.log("error: ", result);
+                widget.dispose();
+            });
+            widget.search("foo");
+        }
+        catch (ex) {
+            console.log(ex.message || ex);
+        }
+        finally {
+            //
+        }
+    }
+    exports.run = run;
+});
 define("labs/console", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
