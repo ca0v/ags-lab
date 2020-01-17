@@ -23,7 +23,14 @@ export class AutoCompleteEngine implements AutoCompleteEngineContract {
     this.channel.publish("success", result);
   }
   search(value: string): void {
+    this.channel.publish("start");
     const results = this.providers.map(provider => provider.search(value));
+    Promise.all(results)
+      .catch(err => {
+        this.channel.publish("error", err);
+        this.channel.publish("complete");
+      })
+      .then(() => this.channel.publish("complete"));
 
     results.forEach(result => {
       result
@@ -36,6 +43,7 @@ export class AutoCompleteEngine implements AutoCompleteEngineContract {
         });
     });
   }
+
   async use(provider: AutoCompleteProviderContract<SearchResult>) {
     this.providers.push(provider);
   }

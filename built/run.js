@@ -2119,7 +2119,14 @@ define("labs/widgets/auto-complete/AutoCompleteEngine", ["require", "exports", "
             this.channel.publish("success", result);
         }
         search(value) {
+            this.channel.publish("start");
             const results = this.providers.map(provider => provider.search(value));
+            Promise.all(results)
+                .catch(err => {
+                this.channel.publish("error", err);
+                this.channel.publish("complete");
+            })
+                .then(() => this.channel.publish("complete"));
             results.forEach(result => {
                 result
                     .catch(reason => {
@@ -2174,6 +2181,42 @@ define("labs/widgets/auto-complete/renderResults", ["require", "exports"], funct
 define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "labs/widgets/auto-complete/keys", "labs/widgets/auto-complete/Widget", "labs/widgets/auto-complete/AutoCompleteEngine", "labs/widgets/auto-complete/renderResults"], function (require, exports, keys_1, Widget_1, AutoCompleteEngine_1, renderResults_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    const svg = `
+<svg style="display:none" viewBox="-10 -10 20 20">
+  <defs>
+    <g id="icon-marker">
+      <path transform="scale(1) translate(-6, -10)"
+      d=" M 6.3 0
+          C 6.3 0
+            0 0.1
+            0 7.5
+          c 0 3.8
+            6.3 12.6
+            6.3 12.6
+          s 6.3 -8.8
+            6.3 -12.7
+          C 12.6 0.1
+            6.3 0
+            6.3 0
+          z"></path>
+    </g>
+    <g id="progress-spinner">
+      <circle class="track" cx="0" cy="0" r="5" fill="none" stroke-width="2" />
+      <circle class="ball" cx="0" cy="-5" r="1" fill="#000000" stroke="#ffffff" stroke-width="0.1" />
+      <circle class="ball" cx="0" cy="5" r="1" fill="#ffffff" stroke="#000000" stroke-width="0.1" />
+    </g>
+    <g id="icon-search" viewBox="0 0 18 18" transform="scale(0.95) translate(0,2)">
+      <path d="M17.707 16.293l-5.108-5.109A6.954 6.954 0 0014 7c0-3.86-3.141-7-7-7S0 3.14 0 7s3.141 7 7 7a6.958 6.958 0 004.185-1.402l5.108 5.109a.997.997 0 001.414 0 .999.999 0 000-1.414zM7 12c-2.757 0-5-2.243-5-5s2.243-5 5-5 5 2.243 5 5-2.243 5-5 5z"
+      fill-rule="nonzero" stroke="none"></path>
+    </g>
+    <g id="icon-close" viewBox="0 0 18 18">
+      <path
+        d="M10.414 9l5.293-5.293a.999.999 0 10-1.414-1.414L9 7.586 3.707 2.293a.999.999 0 10-1.414 1.414L7.586 9l-5.293 5.293a.999.999 0 101.414 1.414L9 10.414l5.293 5.293a.997.997 0 001.414 0 .999.999 0 000-1.414L10.414 9"
+        fill-rule="evenodd" stroke="none"></path>
+    </g>
+  </defs>
+</svg>
+`;
     const css = `
 .widget.autocomplete {
   max-width: 24em;
@@ -2216,6 +2259,17 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
   max-height: 40vh;
 }
 `;
+    const animations = `
+.widget.autocomplete .spin {
+  animation: spin var(--spin-rate) 200ms infinite linear;
+}
+
+@keyframes spin {
+  from {transform:rotate(0deg);}
+  to {transform:rotate(360deg);}
+}
+
+`;
     function injectCss(namespace, css) {
         if (document.head.querySelector(`style[id="${namespace}"]`))
             throw "css already exists";
@@ -2224,11 +2278,17 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
         style.innerText = css;
         document.head.appendChild(style);
     }
-    injectCss("ags-lab", css);
+    function injectSvg(namespace, svg) {
+        const container = document.createElement("div");
+        container.innerHTML = svg.trim();
+        document.body.appendChild(container.firstChild);
+    }
     class AutoCompleteWidget extends Widget_1.Widget {
         constructor(options) {
             super();
             this.options = options;
+            injectCss("ags-lab", css + animations);
+            injectSvg("ags-lab", svg);
             this.dom.classList.add("autocomplete");
             this.engine = new AutoCompleteEngine_1.AutoCompleteEngine();
             const { input, cancel, search, results } = (this.ux = {
@@ -2238,11 +2298,19 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
                 results: document.createElement("div")
             });
             input.addEventListener("change", () => this.onInputChanged());
+            setBackground(this.ux.search, "icon-search");
+            setBackground(this.ux.cancel, "icon-close");
             keys_1.keys(this.ux).forEach(className => {
                 const item = this.ux[className];
                 item.title = className;
                 item.classList.add(className);
                 this.dom.appendChild(item);
+            });
+            this.engine.on("start", () => {
+                this.ux.cancel.querySelector("svg").classList.add("spin");
+            });
+            this.engine.on("complete", () => {
+                this.ux.cancel.querySelector("svg").classList.remove("spin");
             });
             this.engine.on("success", (results) => {
                 // only render results if the input hash matches the results hash
@@ -2294,6 +2362,14 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
         }
     }
     exports.AutoCompleteWidget = AutoCompleteWidget;
+    function asDom(html) {
+        let div = document.createElement("div");
+        div.innerHTML = html.trim();
+        return div.firstChild;
+    }
+    function setBackground(button, id) {
+        button.appendChild(asDom(`<svg viewBox="0 0 18 18"><use href="#${id}"></use></svg>`));
+    }
 });
 define("labs/widgets/auto-complete/KeyboardWidgetExtension", ["require", "exports"], function (require, exports) {
     "use strict";
