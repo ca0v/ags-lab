@@ -1,5 +1,14 @@
 import { AutoCompleteWidget } from "./AutoCompleteWidget";
 
+function debounce<T extends Function>(cb: T, wait = 20) {
+  let h = 0;
+  let callable = (...args: any) => {
+    clearTimeout(h);
+    h = setTimeout(() => cb(...args), wait);
+  };
+  return <T>(<any>callable);
+}
+
 function focus(
   element: Element & { focus?: Function },
   options?: { direction: "up" | "down" }
@@ -42,7 +51,7 @@ export class KeyboardWidgetExtension {
         focus(activeElement.nextElementSibling, { direction: "down" });
       }
     };
-    widget.ux.results.addEventListener("keyup", event => {
+    widget.ux.results.addEventListener("keydown", event => {
       if (resultItemsKeyups[event.code]) {
         resultItemsKeyups[event.code](event);
         event.preventDefault();
@@ -51,6 +60,29 @@ export class KeyboardWidgetExtension {
     });
     widget.ux.results.addEventListener("click", () => {
       widget.selectActiveElement();
+    });
+
+    const inputKeyups = {
+      Enter: () => widget.ux.search.click(),
+      ArrowDown: () =>
+        focus(widget.ux.results.firstElementChild, { direction: "down" })
+    };
+
+    let priorSearchValue = widget.ux.input.value.trim();
+    const slowSearch = debounce(() => {
+      const currentSearchValue = widget.ux.input.value.trim();
+      if (currentSearchValue === priorSearchValue) return;
+      widget.applyChanges();
+      priorSearchValue = currentSearchValue;
+    }, widget.options.delay);
+
+    widget.ux.input.addEventListener("keyup", event => {
+      if (inputKeyups[event.code]) {
+        inputKeyups[event.code](event);
+        event.preventDefault();
+        return;
+      }
+      slowSearch();
     });
   }
 }

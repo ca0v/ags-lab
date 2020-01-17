@@ -63,12 +63,12 @@ export class AutoCompleteWidget extends Widget
     results: HTMLDivElement;
   };
 
-  public constructor() {
+  public constructor(public options: { delay: number }) {
     super();
     this.dom.classList.add("autocomplete");
     this.engine = new AutoCompleteEngine();
 
-    let { input, cancel, search, results } = (this.ux = {
+    const { input, cancel, search, results } = (this.ux = {
       input: document.createElement("input"),
       cancel: document.createElement("button"),
       search: document.createElement("button"),
@@ -118,6 +118,10 @@ export class AutoCompleteWidget extends Widget
    */
   public selectActiveElement() {
     this.onResultSelected();
+  }
+
+  public applyChanges() {
+    this.onInputChanged();
   }
 
   private onInputChanged() {

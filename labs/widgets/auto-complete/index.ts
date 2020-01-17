@@ -6,9 +6,13 @@ import { KeyboardWidgetExtension } from "./KeyboardWidgetExtension";
 
 export type ProviderContract = AutoCompleteProviderContract<SearchResult>;
 
-export function createAutoCompleteWidget(providers: Array<ProviderContract>) {
-  const widget = new AutoCompleteWidget();
-  providers.forEach(provider => widget.use(provider));
+export function createAutoCompleteWidget(options: {
+  providers: Array<ProviderContract>;
+  delay: number;
+}) {
+  const { providers, delay, ...others } = options;
+  const widget = new AutoCompleteWidget({ delay });
+  options.providers.forEach(provider => widget.use(provider));
   widget.ext(new KeyboardWidgetExtension());
 
   return widget as AutoCompleteWidgetContract;

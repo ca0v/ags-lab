@@ -60,7 +60,10 @@ class MockProvider implements ProviderContract {
 export function run() {
   try {
     const provider = new MockProvider();
-    const widget = createAutoCompleteWidget([provider]);
+    const widget = createAutoCompleteWidget({
+      providers: [provider],
+      delay: 200
+    });
     document.body.insertBefore(widget.dom, document.body.firstChild);
 
     widget.on("error", result => {

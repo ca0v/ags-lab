@@ -7,6 +7,17 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 /**
  * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Promise
  */
@@ -2177,11 +2188,12 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
     }
     injectCss("ags-lab", css);
     class AutoCompleteWidget extends Widget_1.Widget {
-        constructor() {
+        constructor(options) {
             super();
+            this.options = options;
             this.dom.classList.add("autocomplete");
             this.engine = new AutoCompleteEngine_1.AutoCompleteEngine();
-            let { input, cancel, search, results } = (this.ux = {
+            const { input, cancel, search, results } = (this.ux = {
                 input: document.createElement("input"),
                 cancel: document.createElement("button"),
                 search: document.createElement("button"),
@@ -2226,6 +2238,9 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
         selectActiveElement() {
             this.onResultSelected();
         }
+        applyChanges() {
+            this.onInputChanged();
+        }
         onInputChanged() {
             try {
                 const searchText = this.ux.input.value;
@@ -2252,6 +2267,14 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
 define("labs/widgets/auto-complete/KeyboardWidgetExtension", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    function debounce(cb, wait = 20) {
+        let h = 0;
+        let callable = (...args) => {
+            clearTimeout(h);
+            h = setTimeout(() => cb(...args), wait);
+        };
+        return callable;
+    }
     function focus(element, options) {
         if (!element)
             return false;
@@ -2292,7 +2315,7 @@ define("labs/widgets/auto-complete/KeyboardWidgetExtension", ["require", "export
                     focus(activeElement.nextElementSibling, { direction: "down" });
                 }
             };
-            widget.ux.results.addEventListener("keyup", event => {
+            widget.ux.results.addEventListener("keydown", event => {
                 if (resultItemsKeyups[event.code]) {
                     resultItemsKeyups[event.code](event);
                     event.preventDefault();
@@ -2302,6 +2325,26 @@ define("labs/widgets/auto-complete/KeyboardWidgetExtension", ["require", "export
             widget.ux.results.addEventListener("click", () => {
                 widget.selectActiveElement();
             });
+            const inputKeyups = {
+                Enter: () => widget.ux.search.click(),
+                ArrowDown: () => focus(widget.ux.results.firstElementChild, { direction: "down" })
+            };
+            let priorSearchValue = widget.ux.input.value.trim();
+            const slowSearch = debounce(() => {
+                const currentSearchValue = widget.ux.input.value.trim();
+                if (currentSearchValue === priorSearchValue)
+                    return;
+                widget.applyChanges();
+                priorSearchValue = currentSearchValue;
+            }, widget.options.delay);
+            widget.ux.input.addEventListener("keyup", event => {
+                if (inputKeyups[event.code]) {
+                    inputKeyups[event.code](event);
+                    event.preventDefault();
+                    return;
+                }
+                slowSearch();
+            });
         }
     }
     exports.KeyboardWidgetExtension = KeyboardWidgetExtension;
@@ -2309,9 +2352,10 @@ define("labs/widgets/auto-complete/KeyboardWidgetExtension", ["require", "export
 define("labs/widgets/auto-complete/index", ["require", "exports", "labs/widgets/auto-complete/AutoCompleteWidget", "labs/widgets/auto-complete/KeyboardWidgetExtension"], function (require, exports, AutoCompleteWidget_1, KeyboardWidgetExtension_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    function createAutoCompleteWidget(providers) {
-        const widget = new AutoCompleteWidget_1.AutoCompleteWidget();
-        providers.forEach(provider => widget.use(provider));
+    function createAutoCompleteWidget(options) {
+        const { providers, delay } = options, others = __rest(options, ["providers", "delay"]);
+        const widget = new AutoCompleteWidget_1.AutoCompleteWidget({ delay });
+        options.providers.forEach(provider => widget.use(provider));
         widget.ext(new KeyboardWidgetExtension_1.KeyboardWidgetExtension());
         return widget;
     }
@@ -2365,7 +2409,10 @@ define("labs/ags-widget-viewer", ["require", "exports", "labs/widgets/auto-compl
     function run() {
         try {
             const provider = new MockProvider();
-            const widget = index_1.createAutoCompleteWidget([provider]);
+            const widget = index_1.createAutoCompleteWidget({
+                providers: [provider],
+                delay: 200
+            });
             document.body.insertBefore(widget.dom, document.body.firstChild);
             widget.on("error", result => {
                 console.log("error: ", result);
