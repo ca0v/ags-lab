@@ -14,15 +14,6 @@ const css = `
     "results results results";
 }
 
-.widget.autocomplete .results .result-list {
-  display: grid;
-  grid-template-columns: 2em auto;
-  grid-template-areas:
-    "marker data";
-  max-height: 40vh;
-  overflow: hidden;
-}
-
 .widget.autocomplete .input {
   grid-area: input;
 }
@@ -39,6 +30,21 @@ const css = `
   grid-area: results;
 }
 
+.widget.autocomplete .results .result-list {
+  display: grid;
+  grid-template-columns: 2em auto;
+  grid-template-areas:
+    "marker data";
+}
+
+.widget.autocomplete .results .result-list .marker {
+  grid-area: "marker";
+}
+
+.widget.autocomplete .results .result-list .data {
+  grid-area: "data";
+  max-height: 40vh;
+}
 `;
 
 function injectCss(namespace: string, css: string) {
@@ -86,10 +92,16 @@ export class AutoCompleteWidget extends Widget
     this.engine.on("success", (results: SearchResult) => {
       const asHtml = results.items
         .map(
-          item => `<div data-d='${JSON.stringify(item)}'>${item.address}</div>`
+          item =>
+            `<div class="marker">${
+              item.key
+            }</div><div class="data" data-d='${JSON.stringify(item)}'>${
+              item.address
+            }</div>`
         )
         .join("");
-      this.ux.results.innerHTML = asHtml;
+
+      this.ux.results.innerHTML = `<div class="result-list">${asHtml}</div>`;
       const resultNodes = Array.from(this.ux.results.children) as HTMLElement[];
       resultNodes.forEach(child => {
         child.tabIndex = 0;
