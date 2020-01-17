@@ -2490,14 +2490,16 @@ define("labs/ags-widget-viewer", ["require", "exports", "labs/widgets/auto-compl
         return `${1 +
             randomInt()} ${randomCompassDir()} ${randomStreetName()} ${randomStreetSuffix()}`;
     }
-    const addressDatabase = Array(1000)
-        .fill(0)
-        .map((_, k) => k)
-        .map(key => ({
-        key: `key${key}`,
-        location: [randomInt(), randomInt()],
-        address: randomAddress()
-    }));
+    function createDatabase(size = 1000) {
+        return Array(size)
+            .fill(0)
+            .map((_, k) => k)
+            .map(key => ({
+            key: `key${key}`,
+            location: [randomInt(), randomInt()],
+            address: randomAddress()
+        }));
+    }
     class MockProvider {
         constructor(options) {
             this.options = options;
@@ -2509,7 +2511,7 @@ define("labs/ags-widget-viewer", ["require", "exports", "labs/widgets/auto-compl
                     if (0.01 > Math.random())
                         bad("Unlucky");
                     else {
-                        const items = addressDatabase.filter(v => 0 <= v.address.indexOf(searchValue));
+                        const items = this.options.database.filter(v => 0 <= v.address.indexOf(searchValue));
                         good({
                             searchHash: searchValue,
                             items: items.map(item => this.options.transform(item))
@@ -2523,8 +2525,13 @@ define("labs/ags-widget-viewer", ["require", "exports", "labs/widgets/auto-compl
         try {
             const widget = index_1.createAutoCompleteWidget({
                 providers: [
-                    new MockProvider({ delay: 100, transform: row => row }),
                     new MockProvider({
+                        delay: 100,
+                        transform: row => row,
+                        database: createDatabase(500)
+                    }),
+                    new MockProvider({
+                        database: createDatabase(500),
                         delay: 2000,
                         transform: ({ key, location, address }) => ({
                             key: key + "slow_provider",
@@ -2546,7 +2553,7 @@ define("labs/ags-widget-viewer", ["require", "exports", "labs/widgets/auto-compl
                 console.log("item selected: ", item);
                 widget.dispose();
             });
-            widget.search("N MAIN");
+            widget.search("N MAIN AVE");
         }
         catch (ex) {
             console.log(ex.message || ex);

@@ -3,42 +3,48 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8" />
-    <title>ESRI ArcGIS JSAPI Tests 3.31</title>
-    <link rel="stylesheet" href="app.css" type="text/css" />
-    <link rel="stylesheet" href="https://js.arcgis.com/3.31/esri/css/esri.css">
-    <script src="https://js.arcgis.com/3.31/"></script>
-    <script src="./built/run.js"></script>
+  <meta charset="utf-8" />
+  <title>ESRI ArcGIS JSAPI Tests 3.31</title>
+  <link rel="stylesheet" href="app.css" type="text/css" />
+  <link rel="stylesheet" href="https://js.arcgis.com/3.31/esri/css/esri.css">
+  <style>
+    #console {
+      max-height: 30em;
+      overflow: auto;
+    }
+  </style>
+  <script src="https://js.arcgis.com/3.31/"></script>
+  <script src="./built/run.js"></script>
 
-    <script>
-        (() => {
+  <script>
+    (() => {
 
-        function getParameterByName(name, url = window.location.href) {
-            name = name.replace(/[\[\]]/g, "\\$&");
-            var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
-                results = regex.exec(url);
-            if (!results) return null;
-            if (!results[2]) return '';
-            return decodeURIComponent(results[2].replace(/\+/g, " "));
-        }
+      function getParameterByName(name, url = window.location.href) {
+        name = name.replace(/[\[\]]/g, "\\$&");
+        var regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+          results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, " "));
+      }
 
-        let run = getParameterByName("run") || "labs/index";
+      let run = getParameterByName("run") || "labs/index";
 
-        require(["labs/console", run, "dojo/domReady!"], (console, test) => {
-            console.run();
-            setTimeout(() => test.run ? test.run() : test(), 0); 
-        });
-        
-        })();
-    </script>
+      require(["labs/console", run, "dojo/domReady!"], (console, test) => {
+        console.run();
+        setTimeout(() => test.run ? test.run() : test(), 0);
+      });
+
+    })();
+  </script>
 
 </head>
 
 <body>
-    <div id="map"></div>
-    <br/><label for="console">Console Outputs</label>
-    <br/>
-    <div id="console"></div>
+  <div id="map"></div>
+  <br /><label for="console">Console Outputs</label>
+  <br />
+  <div id="console"></div>
 </body>
 
 </html>

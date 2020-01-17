@@ -29,14 +29,16 @@ function randomAddress() {
     randomInt()} ${randomCompassDir()} ${randomStreetName()} ${randomStreetSuffix()}`;
 }
 
-const addressDatabase = Array(1000)
-  .fill(0)
-  .map((_, k) => k)
-  .map(key => ({
-    key: `key${key}`,
-    location: [randomInt(), randomInt()],
-    address: randomAddress()
-  }));
+function createDatabase(size = 1000) {
+  return Array(size)
+    .fill(0)
+    .map((_, k) => k)
+    .map(key => ({
+      key: `key${key}`,
+      location: [randomInt(), randomInt()],
+      address: randomAddress()
+    }));
+}
 
 class MockProvider implements ProviderContract {
   name: string;
@@ -45,6 +47,11 @@ class MockProvider implements ProviderContract {
     public options: {
       delay: number;
       transform: (row: SearchResultItem) => SearchResultItem;
+      database: Array<{
+        key: string;
+        location: Array<number>;
+        address: string;
+      }>;
     }
   ) {}
 
@@ -54,7 +61,7 @@ class MockProvider implements ProviderContract {
       setTimeout(() => {
         if (0.01 > Math.random()) bad("Unlucky");
         else {
-          const items = addressDatabase.filter(
+          const items = this.options.database.filter(
             v => 0 <= v.address.indexOf(searchValue)
           );
           good({
@@ -71,8 +78,13 @@ export function run() {
   try {
     const widget = createAutoCompleteWidget({
       providers: [
-        new MockProvider({ delay: 100, transform: row => row }),
         new MockProvider({
+          delay: 100,
+          transform: row => row,
+          database: createDatabase(500)
+        }),
+        new MockProvider({
+          database: createDatabase(500),
           delay: 2000,
           transform: ({ key, location, address }) => ({
             key: key + "slow_provider",
@@ -99,7 +111,7 @@ export function run() {
       widget.dispose();
     });
 
-    widget.search("N MAIN");
+    widget.search("N MAIN AVE");
   } catch (ex) {
     console.log(ex.message || ex);
   } finally {
