@@ -2140,11 +2140,43 @@ define("labs/widgets/auto-complete/AutoCompleteEngine", ["require", "exports", "
     }
     exports.AutoCompleteEngine = AutoCompleteEngine;
 });
-define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "labs/widgets/auto-complete/keys", "labs/widgets/auto-complete/Widget", "labs/widgets/auto-complete/AutoCompleteEngine"], function (require, exports, keys_1, Widget_1, AutoCompleteEngine_1) {
+define("labs/widgets/auto-complete/renderResults", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function asDom(html) {
+        let div = document.createElement("div");
+        div.innerHTML = html.trim();
+        return div.firstChild;
+    }
+    function appendAll(target, source) {
+        while (source.firstChild)
+            target.appendChild(source.firstChild);
+    }
+    function renderResults(widget, results) {
+        const asHtml = results.items
+            .map(item => `<div class="marker">*</div><div class="data" data-d='${JSON.stringify(item)}'>${item.address}</div>`)
+            .join("");
+        // add to result grid
+        appendAll(widget.ux.results, asDom(`<div>${asHtml.trim()}</div>`));
+        const resultNodes = Array.from(widget.ux.results.querySelectorAll(".data"));
+        resultNodes.forEach(child => {
+            child.tabIndex = 0;
+            child.addEventListener("focus", () => {
+                const result = document.activeElement;
+                if (widget.ux.results !== result.parentElement)
+                    return;
+                widget.publish("focusresult", JSON.parse(result.dataset.d));
+            });
+        });
+    }
+    exports.renderResults = renderResults;
+});
+define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "labs/widgets/auto-complete/keys", "labs/widgets/auto-complete/Widget", "labs/widgets/auto-complete/AutoCompleteEngine", "labs/widgets/auto-complete/renderResults"], function (require, exports, keys_1, Widget_1, AutoCompleteEngine_1, renderResults_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const css = `
 .widget.autocomplete {
+  max-width: 24em;
   display: grid;
   grid-template-columns: auto 2em 2em;
   grid-template-areas:
@@ -2166,21 +2198,21 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
 
 .widget.autocomplete .results {
   grid-area: results;
+  max-height: 20em;
+  overflow: hidden;
 }
 
-.widget.autocomplete .results .result-list {
+.widget.autocomplete .results {
   display: grid;
   grid-template-columns: 2em auto;
   grid-template-areas:
     "marker data";
 }
 
-.widget.autocomplete .results .result-list .marker {
-  grid-area: "marker";
+.widget.autocomplete .results .marker {
 }
 
-.widget.autocomplete .results .result-list .data {
-  grid-area: "data";
+.widget.autocomplete .results .data {
   max-height: 40vh;
 }
 `;
@@ -2213,30 +2245,20 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
                 this.dom.appendChild(item);
             });
             this.engine.on("success", (results) => {
-                const asHtml = results.items
-                    .map(item => `<div class="marker">${item.key}</div><div class="data" data-d='${JSON.stringify(item)}'>${item.address}</div>`)
-                    .join("");
-                this.ux.results.innerHTML = `<div class="result-list">${asHtml}</div>`;
-                const resultNodes = Array.from(this.ux.results.children);
-                resultNodes.forEach(child => {
-                    child.tabIndex = 0;
-                    child.addEventListener("focus", () => {
-                        this.onResultFocused();
-                    });
-                });
+                // only render results if the input hash matches the results hash
+                if (this.getSearchHash() !== results.searchHash)
+                    return;
+                renderResults_1.renderResults(this, results);
             });
-        }
-        onResultFocused() {
-            const result = document.activeElement;
-            if (this.ux.results !== result.parentElement)
-                return;
-            this.publish("focusresult", JSON.parse(result.dataset.d));
         }
         onResultSelected() {
             const result = document.activeElement;
             if (this.ux.results !== result.parentElement)
                 return;
             this.publish("selectresult", JSON.parse(result.dataset.d));
+        }
+        getSearchHash() {
+            return this.ux.input.value.trim().toUpperCase();
         }
         /**
          * widget extension
@@ -2249,13 +2271,16 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
         }
         onInputChanged() {
             try {
-                const searchText = this.ux.input.value;
-                console.log("searching for: ", searchText);
+                const searchText = this.getSearchHash();
+                this.clearSearchResults();
                 this.engine.search(searchText);
             }
             catch (ex) {
                 this.publish("error", ex.message);
             }
+        }
+        clearSearchResults() {
+            this.ux.results.innerHTML = "";
         }
         ext(extension) {
             extension.initialize(this);
@@ -2398,25 +2423,40 @@ define("labs/ags-widget-viewer", ["require", "exports", "labs/widgets/auto-compl
         address: randomAddress()
     }));
     class MockProvider {
+        constructor(options) {
+            this.options = options;
+        }
         search(searchValue) {
             console.log("searching for: ", searchValue);
             return new Promise((good, bad) => {
                 setTimeout(() => {
                     if (0.01 > Math.random())
                         bad("Unlucky");
-                    else
+                    else {
+                        const items = addressDatabase.filter(v => 0 <= v.address.indexOf(searchValue));
                         good({
-                            items: addressDatabase.filter(v => 0 <= v.address.indexOf(searchValue))
+                            searchHash: searchValue,
+                            items: items.map(item => this.options.transform(item))
                         });
-                }, randomInt(1000));
+                    }
+                }, randomInt(this.options.delay));
             });
         }
     }
     function run() {
         try {
-            const provider = new MockProvider();
             const widget = index_1.createAutoCompleteWidget({
-                providers: [provider],
+                providers: [
+                    new MockProvider({ delay: 100, transform: row => row }),
+                    new MockProvider({
+                        delay: 2000,
+                        transform: ({ key, location, address }) => ({
+                            key: key + "slow_provider",
+                            location,
+                            address: address.toLowerCase()
+                        })
+                    })
+                ],
                 delay: 200
             });
             document.body.insertBefore(widget.dom, document.body.firstChild);

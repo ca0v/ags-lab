@@ -4,9 +4,11 @@ import { AutoCompleteProviderContract } from "./AutoCompleteProviderContract";
 import { Widget } from "./Widget";
 import { AutoCompleteWidgetContract } from "./AutoCompleteWidgetContract";
 import { AutoCompleteEngine } from "./AutoCompleteEngine";
+import { renderResults } from "./renderResults";
 
 const css = `
 .widget.autocomplete {
+  max-width: 24em;
   display: grid;
   grid-template-columns: auto 2em 2em;
   grid-template-areas:
@@ -28,21 +30,21 @@ const css = `
 
 .widget.autocomplete .results {
   grid-area: results;
+  max-height: 20em;
+  overflow: hidden;
 }
 
-.widget.autocomplete .results .result-list {
+.widget.autocomplete .results {
   display: grid;
   grid-template-columns: 2em auto;
   grid-template-areas:
     "marker data";
 }
 
-.widget.autocomplete .results .result-list .marker {
-  grid-area: "marker";
+.widget.autocomplete .results .marker {
 }
 
-.widget.autocomplete .results .result-list .data {
-  grid-area: "data";
+.widget.autocomplete .results .data {
   max-height: 40vh;
 }
 `;
@@ -90,39 +92,20 @@ export class AutoCompleteWidget extends Widget
     });
 
     this.engine.on("success", (results: SearchResult) => {
-      const asHtml = results.items
-        .map(
-          item =>
-            `<div class="marker">${
-              item.key
-            }</div><div class="data" data-d='${JSON.stringify(item)}'>${
-              item.address
-            }</div>`
-        )
-        .join("");
-
-      this.ux.results.innerHTML = `<div class="result-list">${asHtml}</div>`;
-      const resultNodes = Array.from(this.ux.results.children) as HTMLElement[];
-      resultNodes.forEach(child => {
-        child.tabIndex = 0;
-
-        child.addEventListener("focus", () => {
-          this.onResultFocused();
-        });
-      });
+      // only render results if the input hash matches the results hash
+      if (this.getSearchHash() !== results.searchHash) return;
+      renderResults(this, results);
     });
-  }
-
-  private onResultFocused() {
-    const result = document.activeElement as HTMLElement;
-    if (this.ux.results !== result.parentElement) return;
-    this.publish("focusresult", JSON.parse(result.dataset.d));
   }
 
   private onResultSelected() {
     const result = document.activeElement as HTMLElement;
     if (this.ux.results !== result.parentElement) return;
     this.publish("selectresult", JSON.parse(result.dataset.d));
+  }
+
+  private getSearchHash() {
+    return this.ux.input.value.trim().toUpperCase();
   }
 
   /**
@@ -138,12 +121,16 @@ export class AutoCompleteWidget extends Widget
 
   private onInputChanged() {
     try {
-      const searchText = this.ux.input.value;
-      console.log("searching for: ", searchText);
+      const searchText = this.getSearchHash();
+      this.clearSearchResults();
       this.engine.search(searchText);
     } catch (ex) {
       this.publish("error", ex.message);
     }
+  }
+
+  private clearSearchResults() {
+    this.ux.results.innerHTML = "";
   }
 
   public ext(extension: { initialize(widget: AutoCompleteWidget) }) {

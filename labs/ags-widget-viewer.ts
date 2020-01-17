@@ -41,29 +41,49 @@ const addressDatabase = Array(1000)
 class MockProvider implements ProviderContract {
   name: string;
 
+  constructor(
+    public options: {
+      delay: number;
+      transform: (row: SearchResultItem) => SearchResultItem;
+    }
+  ) {}
+
   search(searchValue: string): Promise<SearchResult> {
     console.log("searching for: ", searchValue);
     return new Promise((good, bad) => {
       setTimeout(() => {
         if (0.01 > Math.random()) bad("Unlucky");
-        else
+        else {
+          const items = addressDatabase.filter(
+            v => 0 <= v.address.indexOf(searchValue)
+          );
           good({
-            items: addressDatabase.filter(
-              v => 0 <= v.address.indexOf(searchValue)
-            )
+            searchHash: searchValue,
+            items: items.map(item => this.options.transform(item))
           });
-      }, randomInt(1000));
+        }
+      }, randomInt(this.options.delay));
     });
   }
 }
 
 export function run() {
   try {
-    const provider = new MockProvider();
     const widget = createAutoCompleteWidget({
-      providers: [provider],
+      providers: [
+        new MockProvider({ delay: 100, transform: row => row }),
+        new MockProvider({
+          delay: 2000,
+          transform: ({ key, location, address }) => ({
+            key: key + "slow_provider",
+            location,
+            address: address.toLowerCase()
+          })
+        })
+      ],
       delay: 200
     });
+
     document.body.insertBefore(widget.dom, document.body.firstChild);
 
     widget.on("error", result => {
