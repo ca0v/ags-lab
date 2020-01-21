@@ -1,5 +1,6 @@
 import { SearchResult } from "./SearchResult";
 import { AutoCompleteWidget } from "./AutoCompleteWidget";
+import { SearchResultTypes } from "./SearchResultItem";
 
 function asDom(html: string) {
   let div = document.createElement("div");
@@ -15,12 +16,22 @@ export function renderResults(
   widget: AutoCompleteWidget,
   results: SearchResult
 ) {
+  // to be read from configuration
+  const getMarkerMarkup = (markerType: SearchResultTypes) => {
+    const createMarker = (className: string) => {
+      return `<svg class="marker ${className}" style="width:1em;height:1em" viewBox="-10 -12 20 24"><use href="#icon-marker"></use></svg>`;
+    };
+    return createMarker((markerType && markerType[0]) || "address");
+  };
+
   const asHtml = results.items
     .map(
       item =>
-        `<div class="marker">*</div><div class="data" data-d='${JSON.stringify(
-          item
-        )}'>${item.address}</div>`
+        `<div class="marker">${getMarkerMarkup(
+          item.address_type
+        )}</div><div class="data" data-d='${JSON.stringify(item)}'>${
+          item.address
+        }</div>`
     )
     .join("");
 

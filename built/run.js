@@ -2160,8 +2160,15 @@ define("labs/widgets/auto-complete/renderResults", ["require", "exports"], funct
             target.appendChild(source.firstChild);
     }
     function renderResults(widget, results) {
+        // to be read from configuration
+        const getMarkerMarkup = (markerType) => {
+            const createMarker = (className) => {
+                return `<svg class="marker ${className}" style="width:1em;height:1em" viewBox="-10 -12 20 24"><use href="#icon-marker"></use></svg>`;
+            };
+            return createMarker((markerType && markerType[0]) || "address");
+        };
         const asHtml = results.items
-            .map(item => `<div class="marker">*</div><div class="data" data-d='${JSON.stringify(item)}'>${item.address}</div>`)
+            .map(item => `<div class="marker">${getMarkerMarkup(item.address_type)}</div><div class="data" data-d='${JSON.stringify(item)}'>${item.address}</div>`)
             .join("");
         // add to result grid
         appendAll(widget.ux.results, asDom(`<div>${asHtml.trim()}</div>`));
@@ -2253,6 +2260,8 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
 }
 
 .widget.autocomplete .results .marker {
+  fill: red;
+  stroke: white;
 }
 
 .widget.autocomplete .results .data {
@@ -2468,38 +2477,9 @@ define("labs/widgets/auto-complete/index", ["require", "exports", "labs/widgets/
     }
     exports.createAutoCompleteWidget = createAutoCompleteWidget;
 });
-define("labs/ags-widget-viewer", ["require", "exports", "labs/widgets/auto-complete/index"], function (require, exports, index_1) {
+define("labs/widgets/auto-complete/MockProvider", ["require", "exports", "labs/ags-widget-viewer"], function (require, exports, ags_widget_viewer_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
-    function randomInt(range = 1000) {
-        return Math.floor(range * Math.random());
-    }
-    function randomCompassDir() {
-        const list = "N S W E NW NE SW SE".split(" ");
-        return list[randomInt(list.length)];
-    }
-    function randomStreetName() {
-        const list = "MAIN PLEASANT MOUNTAIN PINNACLE SUMMIT RAMPART".split(" ");
-        return list[randomInt(list.length)];
-    }
-    function randomStreetSuffix() {
-        const list = "ST AVE WAY COURT BLVD".split(" ");
-        return list[randomInt(list.length)];
-    }
-    function randomAddress() {
-        return `${1 +
-            randomInt()} ${randomCompassDir()} ${randomStreetName()} ${randomStreetSuffix()}`;
-    }
-    function createDatabase(size = 1000) {
-        return Array(size)
-            .fill(0)
-            .map((_, k) => k)
-            .map(key => ({
-            key: `key${key}`,
-            location: [randomInt(), randomInt()],
-            address: randomAddress()
-        }));
-    }
     class MockProvider {
         constructor(options) {
             this.options = options;
@@ -2517,24 +2497,64 @@ define("labs/ags-widget-viewer", ["require", "exports", "labs/widgets/auto-compl
                             items: items.map(item => this.options.transform(item))
                         });
                     }
-                }, randomInt(this.options.delay));
+                }, ags_widget_viewer_1.randomInt(this.options.delay));
             });
         }
+    }
+    exports.MockProvider = MockProvider;
+});
+define("labs/ags-widget-viewer", ["require", "exports", "labs/widgets/auto-complete/index", "labs/widgets/auto-complete/MockProvider"], function (require, exports, index_1, MockProvider_1) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function randomInt(range = 1000) {
+        return Math.floor(range * Math.random());
+    }
+    exports.randomInt = randomInt;
+    function randomCompassDir() {
+        const list = "N S W E NW NE SW SE".split(" ");
+        return list[randomInt(list.length)];
+    }
+    function randomStreetName() {
+        const list = "MAIN PLEASANT MOUNTAIN PINNACLE SUMMIT RAMPART".split(" ");
+        return list[randomInt(list.length)];
+    }
+    function randomStreetSuffix() {
+        const list = "ST AVE WAY COURT BLVD".split(" ");
+        return list[randomInt(list.length)];
+    }
+    function randomAddress() {
+        return `${1 +
+            randomInt()} ${randomCompassDir()} ${randomStreetName()} ${randomStreetSuffix()}`;
+    }
+    function randomAddressType() {
+        const types = ["address", "business", "park", "political"];
+        return types[randomInt(types.length)];
+    }
+    function createDatabase(size = 1000) {
+        return Array(size)
+            .fill(0)
+            .map((_, k) => k)
+            .map(key => ({
+            key: `key${key}`,
+            location: [randomInt(), randomInt()],
+            address: randomAddress()
+        }));
     }
     function run() {
         try {
             const widget = index_1.createAutoCompleteWidget({
                 providers: [
-                    new MockProvider({
+                    new MockProvider_1.MockProvider({
                         delay: 100,
                         transform: row => row,
                         database: createDatabase(500)
                     }),
-                    new MockProvider({
+                    new MockProvider_1.MockProvider({
                         database: createDatabase(500),
                         delay: 2000,
                         transform: ({ key, location, address }) => ({
                             key: key + "slow_provider",
+                            address_type: [randomAddressType()],
                             location,
                             address: address.toLowerCase()
                         })

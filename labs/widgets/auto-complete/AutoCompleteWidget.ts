@@ -79,6 +79,8 @@ const css = `
 }
 
 .widget.autocomplete .results .marker {
+  fill: red;
+  stroke: white;
 }
 
 .widget.autocomplete .results .data {

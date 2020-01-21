@@ -1,11 +1,11 @@
+import { createAutoCompleteWidget } from "./widgets/auto-complete/index";
 import {
-  createAutoCompleteWidget,
-  ProviderContract
-} from "./widgets/auto-complete/index";
-import { SearchResult } from "./widgets/auto-complete/SearchResult";
-import { SearchResultItem } from "./widgets/auto-complete/SearchResultItem";
+  SearchResultItem,
+  SearchResultTypes
+} from "./widgets/auto-complete/SearchResultItem";
+import { MockProvider } from "./widgets/auto-complete/MockProvider";
 
-function randomInt(range = 1000) {
+export function randomInt(range = 1000) {
   return Math.floor(range * Math.random());
 }
 
@@ -29,6 +29,11 @@ function randomAddress() {
     randomInt()} ${randomCompassDir()} ${randomStreetName()} ${randomStreetSuffix()}`;
 }
 
+function randomAddressType() {
+  const types: SearchResultTypes = ["address", "business", "park", "political"];
+  return types[randomInt(types.length)];
+}
+
 function createDatabase(size = 1000) {
   return Array(size)
     .fill(0)
@@ -38,40 +43,6 @@ function createDatabase(size = 1000) {
       location: [randomInt(), randomInt()],
       address: randomAddress()
     }));
-}
-
-class MockProvider implements ProviderContract {
-  name: string;
-
-  constructor(
-    public options: {
-      delay: number;
-      transform: (row: SearchResultItem) => SearchResultItem;
-      database: Array<{
-        key: string;
-        location: Array<number>;
-        address: string;
-      }>;
-    }
-  ) {}
-
-  search(searchValue: string): Promise<SearchResult> {
-    console.log("searching for: ", searchValue);
-    return new Promise((good, bad) => {
-      setTimeout(() => {
-        if (0.01 > Math.random()) bad("Unlucky");
-        else {
-          const items = this.options.database.filter(
-            v => 0 <= v.address.indexOf(searchValue)
-          );
-          good({
-            searchHash: searchValue,
-            items: items.map(item => this.options.transform(item))
-          });
-        }
-      }, randomInt(this.options.delay));
-    });
-  }
 }
 
 export function run() {
@@ -88,6 +59,7 @@ export function run() {
           delay: 2000,
           transform: ({ key, location, address }) => ({
             key: key + "slow_provider",
+            address_type: [randomAddressType()],
             location,
             address: address.toLowerCase()
           })
