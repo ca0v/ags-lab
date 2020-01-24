@@ -31,23 +31,23 @@ injectCss(
 }
 
 .widget.autocomplete .results .marker .address {
-  fill: silver;
-  stroke: black;
+  fill: rgb(255, 0, 0);
+  stroke: rgb(20, 20, 200);
 }
 
 .widget.autocomplete .results .marker .business {
-  fill: green;
-  stroke: black;
+  fill: rgb(0, 0, 255);
+  stroke: rgb(20, 20, 200);
 }
 
 .widget.autocomplete .results .marker .park {
-  fill: rgb(20, 255, 20);
-  stroke: brown;
+  fill: rgb(20, 200, 20);
+  stroke: rgb(20, 20, 200);
 }
 
 .widget.autocomplete .results .marker .political {
   fill: blue;
-  stroke: red;
+  stroke: rgb(20, 20, 200);
 }
 `
 );
@@ -102,6 +102,7 @@ function createDatabase(size = 1000) {
         .map(key => ({
             key: `key${key}`,
             location: [randomInt(), randomInt()],
+            address_type: [randomAddressType()],
             address: randomAddress()
         }));
 }
@@ -115,9 +116,9 @@ export function run() {
                     database: createDatabase(500),
                     delay: 4000,
                     maxResultCount: 6,
-                    transform: ({ key, location, address }) => ({
+                    transform: ({ key, location, address, address_type }) => ({
                         key: key + "sluggard_provider",
-                        address_type: ["park"],
+                        address_type: address_type || ["park"],
                         location,
                         address: camelize(address)
                     })
@@ -127,9 +128,9 @@ export function run() {
                     database: createDatabase(500),
                     delay: 100,
                     maxResultCount: 6,
-                    transform: ({ key, location, address }) => ({
+                    transform: ({ key, location, address, address_type }) => ({
                         key: key + "fast_provider",
-                        address_type: ["business"],
+                        address_type: address_type || ["business"],
                         location,
                         address: address.toLowerCase()
                     })
@@ -139,9 +140,9 @@ export function run() {
                     database: createDatabase(50),
                     delay: 10,
                     maxResultCount: 1,
-                    transform: ({ key, location, address }) => ({
+                    transform: ({ key, location, address, address_type }) => ({
                         key: key + "fast_provider",
-                        address_type: ["address"],
+                        address_type: address_type || ["address"],
                         location,
                         address: address.toLowerCase()
                     })

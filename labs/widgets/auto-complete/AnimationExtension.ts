@@ -5,7 +5,7 @@ import { injectCss } from "./injectCss";
 import { SearchResult } from "./SearchResult";
 import { Dictionary } from "./Dictionary";
 
-const DELETION_DELAY = 100;
+const DELETION_DELAY = 100 + Math.random() * 200;
 
 const enhancements = `
 .widget.autocomplete .results div {
@@ -35,7 +35,8 @@ const animations = `
 }
 
 .widget.autocomplete .results div.loading.loaded.unloading.unloaded {
-    transform: translate(-10em, 0em);
+    opacity: 0;
+    transform: translate(10em, 0em);
 }
 
 .widget.autocomplete .spin {
