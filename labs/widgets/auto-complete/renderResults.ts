@@ -21,13 +21,13 @@ export function renderResults(
     const createMarker = (className: string) => {
       return `<svg class="marker ${className}" style="width:1em;height:1em" viewBox="-10 -12 20 24"><use href="#icon-marker"></use></svg>`;
     };
-    return createMarker((markerType && markerType[0]) || "address");
+    return createMarker((markerType && markerType[0]) || "unknown");
   };
 
   const asHtml = results.items
     .map(
       item =>
-        `<div class="marker">${getMarkerMarkup(
+        `<div class="marker" title="${item.address_type}">${getMarkerMarkup(
           item.address_type
         )}</div><div class="data" data-d='${JSON.stringify(item)}'>${
           item.address

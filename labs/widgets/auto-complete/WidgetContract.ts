@@ -5,6 +5,6 @@ export interface WidgetContract {
    */
   readonly dom: HTMLElement;
   dispose(): void;
-  on(topic: string, cb: (result: any) => void): RemoveEventHandler;
+  subscribe(topic: string, cb: (result: any) => void): RemoveEventHandler;
   publish(topic: string, ...args: any): void;
 }

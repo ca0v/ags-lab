@@ -2019,6 +2019,10 @@ define("labs/widgets/auto-complete/WidgetContract", ["require", "exports"], func
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
 });
+define("labs/widgets/auto-complete/WidgetExtensionContract", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+});
 define("labs/widgets/auto-complete/AutoCompleteWidgetContract", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
@@ -2080,7 +2084,7 @@ define("labs/widgets/auto-complete/Widget", ["require", "exports", "labs/widgets
         dispose() {
             this.dom.remove();
         }
-        on(topic, cb) {
+        subscribe(topic, cb) {
             return this.channel.on(topic, cb);
         }
         publish(topic, ...args) {
@@ -2165,10 +2169,10 @@ define("labs/widgets/auto-complete/renderResults", ["require", "exports"], funct
             const createMarker = (className) => {
                 return `<svg class="marker ${className}" style="width:1em;height:1em" viewBox="-10 -12 20 24"><use href="#icon-marker"></use></svg>`;
             };
-            return createMarker((markerType && markerType[0]) || "address");
+            return createMarker((markerType && markerType[0]) || "unknown");
         };
         const asHtml = results.items
-            .map(item => `<div class="marker">${getMarkerMarkup(item.address_type)}</div><div class="data" data-d='${JSON.stringify(item)}'>${item.address}</div>`)
+            .map(item => `<div class="marker" title="${item.address_type}">${getMarkerMarkup(item.address_type)}</div><div class="data" data-d='${JSON.stringify(item)}'>${item.address}</div>`)
             .join("");
         // add to result grid
         appendAll(widget.ux.results, asDom(`<div>${asHtml.trim()}</div>`));
@@ -2229,8 +2233,10 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
   max-width: 24em;
   display: grid;
   grid-template-columns: auto 2em 2em;
+  grid-template-rows: 2em 0.5em auto;
   grid-template-areas:
     "input search cancel"
+    "gap gap gap"
     "results results results";
 }
 
@@ -2261,7 +2267,7 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
 
 .widget.autocomplete .results .marker {
   fill: red;
-  stroke: white;
+  stroke: black;
 }
 
 .widget.autocomplete .results .data {
@@ -2311,15 +2317,15 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
             setBackground(this.ux.cancel, "icon-close");
             keys_1.keys(this.ux).forEach(className => {
                 const item = this.ux[className];
-                item.title = className;
+                item.title = options.titles[className] || className;
                 item.classList.add(className);
                 this.dom.appendChild(item);
             });
             this.engine.on("start", () => {
-                this.ux.cancel.querySelector("svg").classList.add("spin");
+                this.publish("startsearch");
             });
             this.engine.on("complete", () => {
-                this.ux.cancel.querySelector("svg").classList.remove("spin");
+                this.publish("completesearch");
             });
             this.engine.on("success", (results) => {
                 // only render results if the input hash matches the results hash
@@ -2379,6 +2385,23 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
     function setBackground(button, id) {
         button.appendChild(asDom(`<svg viewBox="0 0 18 18"><use href="#${id}"></use></svg>`));
     }
+});
+define("labs/widgets/auto-complete/AnimationExtension", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    class AnimationExtension {
+        initialize(widget) {
+            // inject css is really all that is necessary but knowning when a search is started
+            // will help with animating the progress spinner
+            widget.subscribe("startsearch", () => {
+                widget.ux.cancel.querySelector("svg").classList.add("spin");
+            });
+            widget.subscribe("completesearch", () => {
+                widget.ux.cancel.querySelector("svg").classList.remove("spin");
+            });
+        }
+    }
+    exports.AnimationExtension = AnimationExtension;
 });
 define("labs/widgets/auto-complete/KeyboardWidgetExtension", ["require", "exports"], function (require, exports) {
     "use strict";
@@ -2465,51 +2488,102 @@ define("labs/widgets/auto-complete/KeyboardWidgetExtension", ["require", "export
     }
     exports.KeyboardWidgetExtension = KeyboardWidgetExtension;
 });
-define("labs/widgets/auto-complete/index", ["require", "exports", "labs/widgets/auto-complete/AutoCompleteWidget", "labs/widgets/auto-complete/KeyboardWidgetExtension"], function (require, exports, AutoCompleteWidget_1, KeyboardWidgetExtension_1) {
+define("labs/widgets/auto-complete/index", ["require", "exports", "labs/widgets/auto-complete/AnimationExtension", "labs/widgets/auto-complete/AutoCompleteWidget", "labs/widgets/auto-complete/KeyboardWidgetExtension"], function (require, exports, AnimationExtension_1, AutoCompleteWidget_1, KeyboardWidgetExtension_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function createAutoCompleteWidget(options) {
         const { providers, delay } = options, others = __rest(options, ["providers", "delay"]);
-        const widget = new AutoCompleteWidget_1.AutoCompleteWidget({ delay });
+        const widget = new AutoCompleteWidget_1.AutoCompleteWidget({
+            delay,
+            titles: {
+                input: "Enter Search Text",
+                cancel: "Dismiss Search",
+                search: "Perform Search",
+                results: "Select Search Text"
+            }
+        });
         options.providers.forEach(provider => widget.use(provider));
         widget.ext(new KeyboardWidgetExtension_1.KeyboardWidgetExtension());
+        widget.ext(new AnimationExtension_1.AnimationExtension());
         return widget;
     }
     exports.createAutoCompleteWidget = createAutoCompleteWidget;
 });
-define("labs/widgets/auto-complete/MockProvider", ["require", "exports", "labs/ags-widget-viewer"], function (require, exports, ags_widget_viewer_1) {
+define("labs/widgets/auto-complete/MockProvider", ["require", "exports"], function (require, exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    function randomInt(range = 1000) {
+        return Math.floor(range * Math.random());
+    }
     class MockProvider {
         constructor(options) {
             this.options = options;
         }
         search(searchValue) {
-            console.log("searching for: ", searchValue);
+            console.log(`${this.options.id} searching for: ${searchValue}`);
             return new Promise((good, bad) => {
                 setTimeout(() => {
                     if (0.01 > Math.random())
                         bad("Unlucky");
                     else {
                         const items = this.options.database.filter(v => 0 <= v.address.indexOf(searchValue));
+                        console.log(`${this.options.id} found ${items.length} items`);
                         good({
                             searchHash: searchValue,
                             items: items.map(item => this.options.transform(item))
                         });
                     }
-                }, ags_widget_viewer_1.randomInt(this.options.delay));
+                }, randomInt(this.options.delay));
             });
         }
     }
     exports.MockProvider = MockProvider;
 });
-define("labs/ags-widget-viewer", ["require", "exports", "labs/widgets/auto-complete/index", "labs/widgets/auto-complete/MockProvider"], function (require, exports, index_1, MockProvider_1) {
+define("labs/ags-widget-viewer", ["require", "exports", "labs/widgets/auto-complete/index", "labs/widgets/auto-complete/MockProvider", "labs/widgets/auto-complete/AnimationExtension"], function (require, exports, index_1, MockProvider_1, AnimationExtension_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    injectCss("demo", `
+.widget.autocomplete {
+  background-color: white;
+  color: black;
+  padding: 0.5em;
+}
+
+.widget.autocomplete .input {
+  padding-left: 0.5em;
+}
+
+.widget.autocomplete .results .marker .address {
+  fill: silver;
+  stroke: black;
+}
+
+.widget.autocomplete .results .marker .business {
+  fill: green;
+  stroke: black;
+}
+
+.widget.autocomplete .results .marker .park {
+  fill: rgb(20, 255, 20);
+  stroke: brown;
+}
+
+.widget.autocomplete .results .marker .political {
+  fill: blue;
+  stroke: red;
+}
+`);
+    function injectCss(namespace, css) {
+        if (document.head.querySelector(`style[id="${namespace}"]`))
+            throw "css already exists";
+        const style = document.createElement("style");
+        style.id = name;
+        style.innerText = css;
+        document.head.appendChild(style);
+    }
     function randomInt(range = 1000) {
         return Math.floor(range * Math.random());
     }
-    exports.randomInt = randomInt;
     function randomCompassDir() {
         const list = "N S W E NW NE SW SE".split(" ");
         return list[randomInt(list.length)];
@@ -2545,31 +2619,39 @@ define("labs/ags-widget-viewer", ["require", "exports", "labs/widgets/auto-compl
             const widget = index_1.createAutoCompleteWidget({
                 providers: [
                     new MockProvider_1.MockProvider({
+                        id: "MockFast",
+                        database: createDatabase(500),
                         delay: 100,
-                        transform: row => row,
-                        database: createDatabase(500)
+                        transform: ({ key, location, address }) => ({
+                            key: key + "fast_provider",
+                            address_type: [randomAddressType()],
+                            location,
+                            address: address.toLowerCase()
+                        })
                     }),
                     new MockProvider_1.MockProvider({
+                        id: "MockSlow",
                         database: createDatabase(500),
                         delay: 2000,
                         transform: ({ key, location, address }) => ({
                             key: key + "slow_provider",
                             address_type: [randomAddressType()],
                             location,
-                            address: address.toLowerCase()
+                            address: address.toUpperCase()
                         })
                     })
                 ],
                 delay: 200
             });
+            widget.ext(new AnimationExtension_2.AnimationExtension());
             document.body.insertBefore(widget.dom, document.body.firstChild);
-            widget.on("error", result => {
+            widget.subscribe("error", result => {
                 console.log("error: ", result);
             });
-            widget.on("focusresult", (item) => {
+            widget.subscribe("focusresult", (item) => {
                 console.log("item focused: ", item);
             });
-            widget.on("selectresult", (item) => {
+            widget.subscribe("selectresult", (item) => {
                 console.log("item selected: ", item);
                 widget.dispose();
             });

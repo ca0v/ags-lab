@@ -4,8 +4,53 @@ import {
   SearchResultTypes
 } from "./widgets/auto-complete/SearchResultItem";
 import { MockProvider } from "./widgets/auto-complete/MockProvider";
+import { AnimationExtension } from "./widgets/auto-complete/AnimationExtension";
 
-export function randomInt(range = 1000) {
+injectCss(
+  "demo",
+  `
+.widget.autocomplete {
+  background-color: white;
+  color: black;
+  padding: 0.5em;
+}
+
+.widget.autocomplete .input {
+  padding-left: 0.5em;
+}
+
+.widget.autocomplete .results .marker .address {
+  fill: silver;
+  stroke: black;
+}
+
+.widget.autocomplete .results .marker .business {
+  fill: green;
+  stroke: black;
+}
+
+.widget.autocomplete .results .marker .park {
+  fill: rgb(20, 255, 20);
+  stroke: brown;
+}
+
+.widget.autocomplete .results .marker .political {
+  fill: blue;
+  stroke: red;
+}
+`
+);
+
+function injectCss(namespace: string, css: string) {
+  if (document.head.querySelector(`style[id="${namespace}"]`))
+    throw "css already exists";
+  const style = document.createElement("style");
+  style.id = name;
+  style.innerText = css;
+  document.head.appendChild(style);
+}
+
+function randomInt(range = 1000) {
   return Math.floor(range * Math.random());
 }
 
@@ -50,35 +95,44 @@ export function run() {
     const widget = createAutoCompleteWidget({
       providers: [
         new MockProvider({
+          id: "MockFast",
+          database: createDatabase(500),
           delay: 100,
-          transform: row => row,
-          database: createDatabase(500)
+          transform: ({ key, location, address }) => ({
+            key: key + "fast_provider",
+            address_type: [randomAddressType()],
+            location,
+            address: address.toLowerCase()
+          })
         }),
         new MockProvider({
+          id: "MockSlow",
           database: createDatabase(500),
           delay: 2000,
           transform: ({ key, location, address }) => ({
             key: key + "slow_provider",
             address_type: [randomAddressType()],
             location,
-            address: address.toLowerCase()
+            address: address.toUpperCase()
           })
         })
       ],
       delay: 200
     });
 
+    widget.ext(new AnimationExtension());
+
     document.body.insertBefore(widget.dom, document.body.firstChild);
 
-    widget.on("error", result => {
+    widget.subscribe("error", result => {
       console.log("error: ", result);
     });
 
-    widget.on("focusresult", (item: SearchResultItem) => {
+    widget.subscribe("focusresult", (item: SearchResultItem) => {
       console.log("item focused: ", item);
     });
 
-    widget.on("selectresult", (item: SearchResultItem) => {
+    widget.subscribe("selectresult", (item: SearchResultItem) => {
       console.log("item selected: ", item);
       widget.dispose();
     });

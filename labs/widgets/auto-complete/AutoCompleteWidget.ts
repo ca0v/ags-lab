@@ -3,6 +3,7 @@ import { SearchResult } from "./SearchResult";
 import { AutoCompleteProviderContract } from "./AutoCompleteProviderContract";
 import { Widget } from "./Widget";
 import { AutoCompleteWidgetContract } from "./AutoCompleteWidgetContract";
+import { WidgetExtensionContract } from "./WidgetExtensionContract";
 import { AutoCompleteEngine } from "./AutoCompleteEngine";
 import { renderResults } from "./renderResults";
 
@@ -48,8 +49,10 @@ const css = `
   max-width: 24em;
   display: grid;
   grid-template-columns: auto 2em 2em;
+  grid-template-rows: 2em 0.5em auto;
   grid-template-areas:
     "input search cancel"
+    "gap gap gap"
     "results results results";
 }
 
@@ -80,7 +83,7 @@ const css = `
 
 .widget.autocomplete .results .marker {
   fill: red;
-  stroke: white;
+  stroke: black;
 }
 
 .widget.autocomplete .results .data {
@@ -126,7 +129,17 @@ export class AutoCompleteWidget extends Widget
     results: HTMLDivElement;
   };
 
-  public constructor(public options: { delay: number }) {
+  public constructor(
+    public options: {
+      delay: number;
+      titles: {
+        input: string;
+        search: string;
+        cancel: string;
+        results: string;
+      };
+    }
+  ) {
     super();
     injectCss("ags-lab", css + animations);
     injectSvg("ags-lab", svg);
@@ -147,17 +160,17 @@ export class AutoCompleteWidget extends Widget
 
     keys(this.ux).forEach(className => {
       const item = this.ux[className];
-      item.title = className;
+      item.title = options.titles[className] || className;
       item.classList.add(className);
       this.dom.appendChild(item);
     });
 
     this.engine.on("start", () => {
-      this.ux.cancel.querySelector("svg").classList.add("spin");
+      this.publish("startsearch");
     });
 
     this.engine.on("complete", () => {
-      this.ux.cancel.querySelector("svg").classList.remove("spin");
+      this.publish("completesearch");
     });
 
     this.engine.on("success", (results: SearchResult) => {
@@ -202,7 +215,7 @@ export class AutoCompleteWidget extends Widget
     this.ux.results.innerHTML = "";
   }
 
-  public ext(extension: { initialize(widget: AutoCompleteWidget) }) {
+  public ext(extension: WidgetExtensionContract<AutoCompleteWidget>): void {
     extension.initialize(this);
   }
 

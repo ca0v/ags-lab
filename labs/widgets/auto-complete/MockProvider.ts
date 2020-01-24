@@ -1,13 +1,18 @@
 import { ProviderContract } from "./index";
 import { SearchResult } from "./SearchResult";
 import { SearchResultItem } from "./SearchResultItem";
-import { randomInt } from "../../ags-widget-viewer";
+
+function randomInt(range = 1000) {
+  return Math.floor(range * Math.random());
+}
+
 export class MockProvider implements ProviderContract {
   name: string;
   constructor(
     public options: {
+      id: string;
       delay: number;
-      transform: (row: SearchResultItem) => SearchResultItem;
+      transform: (row: Partial<SearchResultItem>) => SearchResultItem;
       database: Array<{
         key: string;
         location: Array<number>;
@@ -16,7 +21,7 @@ export class MockProvider implements ProviderContract {
     }
   ) {}
   search(searchValue: string): Promise<SearchResult> {
-    console.log("searching for: ", searchValue);
+    console.log(`${this.options.id} searching for: ${searchValue}`);
     return new Promise((good, bad) => {
       setTimeout(() => {
         if (0.01 > Math.random()) bad("Unlucky");
@@ -24,6 +29,7 @@ export class MockProvider implements ProviderContract {
           const items = this.options.database.filter(
             v => 0 <= v.address.indexOf(searchValue)
           );
+          console.log(`${this.options.id} found ${items.length} items`);
           good({
             searchHash: searchValue,
             items: items.map(item => this.options.transform(item))

@@ -1,6 +1,7 @@
 import { RemoveEventHandler } from "./RemoveEventHandler";
 import { WidgetContract } from "./WidgetContract";
 import { Channel } from "./Channel";
+
 export class Widget implements WidgetContract {
   public dom: HTMLElement;
   public channel: Channel;
@@ -15,7 +16,7 @@ export class Widget implements WidgetContract {
   dispose(): void {
     this.dom.remove();
   }
-  on(topic: string, cb: (result: any) => void): RemoveEventHandler {
+  subscribe(topic: string, cb: (result: any) => void): RemoveEventHandler {
     return this.channel.on(topic, cb);
   }
   publish(topic: string, ...args: any) {
