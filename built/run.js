@@ -2155,7 +2155,7 @@ define("labs/widgets/auto-complete/renderResults", ["require", "exports"], funct
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     function asDom(html) {
-        let div = document.createElement("div");
+        const div = document.createElement("div");
         div.innerHTML = html.trim();
         return div.firstChild;
     }
@@ -2189,7 +2189,30 @@ define("labs/widgets/auto-complete/renderResults", ["require", "exports"], funct
     }
     exports.renderResults = renderResults;
 });
-define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "labs/widgets/auto-complete/keys", "labs/widgets/auto-complete/Widget", "labs/widgets/auto-complete/AutoCompleteEngine", "labs/widgets/auto-complete/renderResults"], function (require, exports, keys_1, Widget_1, AutoCompleteEngine_1, renderResults_1) {
+define("labs/widgets/auto-complete/injectCss", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function injectCss(namespace, css) {
+        if (document.head.querySelector(`style[id="${namespace}"]`))
+            throw "css already exists";
+        const style = document.createElement("style");
+        style.id = name;
+        style.innerText = css;
+        document.head.appendChild(style);
+    }
+    exports.injectCss = injectCss;
+});
+define("labs/widgets/auto-complete/injectSvg", ["require", "exports"], function (require, exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+    function injectSvg(namespace, svg) {
+        const container = document.createElement("div");
+        container.innerHTML = svg.trim();
+        document.body.appendChild(container.firstChild);
+    }
+    exports.injectSvg = injectSvg;
+});
+define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "labs/widgets/auto-complete/keys", "labs/widgets/auto-complete/Widget", "labs/widgets/auto-complete/AutoCompleteEngine", "labs/widgets/auto-complete/renderResults", "labs/widgets/auto-complete/injectCss", "labs/widgets/auto-complete/injectSvg"], function (require, exports, keys_1, Widget_1, AutoCompleteEngine_1, renderResults_1, injectCss_1, injectSvg_1) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
     const svg = `
@@ -2274,36 +2297,12 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
   max-height: 40vh;
 }
 `;
-    const animations = `
-.widget.autocomplete .spin {
-  animation: spin var(--spin-rate) 200ms infinite linear;
-}
-
-@keyframes spin {
-  from {transform:rotate(0deg);}
-  to {transform:rotate(360deg);}
-}
-
-`;
-    function injectCss(namespace, css) {
-        if (document.head.querySelector(`style[id="${namespace}"]`))
-            throw "css already exists";
-        const style = document.createElement("style");
-        style.id = name;
-        style.innerText = css;
-        document.head.appendChild(style);
-    }
-    function injectSvg(namespace, svg) {
-        const container = document.createElement("div");
-        container.innerHTML = svg.trim();
-        document.body.appendChild(container.firstChild);
-    }
     class AutoCompleteWidget extends Widget_1.Widget {
         constructor(options) {
             super();
             this.options = options;
-            injectCss("ags-lab", css + animations);
-            injectSvg("ags-lab", svg);
+            injectCss_1.injectCss("ags-lab", css);
+            injectSvg_1.injectSvg("ags-lab", svg);
             this.dom.classList.add("autocomplete");
             this.engine = new AutoCompleteEngine_1.AutoCompleteEngine();
             const { input, cancel, search, results } = (this.ux = {
@@ -2386,11 +2385,28 @@ define("labs/widgets/auto-complete/AutoCompleteWidget", ["require", "exports", "
         button.appendChild(asDom(`<svg viewBox="0 0 18 18"><use href="#${id}"></use></svg>`));
     }
 });
-define("labs/widgets/auto-complete/AnimationExtension", ["require", "exports"], function (require, exports) {
+define("labs/widgets/auto-complete/AnimationExtension", ["require", "exports", "labs/widgets/auto-complete/injectCss"], function (require, exports, injectCss_2) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
+    const animations = `
+.widget.autocomplete .search-results {
+    background: black;
+    opacity: 0;
+}
+
+.widget.autocomplete .spin {
+  animation: spin var(--spin-rate) 200ms infinite linear;
+}
+
+@keyframes spin {
+  from {transform:rotate(0deg);}
+  to {transform:rotate(360deg);}
+}
+
+`;
     class AnimationExtension {
         initialize(widget) {
+            injectCss_2.injectCss("ags-lab", animations);
             // inject css is really all that is necessary but knowning when a search is started
             // will help with animating the progress spinner
             widget.subscribe("startsearch", () => {

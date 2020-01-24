@@ -6,6 +6,8 @@ import { AutoCompleteWidgetContract } from "./AutoCompleteWidgetContract";
 import { WidgetExtensionContract } from "./WidgetExtensionContract";
 import { AutoCompleteEngine } from "./AutoCompleteEngine";
 import { renderResults } from "./renderResults";
+import { injectCss } from "./injectCss";
+import { injectSvg } from "./injectSvg";
 
 const svg = `
 <svg style="display:none" viewBox="-10 -10 20 20">
@@ -91,152 +93,125 @@ const css = `
 }
 `;
 
-const animations = `
-.widget.autocomplete .spin {
-  animation: spin var(--spin-rate) 200ms infinite linear;
-}
-
-@keyframes spin {
-  from {transform:rotate(0deg);}
-  to {transform:rotate(360deg);}
-}
-
-`;
-
-function injectCss(namespace: string, css: string) {
-  if (document.head.querySelector(`style[id="${namespace}"]`))
-    throw "css already exists";
-  const style = document.createElement("style");
-  style.id = name;
-  style.innerText = css;
-  document.head.appendChild(style);
-}
-
-function injectSvg(namespace: string, svg: string) {
-  const container = document.createElement("div");
-  container.innerHTML = svg.trim();
-  document.body.appendChild(container.firstChild);
-}
-
 export class AutoCompleteWidget extends Widget
-  implements AutoCompleteWidgetContract {
-  dom: HTMLElement;
-  private engine: AutoCompleteEngine;
-  public ux: {
-    input: HTMLInputElement;
-    cancel: HTMLButtonElement;
-    search: HTMLButtonElement;
-    results: HTMLDivElement;
-  };
+    implements AutoCompleteWidgetContract {
+    dom: HTMLElement;
+    private engine: AutoCompleteEngine;
+    public ux: {
+        input: HTMLInputElement;
+        cancel: HTMLButtonElement;
+        search: HTMLButtonElement;
+        results: HTMLDivElement;
+    };
 
-  public constructor(
-    public options: {
-      delay: number;
-      titles: {
-        input: string;
-        search: string;
-        cancel: string;
-        results: string;
-      };
+    public constructor(
+        public options: {
+            delay: number;
+            titles: {
+                input: string;
+                search: string;
+                cancel: string;
+                results: string;
+            };
+        }
+    ) {
+        super();
+        injectCss("ags-lab", css);
+        injectSvg("ags-lab", svg);
+
+        this.dom.classList.add("autocomplete");
+        this.engine = new AutoCompleteEngine();
+
+        const { input, cancel, search, results } = (this.ux = {
+            input: document.createElement("input"),
+            cancel: document.createElement("button"),
+            search: document.createElement("button"),
+            results: document.createElement("div")
+        });
+        input.addEventListener("change", () => this.onInputChanged());
+
+        setBackground(this.ux.search, "icon-search");
+        setBackground(this.ux.cancel, "icon-close");
+
+        keys(this.ux).forEach(className => {
+            const item = this.ux[className];
+            item.title = options.titles[className] || className;
+            item.classList.add(className);
+            this.dom.appendChild(item);
+        });
+
+        this.engine.on("start", () => {
+            this.publish("startsearch");
+        });
+
+        this.engine.on("complete", () => {
+            this.publish("completesearch");
+        });
+
+        this.engine.on("success", (results: SearchResult) => {
+            // only render results if the input hash matches the results hash
+            if (this.getSearchHash() !== results.searchHash) return;
+            renderResults(this, results);
+        });
     }
-  ) {
-    super();
-    injectCss("ags-lab", css + animations);
-    injectSvg("ags-lab", svg);
 
-    this.dom.classList.add("autocomplete");
-    this.engine = new AutoCompleteEngine();
-
-    const { input, cancel, search, results } = (this.ux = {
-      input: document.createElement("input"),
-      cancel: document.createElement("button"),
-      search: document.createElement("button"),
-      results: document.createElement("div")
-    });
-    input.addEventListener("change", () => this.onInputChanged());
-
-    setBackground(this.ux.search, "icon-search");
-    setBackground(this.ux.cancel, "icon-close");
-
-    keys(this.ux).forEach(className => {
-      const item = this.ux[className];
-      item.title = options.titles[className] || className;
-      item.classList.add(className);
-      this.dom.appendChild(item);
-    });
-
-    this.engine.on("start", () => {
-      this.publish("startsearch");
-    });
-
-    this.engine.on("complete", () => {
-      this.publish("completesearch");
-    });
-
-    this.engine.on("success", (results: SearchResult) => {
-      // only render results if the input hash matches the results hash
-      if (this.getSearchHash() !== results.searchHash) return;
-      renderResults(this, results);
-    });
-  }
-
-  private onResultSelected() {
-    const result = document.activeElement as HTMLElement;
-    if (this.ux.results !== result.parentElement) return;
-    this.publish("selectresult", JSON.parse(result.dataset.d));
-  }
-
-  private getSearchHash() {
-    return this.ux.input.value.trim().toUpperCase();
-  }
-
-  /**
-   * widget extension
-   */
-  public selectActiveElement() {
-    this.onResultSelected();
-  }
-
-  public applyChanges() {
-    this.onInputChanged();
-  }
-
-  private onInputChanged() {
-    try {
-      const searchText = this.getSearchHash();
-      this.clearSearchResults();
-      this.engine.search(searchText);
-    } catch (ex) {
-      this.publish("error", ex.message);
+    private onResultSelected() {
+        const result = document.activeElement as HTMLElement;
+        if (this.ux.results !== result.parentElement) return;
+        this.publish("selectresult", JSON.parse(result.dataset.d));
     }
-  }
 
-  private clearSearchResults() {
-    this.ux.results.innerHTML = "";
-  }
+    private getSearchHash() {
+        return this.ux.input.value.trim().toUpperCase();
+    }
 
-  public ext(extension: WidgetExtensionContract<AutoCompleteWidget>): void {
-    extension.initialize(this);
-  }
+    /**
+     * widget extension
+     */
+    public selectActiveElement() {
+        this.onResultSelected();
+    }
 
-  public use(provider: AutoCompleteProviderContract<SearchResult>): void {
-    this.engine.use(provider);
-  }
+    public applyChanges() {
+        this.onInputChanged();
+    }
 
-  public search(value: string) {
-    this.ux.input.value = value;
-    this.onInputChanged();
-  }
+    private onInputChanged() {
+        try {
+            const searchText = this.getSearchHash();
+            this.clearSearchResults();
+            this.engine.search(searchText);
+        } catch (ex) {
+            this.publish("error", ex.message);
+        }
+    }
+
+    private clearSearchResults() {
+        this.ux.results.innerHTML = "";
+    }
+
+    public ext(extension: WidgetExtensionContract<AutoCompleteWidget>): void {
+        extension.initialize(this);
+    }
+
+    public use(provider: AutoCompleteProviderContract<SearchResult>): void {
+        this.engine.use(provider);
+    }
+
+    public search(value: string) {
+        this.ux.input.value = value;
+        this.onInputChanged();
+    }
 }
 
 function asDom(html: string) {
-  let div = document.createElement("div");
-  div.innerHTML = html.trim();
-  return div.firstChild as HTMLElement;
+    let div = document.createElement("div");
+    div.innerHTML = html.trim();
+    return div.firstChild as HTMLElement;
 }
 
 function setBackground(button: HTMLButtonElement, id: string) {
-  button.appendChild(
-    asDom(`<svg viewBox="0 0 18 18"><use href="#${id}"></use></svg>`)
-  );
+    button.appendChild(
+        asDom(`<svg viewBox="0 0 18 18"><use href="#${id}"></use></svg>`)
+    );
 }
