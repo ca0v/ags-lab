@@ -1,17 +1,14 @@
 {
     "compilerOptions": {
-        "lib":["ES2015","DOM"],   
+        "lib": ["ES2015", "DOM"],
         "declaration": false,
         "module": "amd",
         "target": "es2015",
         "noImplicitAny": false,
         "types": ["./node_modules/dojo-typings/index"],
-        "sourceMap": false,
+        "inlineSourceMap": true,
         "outFile": "./built/run.js",
         "moduleResolution": "node"
     },
-    "exclude": [
-        "node_modules",
-        "built"
-    ]
+    "exclude": ["node_modules", "built"]
 }

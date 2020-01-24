@@ -5,7 +5,7 @@ import { Widget } from "./Widget";
 import { AutoCompleteWidgetContract } from "./AutoCompleteWidgetContract";
 import { WidgetExtensionContract } from "./WidgetExtensionContract";
 import { AutoCompleteEngine } from "./AutoCompleteEngine";
-import { renderResults } from "./renderResults";
+import { renderResults as updateResults } from "./renderResults";
 import { injectCss } from "./injectCss";
 import { injectSvg } from "./injectSvg";
 
@@ -141,17 +141,18 @@ export class AutoCompleteWidget extends Widget
         });
 
         this.engine.on("start", () => {
-            this.publish("startsearch");
+            this.publish("start-search");
         });
 
         this.engine.on("complete", () => {
-            this.publish("completesearch");
+            this.publish("complete-search");
         });
 
         this.engine.on("success", (results: SearchResult) => {
             // only render results if the input hash matches the results hash
             if (this.getSearchHash() !== results.searchHash) return;
-            renderResults(this, results);
+            updateResults(this, results);
+            this.publish("success-search", results);
         });
     }
 
@@ -179,15 +180,10 @@ export class AutoCompleteWidget extends Widget
     private onInputChanged() {
         try {
             const searchText = this.getSearchHash();
-            this.clearSearchResults();
             this.engine.search(searchText);
         } catch (ex) {
             this.publish("error", ex.message);
         }
-    }
-
-    private clearSearchResults() {
-        this.ux.results.innerHTML = "";
     }
 
     public ext(extension: WidgetExtensionContract<AutoCompleteWidget>): void {

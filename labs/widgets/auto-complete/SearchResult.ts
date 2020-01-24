@@ -1,5 +1,6 @@
 import { SearchResultItem } from "./SearchResultItem";
 export type SearchResult = {
-  searchHash: string; // original search conditions
-  items: Array<SearchResultItem>;
+    provider_id: string; // identifies the search provider
+    searchHash: string; // original search conditions
+    items: Array<SearchResultItem>;
 };

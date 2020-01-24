@@ -3,39 +3,45 @@ import { SearchResult } from "./SearchResult";
 import { SearchResultItem } from "./SearchResultItem";
 
 function randomInt(range = 1000) {
-  return Math.floor(range * Math.random());
+    return Math.floor(range * Math.random());
 }
 
 export class MockProvider implements ProviderContract {
-  name: string;
-  constructor(
-    public options: {
-      id: string;
-      delay: number;
-      transform: (row: Partial<SearchResultItem>) => SearchResultItem;
-      database: Array<{
-        key: string;
-        location: Array<number>;
-        address: string;
-      }>;
-    }
-  ) {}
-  search(searchValue: string): Promise<SearchResult> {
-    console.log(`${this.options.id} searching for: ${searchValue}`);
-    return new Promise((good, bad) => {
-      setTimeout(() => {
-        if (0.01 > Math.random()) bad("Unlucky");
-        else {
-          const items = this.options.database.filter(
-            v => 0 <= v.address.indexOf(searchValue)
-          );
-          console.log(`${this.options.id} found ${items.length} items`);
-          good({
-            searchHash: searchValue,
-            items: items.map(item => this.options.transform(item))
-          });
+    name: string;
+    constructor(
+        public options: {
+            id: string;
+            delay: number;
+            transform: (row: Partial<SearchResultItem>) => SearchResultItem;
+            database: Array<{
+                key: string;
+                location: Array<number>;
+                address: string;
+            }>;
         }
-      }, randomInt(this.options.delay));
-    });
-  }
+    ) {
+        this.name = options.id;
+    }
+
+    search(searchValue: string): Promise<SearchResult> {
+        console.log(`${this.options.id} searching for: ${searchValue}`);
+        return new Promise((good, bad) => {
+            setTimeout(() => {
+                if (0.01 > Math.random()) bad("Unlucky");
+                else {
+                    const items = this.options.database.filter(
+                        v => 0 <= v.address.indexOf(searchValue)
+                    );
+                    console.log(
+                        `${this.options.id} found ${items.length} items`
+                    );
+                    good({
+                        provider_id: this.name,
+                        searchHash: searchValue,
+                        items: items.map(item => this.options.transform(item))
+                    });
+                }
+            }, randomInt(this.options.delay));
+        });
+    }
 }
