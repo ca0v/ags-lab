@@ -5,7 +5,7 @@ import { injectCss } from "./injectCss";
 import { SearchResult } from "./SearchResult";
 import { Dictionary } from "./Dictionary";
 
-const DELETION_DELAY = 200;
+const DELETION_DELAY = 100;
 
 const enhancements = `
 .widget.autocomplete .results div {
@@ -17,17 +17,25 @@ const animations = `
 .widget.autocomplete .results div {
     transform: translate(0em, 0em);
     opacity: 1;
-    transition: all ${DELETION_DELAY}ms linear;
 }
 
 .widget.autocomplete .results div.loading {
     transform: translate(-10em, 0em);
+    opacity: 0;
+    transition: all ${DELETION_DELAY}ms linear;
+}
+
+.widget.autocomplete .results div.loading.loaded {
+    transform: translate(0em, 0em);
+    opacity: 1;
+}
+
+.widget.autocomplete .results div.loading.loaded.unloading {
     opacity: 0.5;
 }
 
-.widget.autocomplete .results div.pending {
+.widget.autocomplete .results div.loading.loaded.unloading.unloaded {
     transform: translate(-10em, 0em);
-    opacity: 0;
 }
 
 .widget.autocomplete .spin {
@@ -40,41 +48,32 @@ const animations = `
 }
 `;
 
+injectCss("ags-lab", enhancements);
+injectCss("ags-lab", animations);
+
 export class AnimationExtension
     implements WidgetExtensionContract<AutoCompleteWidgetContract> {
     initialize(widget: AutoCompleteWidget): void {
-        const markAsLoading = (selector: string) => {
+        const markAs = (selector: string, mark: string) => {
             const nodes = Array.from(
                 widget.ux.results.querySelectorAll(selector)
             ) as HTMLElement[];
-            nodes.forEach(n => n.classList.add("loading"));
-            setTimeout(() => {
-                nodes.forEach(n => {
-                    n.classList.remove("loading");
-                    //n.classList.add("loaded");
-                });
-            }, DELETION_DELAY);
+            nodes.forEach(n => n.classList.add(mark));
+            return nodes;
         };
 
-        const markAsUnloading = (selector: string) => {
+        const unload = (providerId: string) => {
             const nodes = Array.from(
-                widget.ux.results.querySelectorAll(selector)
+                widget.ux.results.querySelectorAll(`.unloading.${providerId}`)
             ) as HTMLElement[];
-            nodes.forEach(n => n.classList.add("pending"));
-            setTimeout(() => {
-                nodes
-                    .filter(n => n.classList.contains("pending"))
-                    .forEach(n => n.remove());
-            }, DELETION_DELAY);
+            nodes.forEach(n => n.classList.add("unloaded"));
+            setTimeout(() => nodes.forEach(n => n.remove()), DELETION_DELAY);
         };
-
-        injectCss("ags-lab", enhancements);
-        injectCss("ags-lab", animations);
 
         const providers = <Dictionary<SearchResult>>{};
 
         widget.subscribe("start-search", () => {
-            Object.keys(providers).forEach(id => markAsUnloading(`.${id}`));
+            Object.keys(providers).forEach(id => markAs(`.${id}`, "unloading"));
             widget.ux.cancel.querySelector("svg").classList.add("spin");
         });
 
@@ -82,9 +81,14 @@ export class AnimationExtension
             widget.ux.cancel.querySelector("svg").classList.remove("spin");
         });
 
-        widget.subscribe("success-search", (results: SearchResult) => {
+        widget.subscribe("receive-search-result", (results: SearchResult) => {
             providers[results.provider_id] = results;
-            markAsLoading(`.${results.provider_id}`);
+            unload(results.provider_id);
+        });
+
+        widget.subscribe("update-search-result", (results: SearchResult) => {
+            markAs(`.${results.provider_id}`, "loading");
+            setTimeout(() => markAs(`.${results.provider_id}`, "loaded"), 20);
         });
     }
 }

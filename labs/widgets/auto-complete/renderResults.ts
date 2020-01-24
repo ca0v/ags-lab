@@ -12,6 +12,11 @@ function appendAll(target: HTMLElement, source: HTMLElement) {
     while (source.firstChild) target.appendChild(source.firstChild);
 }
 
+function prependAll(target: HTMLElement, source: HTMLElement) {
+    while (source.lastChild)
+        target.insertBefore(source.lastChild, target.firstChild);
+}
+
 export function renderResults(
     widget: AutoCompleteWidget,
     results: SearchResult
@@ -38,7 +43,7 @@ export function renderResults(
         .join("");
 
     // add to result grid
-    appendAll(widget.ux.results, asDom(`<div>${asHtml.trim()}</div>`));
+    prependAll(widget.ux.results, asDom(`<div>${asHtml.trim()}</div>`));
 
     const resultNodes = Array.from(
         widget.ux.results.querySelectorAll(".data")

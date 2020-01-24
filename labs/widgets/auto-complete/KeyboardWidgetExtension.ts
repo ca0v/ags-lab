@@ -51,7 +51,7 @@ export class KeyboardWidgetExtension {
                 }
             },
             ArrowDown: () => {
-                let { activeElement } = document;
+                const { activeElement } = document;
                 focus(activeElement.nextElementSibling, { direction: "down" });
             }
         };

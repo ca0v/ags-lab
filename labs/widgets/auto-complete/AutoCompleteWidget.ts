@@ -97,6 +97,7 @@ export class AutoCompleteWidget extends Widget
     implements AutoCompleteWidgetContract {
     dom: HTMLElement;
     private engine: AutoCompleteEngine;
+    private priorSearchText: string | null;
     public ux: {
         input: HTMLInputElement;
         cancel: HTMLButtonElement;
@@ -149,10 +150,11 @@ export class AutoCompleteWidget extends Widget
         });
 
         this.engine.on("success", (results: SearchResult) => {
+            this.publish("receive-search-result", results);
             // only render results if the input hash matches the results hash
             if (this.getSearchHash() !== results.searchHash) return;
             updateResults(this, results);
-            this.publish("success-search", results);
+            this.publish("update-search-result", results);
         });
     }
 
@@ -180,7 +182,9 @@ export class AutoCompleteWidget extends Widget
     private onInputChanged() {
         try {
             const searchText = this.getSearchHash();
+            if (searchText === this.priorSearchText) return;
             this.engine.search(searchText);
+            this.priorSearchText = searchText;
         } catch (ex) {
             this.publish("error", ex.message);
         }

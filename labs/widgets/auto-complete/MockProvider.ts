@@ -12,6 +12,7 @@ export class MockProvider implements ProviderContract {
         public options: {
             id: string;
             delay: number;
+            maxResultCount: number;
             transform: (row: Partial<SearchResultItem>) => SearchResultItem;
             database: Array<{
                 key: string;
@@ -35,13 +36,20 @@ export class MockProvider implements ProviderContract {
                     console.log(
                         `${this.options.id} found ${items.length} items`
                     );
+                    const { maxResultCount } = this.options;
+                    if (items.length > maxResultCount) {
+                        items.splice(
+                            maxResultCount,
+                            items.length - maxResultCount
+                        );
+                    }
                     good({
                         provider_id: this.name,
                         searchHash: searchValue,
                         items: items.map(item => this.options.transform(item))
                     });
                 }
-            }, randomInt(this.options.delay));
+            }, this.options.delay / 2 + randomInt(this.options.delay / 2));
         });
     }
 }
