@@ -14,14 +14,11 @@ export class MockProvider implements ProviderContract {
             delay: number;
             maxResultCount: number;
             transform: (row: Partial<SearchResultItem>) => SearchResultItem;
-            database: Array<{
-                key: string;
-                location: Array<number>;
-                address: string;
-            }>;
+            database: Array<SearchResultItem>;
         }
     ) {
         this.name = options.id;
+        options.database.forEach(item => (item.key += options.id));
     }
 
     search(searchValue: string): Promise<SearchResult> {

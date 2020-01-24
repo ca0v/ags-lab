@@ -117,8 +117,8 @@ export function run() {
                     delay: 4000,
                     maxResultCount: 6,
                     transform: ({ key, location, address, address_type }) => ({
-                        key: key + "sluggard_provider",
-                        address_type: address_type || ["park"],
+                        key,
+                        address_type,
                         location,
                         address: camelize(address)
                     })
@@ -129,8 +129,8 @@ export function run() {
                     delay: 100,
                     maxResultCount: 6,
                     transform: ({ key, location, address, address_type }) => ({
-                        key: key + "fast_provider",
-                        address_type: address_type || ["business"],
+                        key,
+                        address_type,
                         location,
                         address: address.toLowerCase()
                     })
@@ -141,8 +141,8 @@ export function run() {
                     delay: 10,
                     maxResultCount: 1,
                     transform: ({ key, location, address, address_type }) => ({
-                        key: key + "fast_provider",
-                        address_type: address_type || ["address"],
+                        key,
+                        address_type,
                         location,
                         address: address.toLowerCase()
                     })
@@ -152,9 +152,9 @@ export function run() {
                     maxResultCount: 6,
                     database: createDatabase(500),
                     delay: 2000,
-                    transform: ({ key, location, address }) => ({
-                        key: key + "slow_provider",
-                        address_type: [randomAddressType()],
+                    transform: ({ key, location, address, address_type }) => ({
+                        key,
+                        address_type,
                         location,
                         address: address.toUpperCase()
                     })
