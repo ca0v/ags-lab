@@ -8,6 +8,7 @@ import { AutoCompleteEngine } from "./AutoCompleteEngine";
 import { renderResults as updateResults } from "./fun/renderResults";
 import { injectCss } from "./fun/injectCss";
 import { injectSvg } from "./fun/injectSvg";
+import { SearchResultItem } from "./typings/SearchResultItem";
 
 const svg = `
 <svg style="display:none" viewBox="-10 -10 20 20">
@@ -94,124 +95,152 @@ const css = `
 `;
 
 export class AutoCompleteWidget extends WidgetBase
-    implements AutoCompleteWidgetContract {
-    dom: HTMLElement;
-    private engine: AutoCompleteEngine;
-    private priorSearchText: string | null;
-    public ux: {
-        input: HTMLInputElement;
-        cancel: HTMLButtonElement;
-        search: HTMLButtonElement;
-        results: HTMLDivElement;
-    };
+  implements AutoCompleteWidgetContract {
+  dom: HTMLElement;
+  private engine: AutoCompleteEngine;
+  private priorSearchText: string | null;
+  public ux: {
+    input: HTMLInputElement;
+    cancel: HTMLButtonElement;
+    search: HTMLButtonElement;
+    results: HTMLDivElement;
+  };
 
-    public constructor(
-        public options: {
-            delay: number;
-            titles: {
-                input: string;
-                search: string;
-                cancel: string;
-                results: string;
-            };
-        }
-    ) {
-        super();
-        injectCss("ags-lab", css);
-        injectSvg("ags-lab", svg);
-
-        this.dom.classList.add("autocomplete");
-        this.engine = new AutoCompleteEngine();
-
-        const { input, cancel, search, results } = (this.ux = {
-            input: document.createElement("input"),
-            cancel: document.createElement("button"),
-            search: document.createElement("button"),
-            results: document.createElement("div")
-        });
-        input.addEventListener("change", () => this.onInputChanged());
-
-        setBackground(this.ux.search, "icon-search");
-        setBackground(this.ux.cancel, "icon-close");
-
-        keys(this.ux).forEach(className => {
-            const item = this.ux[className];
-            item.title = options.titles[className] || className;
-            item.classList.add(className);
-            this.dom.appendChild(item);
-        });
-
-        this.engine.on("start", () => {
-            this.publish("start-search");
-        });
-
-        this.engine.on("complete", () => {
-            this.publish("complete-search");
-        });
-
-        this.engine.on("success", (results: SearchResult) => {
-            this.publish("receive-search-result", results);
-            // only render results if the input hash matches the results hash
-            if (this.getSearchHash() !== results.searchHash) return;
-            updateResults(this, results);
-            this.publish("update-search-result", results);
-        });
+  public constructor(
+    public options: {
+      delay: number;
+      titles: {
+        input: string;
+        search: string;
+        cancel: string;
+        results: string;
+      };
     }
+  ) {
+    super();
+    injectCss("ags-lab", css);
+    injectSvg("ags-lab", svg);
 
-    private onResultSelected() {
-        const result = document.activeElement as HTMLElement;
-        if (this.ux.results !== result.parentElement) return;
-        this.publish("selectresult", JSON.parse(result.dataset.d));
-    }
+    this.dom.classList.add("autocomplete");
+    this.engine = new AutoCompleteEngine();
 
-    private getSearchHash() {
-        return this.ux.input.value.trim().toUpperCase();
-    }
+    const { input, cancel, search, results } = (this.ux = {
+      input: document.createElement("input"),
+      cancel: document.createElement("button"),
+      search: document.createElement("button"),
+      results: document.createElement("div")
+    });
+    input.addEventListener("change", () => this.onInputChanged());
+    search.addEventListener("click", () => this.onSearch());
 
-    /**
-     * widget extension
-     */
-    public selectActiveElement() {
-        this.onResultSelected();
-    }
+    setBackground(this.ux.search, "icon-search");
+    setBackground(this.ux.cancel, "icon-close");
 
-    public applyChanges() {
-        this.onInputChanged();
-    }
+    keys(this.ux).forEach(className => {
+      const item = this.ux[className];
+      item.title = options.titles[className] || className;
+      item.classList.add(className);
+      this.dom.appendChild(item);
+    });
 
-    private onInputChanged() {
-        try {
-            const searchText = this.getSearchHash();
-            if (searchText === this.priorSearchText) return;
-            this.engine.search(searchText);
-            this.priorSearchText = searchText;
-        } catch (ex) {
-            this.publish("error", ex.message);
-        }
-    }
+    this.engine.on("start", () => {
+      this.publish("start-search");
+    });
 
-    public ext(extension: WidgetExtensionContract<AutoCompleteWidget>): void {
-        extension.initialize(this);
-    }
+    this.engine.on("complete", () => {
+      this.publish("complete-search");
+    });
 
-    public use(provider: AutoCompleteProviderContract<SearchResult>): void {
-        this.engine.use(provider);
-    }
+    this.engine.on("success", (results: SearchResult) => {
+      this.publish("receive-search-result", results);
+      // only render results if the input hash matches the results hash
+      if (this.getSearchHash() !== results.searchHash) return;
+      updateResults(this, results);
+      this.publish("update-search-result", results);
+    });
+  }
 
-    public search(value: string) {
-        this.ux.input.value = value;
-        this.onInputChanged();
+  /**
+   * Notify that user selected a result item
+   */
+  private onResultSelected() {
+    const result = document.activeElement as HTMLElement;
+    if (this.ux.results !== result.parentElement) return;
+    this.publish("selectresult", JSON.parse(result.dataset.d));
+  }
+
+  private getSearchHash() {
+    return this.ux.input.value.trim().toUpperCase();
+  }
+
+  /**
+   * widget extension
+   */
+  public selectActiveElement() {
+    this.onResultSelected();
+  }
+
+  public applyChanges() {
+    this.onInputChanged();
+  }
+
+  /**
+   * User clicked "search" button, perform a location query
+   */
+  private onSearch() {
+    try {
+      const searchText = this.getSearchHash();
+      if (searchText === this.priorSearchText) return;
+      this.engine.search(searchText);
+      this.priorSearchText = searchText;
+    } catch (ex) {
+      this.publish("error", ex.message);
     }
+  }
+
+  private onInputChanged() {
+    try {
+      const searchText = this.getSearchHash();
+      if (searchText === this.priorSearchText) return;
+      this.engine.search(searchText);
+      this.priorSearchText = searchText;
+    } catch (ex) {
+      this.publish("error", ex.message);
+    }
+  }
+
+  public ext(extension: WidgetExtensionContract<AutoCompleteWidget>): void {
+    extension.initialize(this);
+  }
+
+  public use(provider: AutoCompleteProviderContract<SearchResult>): void {
+    this.engine.use(provider);
+  }
+
+  /**
+   * Update the search text
+   * @param value Value to assign to the search area
+   */
+  public search(value: string) {
+    this.ux.input.value = value;
+    this.onInputChanged();
+  }
+
+  public locate(value: SearchResultItem) {
+    // responses are associated with requests through a hash of the input value
+    this.ux.input.value = value.key;
+    this.engine.search(value);
+  }
 }
 
 function asDom(html: string) {
-    let div = document.createElement("div");
-    div.innerHTML = html.trim();
-    return div.firstChild as HTMLElement;
+  let div = document.createElement("div");
+  div.innerHTML = html.trim();
+  return div.firstChild as HTMLElement;
 }
 
 function setBackground(button: HTMLButtonElement, id: string) {
-    button.appendChild(
-        asDom(`<svg viewBox="0 0 18 18"><use href="#${id}"></use></svg>`)
-    );
+  button.appendChild(
+    asDom(`<svg viewBox="0 0 18 18"><use href="#${id}"></use></svg>`)
+  );
 }

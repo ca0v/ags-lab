@@ -2,6 +2,7 @@ import { SearchResult } from "./typings/SearchResult";
 import { AutoCompleteProviderContract } from "./typings/AutoCompleteProviderContract";
 import { AutoCompleteEngineContract } from "./typings/AutoCompleteEngineContract";
 import { Channel } from "./Channel";
+import { SearchResultItem } from "./typings/SearchResultItem";
 /**
  * Generic auto-complete
  */
@@ -22,7 +23,12 @@ export class AutoCompleteEngine implements AutoCompleteEngineContract {
     console.log("success", result);
     this.channel.publish("success", result);
   }
-  search(value: string): void {
+
+  /**
+   * Invoke search on all providers
+   * @param value search value
+   */
+  search(value: string|SearchResultItem): void {
     this.channel.publish("start");
     const results = this.providers.map(provider => provider.search(value));
     Promise.all(results)

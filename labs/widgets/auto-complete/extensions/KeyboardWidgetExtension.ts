@@ -62,6 +62,7 @@ export class KeyboardWidgetExtension {
                 return;
             }
         });
+        
         widget.ux.results.addEventListener("click", event => {
             // if clicking a marker focus the input
             const path = event.composedPath();

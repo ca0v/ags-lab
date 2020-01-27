@@ -112,42 +112,42 @@ export function run() {
     try {
         const widget = createAutoCompleteWidget({
             providers: [
-                new MockProvider({
-                    id: "Sluggard",
-                    database: createDatabase(500),
-                    delay: 4000,
-                    maxResultCount: 6,
-                    transform: ({ key, location, address, address_type }) => ({
-                        key,
-                        address_type,
-                        location,
-                        address: camelize(address)
-                    })
-                }),
-                new MockProvider({
-                    id: "MockFast",
-                    database: createDatabase(500),
-                    delay: 100,
-                    maxResultCount: 6,
-                    transform: ({ key, location, address, address_type }) => ({
-                        key,
-                        address_type,
-                        location,
-                        address: address.toLowerCase()
-                    })
-                }),
-                new MockProvider({
-                    id: "MockFastest",
-                    database: createDatabase(50),
-                    delay: 10,
-                    maxResultCount: 1,
-                    transform: ({ key, location, address, address_type }) => ({
-                        key,
-                        address_type,
-                        location,
-                        address: address.toLowerCase()
-                    })
-                }),
+                // new MockProvider({
+                //     id: "Sluggard",
+                //     database: createDatabase(500),
+                //     delay: 4000,
+                //     maxResultCount: 6,
+                //     transform: ({ key, location, address, address_type }) => ({
+                //         key,
+                //         address_type,
+                //         location,
+                //         address: camelize(address)
+                //     })
+                // }),
+                // new MockProvider({
+                //     id: "MockFast",
+                //     database: createDatabase(500),
+                //     delay: 100,
+                //     maxResultCount: 6,
+                //     transform: ({ key, location, address, address_type }) => ({
+                //         key,
+                //         address_type,
+                //         location,
+                //         address: address.toLowerCase()
+                //     })
+                // }),
+                // new MockProvider({
+                //     id: "MockFastest",
+                //     database: createDatabase(50),
+                //     delay: 10,
+                //     maxResultCount: 1,
+                //     transform: ({ key, location, address, address_type }) => ({
+                //         key,
+                //         address_type,
+                //         location,
+                //         address: address.toLowerCase()
+                //     })
+                // }),
                 new MockProvider({
                     id: "MockSlow",
                     maxResultCount: 6,
@@ -177,9 +177,16 @@ export function run() {
             console.log("item focused: ", item);
         });
 
+        /**
+         * request a search to be performed using that item
+         */
         widget.subscribe("selectresult", (item: SearchResultItem) => {
             console.log("item selected: ", item);
-            widget.dispose();
+            if (!!item.location) {
+                widget.dispose();
+            } else {
+                widget.locate(item);
+            }
         });
 
         widget.search("N MAIN AVE");

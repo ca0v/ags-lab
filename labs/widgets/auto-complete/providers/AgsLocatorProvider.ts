@@ -59,11 +59,11 @@ export class AgsLocatorProvider implements ProviderContract {
         return response;
     }
 
-    async locate(item: SearchResultItem): Promise<SearchResult> {
+    private async locate(item: SearchResultItem): Promise<SearchResult> {
         const fetchResponse = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=${item.address}&f=json&maxLocations=6`);
         const responseData = await fetchResponse.json();
         const response = this.mapFindAddressCandidatesResponseData(responseData);
-        response.searchHash = item.key;
+        response.searchHash = item.key.toUpperCase();
         return response;
     }
 

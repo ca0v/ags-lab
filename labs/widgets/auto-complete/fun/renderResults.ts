@@ -43,7 +43,7 @@ export function renderResults(
         .join("");
 
     // add to result grid
-    prependAll(widget.ux.results, asDom(`<div>${asHtml.trim()}</div>`));
+    appendAll(widget.ux.results, asDom(`<div>${asHtml.trim()}</div>`));
 
     const resultNodes = Array.from(
         widget.ux.results.querySelectorAll(".data")
