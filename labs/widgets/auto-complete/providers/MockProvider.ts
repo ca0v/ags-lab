@@ -24,9 +24,11 @@ export class MockProvider implements ProviderContract {
     search(clue: SearchResultItem): Promise<SearchResult>;
     search(searchValue: string): Promise<SearchResult>
     search(searchValue: any): Promise<SearchResult> {
-        if (typeof searchValue !== "string") searchValue = searchValue.address;
         console.log(`${this.options.id} searching for: ${searchValue}`);
         return new Promise((good, bad) => {
+            if (typeof searchValue !== "string") {
+                good({ provider_id: this.name, searchHash: searchValue, items: [] });
+            };
             setTimeout(() => {
                 if (0.01 > Math.random()) bad("Unlucky");
                 else {

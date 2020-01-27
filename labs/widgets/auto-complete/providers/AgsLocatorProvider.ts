@@ -4,6 +4,16 @@ import { SearchResultItem } from "../typings/SearchResultItem";
 import { Geometry } from "../typings/Geometry";
 import { Dictionary } from "../typings/Dictionary";
 
+function asQueryString(args: any): string {
+    return Object.keys(args).map(key => `${key}=${args[key]}`).join("&");
+}
+
+type AgsSearchResultItem = {
+    text: string;
+    magicKey: string;
+    isCollection: boolean;
+};
+
 // https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest?f=json&text=greenville&maxSuggestions=6&location=%7B%22spatialReference%22%3A%7B%22latestWkid%22%3A3857%2C%22wkid%22%3A102100%7D%2C%22x%22%3A-10797990.606947355%2C%22y%22%3A4579425.812870008%7D
 export class AgsLocatorProvider implements ProviderContract {
     name: string;
@@ -11,7 +21,7 @@ export class AgsLocatorProvider implements ProviderContract {
         this.name = "AgsLocatorProvider";
     }
 
-    private mapResponseData(data: { suggestions: Array<{ text: string; magicKey: string; isCollection: boolean; }> }): SearchResult {
+    private mapSuggestResponseData(data: { suggestions: Array<AgsSearchResultItem> }): SearchResult {
         const items = data.suggestions.map(responseItem => (<SearchResultItem>{
             ...responseItem,
             address: responseItem.text,
@@ -52,18 +62,33 @@ export class AgsLocatorProvider implements ProviderContract {
     search(searchValue: string): Promise<SearchResult>
     async search(searchValue: any): Promise<SearchResult> {
         if (typeof searchValue !== "string") return this.locate(searchValue as SearchResultItem);
-        const fetchResponse = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest?f=json&text=${searchValue}`);
+        const args = {
+            category: "Address,Postal",
+            text: searchValue,
+            maxLocations: 3,
+            maxSuggestions: 3,
+            countryCode: "USA"
+        }
+        const fetchResponse = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/suggest?f=json&${asQueryString(args)}`);
         const responseData = await fetchResponse.json();
-        const response = this.mapResponseData(responseData);
+        const response = this.mapSuggestResponseData(responseData);
         response.searchHash = searchValue;
         return response;
     }
 
     private async locate(item: SearchResultItem): Promise<SearchResult> {
-        const fetchResponse = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?SingleLine=${item.address}&f=json&maxLocations=6`);
+        const args = {
+            category: "Address,Postal",
+            SingleLine: item.address,
+            maxLocations: 3,
+            maxSuggestions: 3,
+            countryCode: "USA",
+            magicKey: item.key,
+        }
+        const fetchResponse = await fetch(`https://geocode.arcgis.com/arcgis/rest/services/World/GeocodeServer/findAddressCandidates?f=json&${asQueryString(args)}`);
         const responseData = await fetchResponse.json();
         const response = this.mapFindAddressCandidatesResponseData(responseData);
-        response.searchHash = item.key.toUpperCase();
+        response.searchHash = item.key;
         return response;
     }
 

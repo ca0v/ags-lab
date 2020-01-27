@@ -12,7 +12,7 @@ export class AutoCompleteEngine implements AutoCompleteEngineContract {
   dispose() {
     this.channel.dispose();
   }
-  on(topic: string, cb: (result: any) => void) {
+  subscribe(topic: string, cb: (result: any) => void) {
     return this.channel.on(topic, cb);
   }
   private onError(message: string) {

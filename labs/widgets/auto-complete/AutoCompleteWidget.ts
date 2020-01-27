@@ -143,15 +143,15 @@ export class AutoCompleteWidget extends WidgetBase
       this.dom.appendChild(item);
     });
 
-    this.engine.on("start", () => {
+    this.engine.subscribe("start", () => {
       this.publish("start-search");
     });
 
-    this.engine.on("complete", () => {
+    this.engine.subscribe("complete", () => {
       this.publish("complete-search");
     });
 
-    this.engine.on("success", (results: SearchResult) => {
+    this.engine.subscribe("success", (results: SearchResult) => {
       this.publish("receive-search-result", results);
       // only render results if the input hash matches the results hash
       if (this.getSearchHash() !== results.searchHash) return;
@@ -169,8 +169,13 @@ export class AutoCompleteWidget extends WidgetBase
     this.publish("selectresult", JSON.parse(result.dataset.d));
   }
 
+  private _hash: string;
+  private setSearchHash(value: string) {
+    this._hash = value;
+  }
+
   private getSearchHash() {
-    return this.ux.input.value.trim().toUpperCase();
+    return (this._hash || this.ux.input.value.trim().toUpperCase());
   }
 
   /**
@@ -200,8 +205,9 @@ export class AutoCompleteWidget extends WidgetBase
 
   private onInputChanged() {
     try {
-      const searchText = this.getSearchHash();
+      const searchText = this.ux.input.value.trim();      
       if (searchText === this.priorSearchText) return;
+      this.setSearchHash(searchText);
       this.engine.search(searchText);
       this.priorSearchText = searchText;
     } catch (ex) {
@@ -228,7 +234,7 @@ export class AutoCompleteWidget extends WidgetBase
 
   public locate(value: SearchResultItem) {
     // responses are associated with requests through a hash of the input value
-    this.ux.input.value = value.key;
+    this.setSearchHash(value.key);
     this.engine.search(value);
   }
 }
