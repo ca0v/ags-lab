@@ -148,19 +148,19 @@ export function run() {
                 //         address: address.toLowerCase()
                 //     })
                 // }),
-                new MockProvider({
-                    id: "MockSlow",
-                    maxResultCount: 6,
-                    database: createDatabase(500),
-                    delay: 2000,
-                    transform: ({ key, location, address, address_type, provider_id }) => ({
-                        provider_id,
-                        key,
-                        address_type,
-                        location,
-                        address: address.toUpperCase()
-                    })
-                }),
+                // new MockProvider({
+                //     id: "MockSlow",
+                //     maxResultCount: 6,
+                //     database: createDatabase(500),
+                //     delay: 2000,
+                //     transform: ({ key, location, address, address_type, provider_id }) => ({
+                //         provider_id,
+                //         key,
+                //         address_type,
+                //         location,
+                //         address: address.toUpperCase()
+                //     })
+                // }),
                 new AgsLocatorProvider()
             ],
             delay: 200
@@ -193,7 +193,7 @@ export function run() {
             }
         });
 
-        widget.search("N MAIN AVE");
+        //widget.search("N MAIN AVE");
     } catch (ex) {
         console.log(ex.message || ex);
     } finally {
