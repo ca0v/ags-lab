@@ -1,9 +1,9 @@
-import { SearchResult } from "./SearchResult";
-import { AutoCompleteProviderContract } from "./AutoCompleteProviderContract";
-import { AutoCompleteWidgetContract } from "./AutoCompleteWidgetContract";
-import { AnimationExtension } from "./AnimationExtension";
+import { SearchResult } from "./typings/SearchResult";
+import { AutoCompleteProviderContract } from "./typings/AutoCompleteProviderContract";
+import { AutoCompleteWidgetContract } from "./typings/AutoCompleteWidgetContract";
+import { AnimationExtension } from "./extensions/AnimationExtension";
 import { AutoCompleteWidget } from "./AutoCompleteWidget";
-import { KeyboardWidgetExtension } from "./KeyboardWidgetExtension";
+import { KeyboardWidgetExtension } from "./extensions/KeyboardWidgetExtension";
 
 export type ProviderContract = AutoCompleteProviderContract<SearchResult>;
 

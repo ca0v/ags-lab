@@ -2,9 +2,10 @@ import { createAutoCompleteWidget } from "./widgets/auto-complete/index";
 import {
     SearchResultItem,
     SearchResultTypes
-} from "./widgets/auto-complete/SearchResultItem";
-import { MockProvider } from "./widgets/auto-complete/MockProvider";
-import { AnimationExtension } from "./widgets/auto-complete/AnimationExtension";
+} from "./widgets/auto-complete/typings/SearchResultItem";
+import { MockProvider } from "./widgets/auto-complete/providers/MockProvider";
+import { AnimationExtension } from "./widgets/auto-complete/extensions/AnimationExtension";
+import { AgsLocatorProvider } from "./widgets/auto-complete/providers/AgsLocatorProvider";
 
 function camelize(text: string) {
     const words = text.split(" ");
@@ -158,7 +159,8 @@ export function run() {
                         location,
                         address: address.toUpperCase()
                     })
-                })
+                }),
+                new AgsLocatorProvider()
             ],
             delay: 200
         });

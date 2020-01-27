@@ -1,9 +1,9 @@
-import { AutoCompleteWidget } from "./AutoCompleteWidget";
-import { WidgetExtensionContract } from "./WidgetExtensionContract";
-import { AutoCompleteWidgetContract } from "./AutoCompleteWidgetContract";
-import { injectCss } from "./injectCss";
-import { SearchResult } from "./SearchResult";
-import { Dictionary } from "./Dictionary";
+import { AutoCompleteWidget } from "../AutoCompleteWidget";
+import { WidgetExtensionContract } from "../typings/WidgetExtensionContract";
+import { AutoCompleteWidgetContract } from "../typings/AutoCompleteWidgetContract";
+import { injectCss } from "../fun/injectCss";
+import { SearchResult } from "../typings/SearchResult";
+import { Dictionary } from "../typings/Dictionary";
 
 const DELETION_DELAY = 100 + Math.random() * 200;
 

@@ -1,6 +1,6 @@
-import { SearchResult } from "./SearchResult";
-import { AutoCompleteProviderContract } from "./AutoCompleteProviderContract";
-import { AutoCompleteEngineContract } from "./AutoCompleteEngineContract";
+import { SearchResult } from "./typings/SearchResult";
+import { AutoCompleteProviderContract } from "./typings/AutoCompleteProviderContract";
+import { AutoCompleteEngineContract } from "./typings/AutoCompleteEngineContract";
 import { Channel } from "./Channel";
 /**
  * Generic auto-complete

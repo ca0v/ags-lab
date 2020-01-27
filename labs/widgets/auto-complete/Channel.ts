@@ -1,5 +1,5 @@
-import { Dictionary } from "./Dictionary";
-import { RemoveEventHandler } from "./RemoveEventHandler";
+import { Dictionary } from "./typings/Dictionary";
+import { RemoveEventHandler } from "./typings/RemoveEventHandler";
 export class Channel {
   private topics: Dictionary<Array<(...args: any[]) => void>> = {};
   dispose() {

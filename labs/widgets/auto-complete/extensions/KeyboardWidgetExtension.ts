@@ -1,4 +1,4 @@
-import { AutoCompleteWidget } from "./AutoCompleteWidget";
+import { AutoCompleteWidget } from "../AutoCompleteWidget";
 
 function debounce<T extends Function>(cb: T, wait = 20) {
     let h = 0;

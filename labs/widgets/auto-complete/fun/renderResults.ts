@@ -1,6 +1,6 @@
-import { SearchResult } from "./SearchResult";
-import { AutoCompleteWidget } from "./AutoCompleteWidget";
-import { SearchResultTypes } from "./SearchResultItem";
+import { SearchResult } from "../typings/SearchResult";
+import { AutoCompleteWidget } from "../AutoCompleteWidget";
+import { SearchResultTypes } from "../typings/SearchResultItem";
 
 function asDom(html: string) {
     const div = document.createElement("div");

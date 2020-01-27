@@ -1,13 +1,13 @@
-import { keys } from "./keys";
-import { SearchResult } from "./SearchResult";
-import { AutoCompleteProviderContract } from "./AutoCompleteProviderContract";
-import { Widget } from "./Widget";
-import { AutoCompleteWidgetContract } from "./AutoCompleteWidgetContract";
-import { WidgetExtensionContract } from "./WidgetExtensionContract";
+import { keys } from "./fun/keys";
+import { SearchResult } from "./typings/SearchResult";
+import { AutoCompleteProviderContract } from "./typings/AutoCompleteProviderContract";
+import { WidgetBase } from "./WidgetBase";
+import { AutoCompleteWidgetContract } from "./typings/AutoCompleteWidgetContract";
+import { WidgetExtensionContract } from "./typings/WidgetExtensionContract";
 import { AutoCompleteEngine } from "./AutoCompleteEngine";
-import { renderResults as updateResults } from "./renderResults";
-import { injectCss } from "./injectCss";
-import { injectSvg } from "./injectSvg";
+import { renderResults as updateResults } from "./fun/renderResults";
+import { injectCss } from "./fun/injectCss";
+import { injectSvg } from "./fun/injectSvg";
 
 const svg = `
 <svg style="display:none" viewBox="-10 -10 20 20">
@@ -93,7 +93,7 @@ const css = `
 }
 `;
 
-export class AutoCompleteWidget extends Widget
+export class AutoCompleteWidget extends WidgetBase
     implements AutoCompleteWidgetContract {
     dom: HTMLElement;
     private engine: AutoCompleteEngine;

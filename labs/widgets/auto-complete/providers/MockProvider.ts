@@ -1,6 +1,6 @@
-import { ProviderContract } from "./index";
-import { SearchResult } from "./SearchResult";
-import { SearchResultItem } from "./SearchResultItem";
+import { ProviderContract } from "../index";
+import { SearchResult } from "../typings/SearchResult";
+import { SearchResultItem } from "../typings/SearchResultItem";
 
 function randomInt(range = 1000) {
     return Math.floor(range * Math.random());
@@ -21,7 +21,10 @@ export class MockProvider implements ProviderContract {
         options.database.forEach(item => (item.key += options.id));
     }
 
-    search(searchValue: string): Promise<SearchResult> {
+    search(clue: SearchResultItem): Promise<SearchResult>;
+    search(searchValue: string): Promise<SearchResult>
+    search(searchValue: any): Promise<SearchResult> {
+        if (typeof searchValue !== "string") searchValue = searchValue.address;
         console.log(`${this.options.id} searching for: ${searchValue}`);
         return new Promise((good, bad) => {
             setTimeout(() => {
