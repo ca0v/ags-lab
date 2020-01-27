@@ -8,28 +8,6 @@ import { SearchResultItem } from "./typings/SearchResultItem";
 
 export type ProviderContract = AutoCompleteProviderContract<SearchResult>;
 
-class FlowExtension {
-  private results: Array<SearchResultItem> = [];
-  initialize(widget: AutoCompleteWidget) {
-    widget.subscribe("start-search", () => {
-      this.results = [];
-    });
-    widget.subscribe("complete-search", () => {
-      // if exactly one result and it has a location then
-      // closed the widget
-      if (1 === this.results.length) {
-        if (this.results[0].location) {
-          console.log(`using ${JSON.stringify(this.results[0])}`);
-          widget.dispose();
-        }
-      }
-    });
-    widget.subscribe("update-search-result", (results) => {
-      this.results = this.results.concat(results.items);
-    });
-
-  }
-}
 
 export function createAutoCompleteWidget(options: {
   providers: Array<ProviderContract>;
@@ -48,7 +26,6 @@ export function createAutoCompleteWidget(options: {
   options.providers.forEach(provider => widget.use(provider));
   widget.ext(new KeyboardWidgetExtension());
   widget.ext(new AnimationExtension());
-  widget.ext(new FlowExtension());
 
   return widget as AutoCompleteWidgetContract;
 }

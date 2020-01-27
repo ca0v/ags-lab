@@ -28,7 +28,7 @@ export class AutoCompleteEngine implements AutoCompleteEngineContract {
    * Invoke search on all providers
    * @param value search value
    */
-  search(value: string|SearchResultItem): void {
+  search(value: string): void {
     this.channel.publish("start");
     const results = this.providers.map(provider => provider.search(value));
     Promise.all(results)
@@ -48,6 +48,12 @@ export class AutoCompleteEngine implements AutoCompleteEngineContract {
           this.onSuccess(result);
         });
     });
+  }
+
+  async locate(value: SearchResultItem) {
+    this.channel.publish("start");
+    const provider = this.providers.find(p => p.name === value.provider_id);
+    return provider.search(value);
   }
 
   async use(provider: AutoCompleteProviderContract<SearchResult>) {

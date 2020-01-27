@@ -14,7 +14,7 @@ export class MockProvider implements ProviderContract {
             delay: number;
             maxResultCount: number;
             transform: (row: Partial<SearchResultItem>) => SearchResultItem;
-            database: Array<SearchResultItem>;
+            database: Array<Partial<SearchResultItem>>;
         }
     ) {
         this.name = options.id;

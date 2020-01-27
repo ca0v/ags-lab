@@ -24,6 +24,7 @@ export class AgsLocatorProvider implements ProviderContract {
     private mapSuggestResponseData(data: { suggestions: Array<AgsSearchResultItem> }): SearchResult {
         const items = data.suggestions.map(responseItem => (<SearchResultItem>{
             ...responseItem,
+            provider_id: this.name,
             address: responseItem.text,
             key: responseItem.magicKey,
             location: null,
@@ -46,6 +47,7 @@ export class AgsLocatorProvider implements ProviderContract {
     }): SearchResult {
         const items = data.candidates.map(responseItem => (<SearchResultItem>{
             ...responseItem,
+            provider_id: this.name,
             address: responseItem.address,
             key: responseItem.address,
             location: responseItem.location,

@@ -153,7 +153,8 @@ export function run() {
                     maxResultCount: 6,
                     database: createDatabase(500),
                     delay: 2000,
-                    transform: ({ key, location, address, address_type }) => ({
+                    transform: ({ key, location, address, address_type, provider_id }) => ({
+                        provider_id,
                         key,
                         address_type,
                         location,
@@ -180,12 +181,15 @@ export function run() {
         /**
          * request a search to be performed using that item
          */
-        widget.subscribe("selectresult", (item: SearchResultItem) => {
+        widget.subscribe("selectresult", async (item: SearchResultItem) => {
             console.log("item selected: ", item);
             if (!!item.location) {
+                console.log("location", item.location);
                 widget.dispose();
             } else {
-                widget.locate(item);
+                const searchResult = await widget.locate(item);
+                console.log("location:", searchResult.items[0].location);
+                widget.dispose();
             }
         });
 

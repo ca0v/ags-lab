@@ -229,13 +229,14 @@ export class AutoCompleteWidget extends WidgetBase
    */
   public search(value: string) {
     this.ux.input.value = value;
+    this.ux.input.focus();
     this.onInputChanged();
   }
 
   public locate(value: SearchResultItem) {
     // responses are associated with requests through a hash of the input value
     this.setSearchHash(value.key);
-    this.engine.search(value);
+    return this.engine.locate(value);
   }
 }
 
