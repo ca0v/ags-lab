@@ -4,8 +4,8 @@
         "tsc": "tsc -p tsconfig.json"
     },
     "devDependencies": {
-        "@types/arcgis-js-api": "^3.31.0",
-        "dojo-typings": "^1.11.9",
-        "typescript": "^3.8.0-dev.20200104"
+        "@types/arcgis-js-api": "^3.34.0",
+        "dojo-typings": "^1.11.11",
+        "typescript": "^3.9.7"
     }
 }
