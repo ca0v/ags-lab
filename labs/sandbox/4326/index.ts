@@ -35,12 +35,14 @@ export function run() {
             return { level, resolution, scale, levelValue: "level" };
         });
 
+    // zoom levels are broken without specifying a basemap
     const map = new Map("map", {
-        basemap: "streets",
-        center: [-85, 36],
-        lods: lods,
-        // minZoom: 14,
-        // maxZoom: 14,
+        //basemap: "streets",
+        center: new Point(-85, 36, new SpatialReference(4326)),
+        //lods: lods,
+        minZoom: 12,
+        maxZoom: 16,
+        zoom: 14,
     });
 
     new Scalebar({ map: map, scalebarUnit: "dual" });
