@@ -38,7 +38,7 @@ const srs4326 = new SpatialReference({ wkid: 4326 });
 const baselineResolution = 156543.03408771486;
 const baselineScale = 591657527.591555;
 
-const lods3857 = range(30)
+const lods3857 = range(5)
   .map((i) => i)
   .map((i) => {
     const level = i;
@@ -72,9 +72,7 @@ export async function run() {
     center,
     extent,
     lods: lods3857, // causes map to use 4326
-    minZoom: 1,
-    maxZoom: 15,
-    zoom: 3,
+    zoom: 0,
   });
 
   // trick to get the map to work properly
@@ -84,7 +82,7 @@ export async function run() {
         () => map.removeLayer(map.getLayer(map.basemapLayerIds[0])),
         0
       );
-      map.removeLayer(layer);
+      //map.removeLayer(layer);
     });
 
   map.on("click", async () => {
@@ -99,7 +97,7 @@ export async function run() {
 
   const layer = new FeatureLayer(
     "https://sampleserver6.arcgisonline.com/arcgis/rest/services/Census/MapServer/3",
-    { definitionExpression: "1=2" }
+    { definitionExpression: "1=1" }
   );
   // other layers to use...world regions:
   // var layer = new FeatureLayer("https://sampleserver6.arcgisonline.com/arcgis/rest/services/WorldTimeZones/MapServer/2");
@@ -118,13 +116,17 @@ export async function run() {
   layer.setRenderer(new SimpleRenderer(fill));
   map.addLayer(layer); // somehow this allows the map to take on srs3857
 
-  if (true) {
+  map.on("load", () => {
     const graphicsLayer = new GraphicsLayer();
 
     // these only appear when there is a basemap
     [-85, -85.01, -84.99]
       .map(
-        (x) => projection.project(new Point(x, 36.0, srs4326), srs3857) as Point
+        (x) =>
+          projection.project(
+            new Point(x, 36.0, srs4326),
+            map.spatialReference
+          ) as Point
       )
       .forEach((p, i) =>
         graphicsLayer.add(new Graphic(p, createMarker(i * 10), {}))
@@ -133,12 +135,16 @@ export async function run() {
     // these appear at all times
     [36, 36.01, 35.99]
       .map(
-        (y) => projection.project(new Point(-85, y, srs4326), srs3857) as Point
+        (y) =>
+          projection.project(
+            new Point(-85, y, srs4326),
+            map.spatialReference
+          ) as Point
       )
       .forEach((p, i) =>
         graphicsLayer.add(new Graphic(p, createMarker(i * 10), {}))
       );
 
     map.addLayer(graphicsLayer);
-  }
+  });
 }
