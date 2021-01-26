@@ -1,55 +1,95 @@
-// convert to import..how?
-import Map = require("esri/map");
-import SpatialReference = require("esri/SpatialReference");
-import Scalebar = require("esri/dijit/Scalebar");
-import GraphicsLayer = require("esri/layers/GraphicsLayer");
-import Graphic = require("esri/graphic");
-import Point = require("esri/geometry/Point");
-import SimpleMarkerSymbol = require("esri/symbols/SimpleMarkerSymbol");
-import SimpleLineSymbol = require("esri/symbols/SimpleLineSymbol");
-import Color = require("esri/Color");
+/**
+ * Trying to setup a map to use 3857 because it uses 4326 by default already
+ * https://stackoverflow.com/questions/65904709/how-to-set-the-spatial-reference-of-a-esri-javascript-api-map-3-x
+ * https://stackoverflow.com/questions/65852375/esri-jsapi-3-x-how-to-set-min-max-zoom-levels
+ * setting the extent and center do not affect the maps spatial reference
+ * setting the spatialReference does not affect the maps spatial reference
+ * only loading a basemap seems to have an affect
+ */
+import Map from "esri/map";
+import SpatialReference from "esri/SpatialReference";
+import Scalebar from "esri/dijit/Scalebar";
+import GraphicsLayer from "esri/layers/GraphicsLayer";
+import Graphic from "esri/graphic";
+import Point from "esri/geometry/Point";
+import Extent from "esri/geometry/Extent";
+import SimpleMarkerSymbol from "esri/symbols/SimpleMarkerSymbol";
+import SimpleLineSymbol from "esri/symbols/SimpleLineSymbol";
+import Color from "esri/Color";
+import * as projection from "esri/geometry/projection";
+
 import "dojo/domReady!";
 
-export function run() {
-    const range = (n: number) => {
-        let a = new Array(n).fill(n);
-        return a.map((_, i) => i);
-    };
+const range = (n: number) => new Array(n).fill(n).map((_, i) => i);
 
-    const createMarker = (color: number) =>
-        new SimpleMarkerSymbol(
-            "solid",
-            8,
-            new SimpleLineSymbol(),
-            new Color([255, color, color, 1])
-        );
+const createMarker = (color: number) =>
+  new SimpleMarkerSymbol(
+    "solid",
+    8,
+    new SimpleLineSymbol(),
+    new Color([color, color, color, 1])
+  );
 
-    const lods = range(5)
-        .map((i) => i + 10)
-        .map((i) => {
-            const baselineResolution = 156543.03392800014;
-            const baselineScale = 591657527.591555;
-            const level = i;
-            const resolution = baselineResolution / Math.pow(2, level);
-            const scale = baselineScale / Math.pow(2, level);
-            return { level, resolution, scale, levelValue: "level" };
-        });
+const srs3857 = new SpatialReference({ wkid: 3857 });
+const srs4326 = new SpatialReference({ wkid: 4326 });
+const baselineResolution = 156543.03408771486;
+const baselineScale = 591657527.591555;
 
-    // zoom levels are broken without specifying a basemap
-    const map = new Map("map", {
-        //basemap: "streets",
-        center: new Point(-85, 36, new SpatialReference(4326)),
-        //lods: lods,
-        minZoom: 12,
-        maxZoom: 16,
-        zoom: 14,
-    });
+const lods3857 = range(30).map((i) => {
+  const level = i;
+  const resolution = baselineResolution / Math.pow(2, level);
+  const scale = baselineScale / Math.pow(2, level);
+  return { level, resolution, scale, levelValue: "level" };
+});
 
-    new Scalebar({ map: map, scalebarUnit: "dual" });
+export async function run() {
+  await projection.load();
 
-    const graphicsLayer = new GraphicsLayer();
-    map.addLayer(graphicsLayer);
+  const center = new Point(-9462156, 4300621, srs3857);
+  const extent = new Extent(
+    center.x - 1000,
+    center.y - 1000,
+    center.x + 1000,
+    center.y + 1000,
+    srs3857
+  );
 
-    const point1 = new Point({ x: -85.001, y: 36.001 });
-    graphicsLayer.add(new Graphic(point1, createMarker(0), {}));
+  const map = new Map("map", {
+    //basemap: "streets",
+    minScale: lods3857[0].scale,
+    maxScale: lods3857[lods3857.length - 1].scale,
+    scale: lods3857[Math.floor(lods3857.length / 2)].scale,
+    center,
+    extent,
+    //lods: lods3857,
+  });
+
+  // trick to get the map to work properly
+  map.basemapLayerIds &&
+    map.on("load", () =>
+      setTimeout(() => map.removeLayer(map.getLayer(map.basemapLayerIds[0])), 0)
+    );
+
+  new Scalebar({ map: map, scalebarUnit: "dual" });
+
+  const graphicsLayer = new GraphicsLayer();
+  map.addLayer(graphicsLayer);
+
+  // these only appear when there is a basemap
+  [-85, -85.01, -84.99]
+    .map(
+      (x) => projection.project(new Point(x, 36.0, srs4326), srs3857) as Point
+    )
+    .forEach((p, i) =>
+      graphicsLayer.add(new Graphic(p, createMarker(i * 10), {}))
+    );
+
+  // these appear at all times
+  [36, 36.01, 35.99]
+    .map(
+      (y) => projection.project(new Point(-85, y, srs4326), srs4326) as Point
+    )
+    .forEach((p, i) =>
+      graphicsLayer.add(new Graphic(p, createMarker(i * 10), {}))
+    );
 }
