@@ -1,11 +1,12 @@
 {
-    "scripts": {
-        "dev": "tsc -p tsconfig.json -w",
-        "tsc": "tsc -p tsconfig.json"
-    },
-    "devDependencies": {
-        "@types/arcgis-js-api": "^3.34.0",
-        "dojo-typings": "^1.11.11",
-        "typescript": "^3.9.7"
-    }
+  "scripts": {
+    "dev": "tsc -p tsconfig.json -w",
+    "tsc": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "@types/arcgis-js-api": "^4.21.0",
+    "dojo-typings": "^1.11.11",
+    "typescript": "^4.4.4",
+    "@arcgis/cli": "^4.21.0"
+  }
 }
